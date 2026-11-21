@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · admin-overview (/admin)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#222;background:#fafafa;font-size:14px}
+.app{display:flex;min-height:100vh}.side{display:none}
+.side a{display:flex;justify-content:space-between;padding:12px;border-radius:8px}.side a.on{background:#ccc;font-weight:bold}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;border-top:1px solid #888;background:#eee;z-index:5}
+.tabs div{flex:1;text-align:center;padding:10px 0;min-height:56px;font-size:12px}.tabs .on{font-weight:bold;background:#ccc}
+.cnt{display:inline-block;border:1px solid #444;border-radius:10px;padding:0 6px;font-size:11px;background:#fff}
+main{flex:1;padding:16px 16px 80px;min-width:0}
+.mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tag{border:1px solid #777;border-radius:10px;padding:2px 8px;font-size:11px;background:#ddd}
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.sel{border:1px solid #888;border-radius:8px;padding:10px 12px;min-height:44px;background:#fff;white-space:nowrap}
+.card{border:1px solid #888;border-radius:12px;padding:12px;background:#fff;margin-top:12px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.kpi{border:1px solid #888;border-radius:12px;padding:12px;background:#fff}
+.kpi b{font-size:22px;display:block;margin:4px 0}.up,.dn{font-size:12px}
+.hbar{display:flex;align-items:center;gap:8px;margin:6px 0}.hbar span{width:120px;font-size:12px}.hbar i{display:block;height:14px;background:#777;border-radius:3px}
+.chart{height:150px;border:1px dashed #888;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#666}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid #ccc;padding:8px 4px;text-align:left}th{background:#eee}
+.scroll{overflow-x:auto}
+.stack{display:flex;height:12px;border:1px solid #888;border-radius:3px;overflow:hidden;flex:1}.stack i{background:#666}.stack s{background:#ccc}
+.qrow{display:flex;gap:8px;align-items:center;font-size:12px;margin:5px 0}.qrow span{width:40px}
+.skel{height:12px;background:#ddd;border-radius:4px;margin:6px 0}
+.muted{color:#666;font-size:12px}
+@media(min-width:900px){.side{display:block;width:230px;border-right:1px solid #888;background:#eee;padding:16px;flex-shrink:0}.tabs{display:none}main{padding:24px}
+ .kpis{grid-template-columns:repeat(5,1fr)}
+ .blocks{display:grid;grid-template-columns:1fr 1fr;gap:12px}.wide{grid-column:span 2}
+ .filters{flex-wrap:wrap}}
+</style></head><body>
+<div class="app">
+<nav class="side"><b>Chandra Honda · Feedback</b><p><span class="tag">Demo — sample data</span></p>
+  <a class="on">Overview</a><a>Alerts <span class="cnt">4</span></a><a>Responses</a><a>Recently deleted</a><a>Audit log</a><a>Users</a><hr><a>Reset demo data</a><a>Sign out (Admin)</a></nav>
+<main>
+  <div class="mtop"><h2 style="margin:0">Overview</h2><span class="tag">Demo — sample data</span></div>
+  <div class="filters">
+    <div class="sel">Last 30 days ▾</div><div class="sel">Vehicle type: All ▾</div><div class="sel">Model: All ▾</div><div class="sel">Advisor: All ▾</div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span class="muted">Responses received</span><b>18</b><span class="up">▲ 3 vs prev 30 days</span></div>
+    <div class="kpi"><span class="muted">Response rate</span><b>75%</b><span class="up">▲ 5 pts</span></div>
+    <div class="kpi"><span class="muted">Avg overall (Q12)</span><b>3.9 / 5</b><span class="dn">▼ 0.2</span></div>
+    <div class="kpi"><span class="muted">Recommend rate</span><b>83%</b><span class="up">▲ 4 pts</span></div>
+    <div class="kpi"><span class="muted">Open alerts</span><b>4</b><span class="muted">all dates</span></div>
+  </div>
+  <p class="muted">Arrows are green (better) / red (worse) in the real UI.</p>
+
+  <div class="blocks">
+  <div class="card"><b>Category scores (/100)</b>
+    <div class="hbar"><span>Service quality</span><i style="width:58%"></i> 78</div>
+    <div class="hbar"><span>Interaction</span><i style="width:62%"></i> 84</div>
+    <div class="hbar"><span>Timelines &amp; delivery</span><i style="width:52%"></i> 71</div>
+    <div class="hbar"><span>Pricing &amp; value</span><i style="width:48%"></i> 66</div>
+    <div class="hbar"><span>Overall &amp; loyalty</span><i style="width:60%"></i> 80</div>
+  </div>
+
+  <div class="card"><b>Trend (weekly)</b> <span class="muted">Avg Q12 · Recommend rate</span>
+    <div class="chart">[line chart: 2 lines, weeks of 27 Oct – 17 Nov]</div>
+  </div>
+
+  <div class="card wide"><b>Advisor performance</b> <span class="muted">(tap a header to sort)</span>
+    <div class="scroll"><table>
+      <tr><th>Advisor ▾</th><th>Responses</th><th>Avg Q6</th><th>% Q4 Yes</th><th>% Q7 Yes</th><th>Avg Q12</th></tr>
+      <tr><td>Suresh</td><td>6</td><td>4.2</td><td>83%</td><td>67%</td><td>4.0</td></tr>
+      <tr><td>Karthik</td><td>5</td><td>3.6</td><td>80%</td><td>80%</td><td>3.8</td></tr>
+      <tr><td>Meena</td><td>4</td><td>4.5</td><td>100%</td><td>75%</td><td>4.3</td></tr>
+      <tr><td>Vijay</td><td>3</td><td>3.0</td><td>67%</td><td>33%</td><td>3.3</td></tr>
+    </table></div>
+  </div>
+
+  <div class="card"><b>Problem breakdown</b> <span class="sel" style="display:inline-block;min-height:0;padding:4px 8px">Q1a What was wrong ▾</span>
+    <div class="hbar"><span>Problem not fixed</span><i style="width:40%"></i> 4</div>
+    <div class="hbar"><span>Same problem came back</span><i style="width:30%"></i> 3</div>
+    <div class="hbar"><span>New problem appeared</span><i style="width:10%"></i> 1</div>
+    <div class="hbar"><span>Other</span><i style="width:10%"></i> 1</div>
+  </div>
+
+  <div class="card"><b>Question detail</b> <span class="muted">dark = Yes, light = No</span>
+    <div class="qrow"><span>Q2</span><div class="stack"><i style="width:70%"></i><s style="width:30%"></s></div>Yes 70 · Part 20 · No 10</div>
+    <div class="qrow"><span>Q3</span><div class="stack"><i style="width:15%"></i><s style="width:85%"></s></div>Yes 15%</div>
+    <div class="qrow"><span>Q4</span><div class="stack"><i style="width:83%"></i><s style="width:17%"></s></div>83%</div>
+    <div class="qrow"><span>Q5</span><div class="stack"><i style="width:61%"></i><s style="width:39%"></s></div>61%</div>
+    <div class="qrow"><span>Q7</span><div class="stack"><i style="width:66%"></i><s style="width:34%"></s></div>66%</div>
+    <div class="qrow"><span>…</span><span class="muted" style="width:auto">Q8, Q9, Q10, Q13, Q15</span></div>
+  </div>
+
+  <div class="card wide"><b>Recent comments</b>
+    <div class="card" style="margin-top:8px"><b>Q12: 2</b> · Priya S. · Dio · 13 Nov<br>"Delivery was slightly delayed and the bike was not washed."</div>
+    <div class="card" style="margin-top:8px"><b>Q12: 5</b> · Arun V. · Shine · 11 Nov<br>"Good service, advisor explained everything."</div>
+    <div class="card" style="margin-top:8px"><b>Q12: 1</b> · CUST-014 · Unicorn · 8 Nov<br>"Same brake noise came back after one day."</div>
+  </div>
+
+  <div class="card"><b>Loading state</b> <span class="muted">(skeleton loader shown in every block while data loads)</span>
+    <div class="skel" style="width:80%"></div><div class="skel" style="width:60%"></div><div class="skel" style="width:70%"></div>
+  </div>
+  </div>
+</main>
+</div>
+<div class="tabs"><div class="on">Overview</div><div>Alerts <span class="cnt">4</span></div><div>Responses</div><div>More</div></div>
+</body></html>

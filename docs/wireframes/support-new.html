@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · support-new (/support/new)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#222;background:#fafafa;font-size:14px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #888;background:#eee}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.btn{display:block;width:100%;border:1px solid #444;border-radius:10px;padding:14px;min-height:48px;background:#e6e6e6;text-align:center;margin-top:10px;font-size:15px}
+.btn.primary{background:#444;color:#fff}.btn.wa{background:#333;color:#fff;border-width:2px}
+.input{border:1px solid #888;border-radius:8px;height:48px;padding:14px;background:#fff;color:#333;flex:1}
+.card{border:1px solid #888;border-radius:12px;padding:14px;background:#fff;margin-top:14px}
+dl{display:grid;grid-template-columns:110px 1fr;gap:6px;margin:0}dt{color:#666}dd{margin:0;font-weight:bold}
+.link{border:1px dashed #555;border-radius:8px;padding:12px;background:#eee;word-break:break-all;font-family:monospace}
+.err{border:1px dashed #555;background:#eee;padding:10px;border-radius:8px;margin-top:10px}
+.muted{color:#666;font-size:12px}.tag{border:1px solid #777;border-radius:10px;padding:2px 8px;font-size:11px;background:#ddd}
+.badge{border:1px solid #555;border-radius:10px;padding:2px 8px;font-size:12px;background:#eee}
+.row{display:flex;gap:8px;align-items:center}
+@media(min-width:900px){.cols{display:grid;grid-template-columns:1fr 1fr;gap:24px}.row2{display:flex;gap:10px}.row2 .btn{flex:1}}
+</style></head><body>
+<div class="top"><b>&larr; My feedback links</b> <span><span class="tag">Demo — sample data</span> &nbsp; Support 1 · <u>Sign out</u></span></div>
+<div class="wrap">
+  <h2 style="margin:4px 0 12px">New feedback link</h2>
+  <div class="cols">
+  <div>
+    <label class="muted">Job card number</label>
+    <div class="row" style="margin-top:4px"><div class="input">JC-24-1042</div><div class="btn" style="width:auto;margin:0">Look up</div></div>
+    <div class="err">Job card not found. Check the number on the job card. <span class="muted">(state: JC-99-0000)</span></div>
+
+    <div class="card">
+      <b>Customer &amp; vehicle</b> <span class="muted">(autofilled from DMS)</span>
+      <dl style="margin-top:10px">
+        <dt>Name</dt><dd>Ramesh Kumar</dd>
+        <dt>Phone</dt><dd>+91 98400 12345</dd>
+        <dt>Reg. no</dt><dd>TN 09 BX 4521</dd>
+        <dt>Model</dt><dd>Activa 6G</dd>
+        <dt>Vehicle type</dt><dd>Scooter</dd>
+        <dt>Service</dt><dd>Paid service</dd>
+        <dt>Service date</dt><dd>14 Nov 2026</dd>
+        <dt>Advisor</dt><dd>Suresh</dd>
+      </dl>
+    </div>
+    <div class="btn primary">Generate link</div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><b>Feedback link</b><span class="badge">Created · expires 28 Nov 2026</span></div>
+      <div class="link" style="margin-top:10px">https://&lt;domain&gt;/f/k3Jx9…Qe</div>
+      <div class="row2">
+        <div class="btn wa">[WhatsApp icon] Send on WhatsApp</div>
+        <div class="btn">Copy link</div>
+      </div>
+      <p class="muted">After Copy: button reads "Copied". WhatsApp button is green in the real UI.</p>
+    </div>
+    <div class="card">
+      <b>State: link already exists for this job card</b>
+      <p>A link was already sent for JC-24-1042 <span class="badge">Opened</span></p>
+      <div class="row2"><div class="btn">Resend</div><div class="btn">Regenerate</div></div>
+    </div>
+    <div class="card">
+      <b>State: feedback completed</b>
+      <p>Feedback already received for JC-24-1031. No new link needed.</p>
+    </div>
+  </div>
+  </div>
+</div>
+</body></html>

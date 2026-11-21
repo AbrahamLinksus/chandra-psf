@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · form-states (expired / already submitted / invalid / not allowed)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#222;background:#f0f0f0;font-size:15px}
+.grid{max-width:1200px;margin:0 auto;padding:12px}
+.card{max-width:560px;margin:0 auto 16px;background:#fff;border:1px solid #888;border-radius:16px;padding:28px 20px;text-align:center}
+.icon{width:72px;height:72px;border:2px solid #555;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:#e4e4e4;font-size:11px}
+.contact{border:1px solid #aaa;border-radius:10px;padding:12px;background:#f2f2f2;margin-top:14px}
+.btn{display:inline-block;border:1px solid #333;border-radius:12px;padding:14px 20px;min-height:48px;background:#e6e6e6}
+.lab{color:#555;font-size:12px;margin:0 0 8px;text-align:left}
+@media(min-width:900px){.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{margin:0}}
+</style></head><body>
+<div class="grid">
+  <div class="card"><p class="lab">form-expired (link &gt; 7 days old or regenerated)</p>
+    <div class="icon">[clock]</div>
+    <h2>Link expired</h2>
+    <p>This feedback link has expired. Please contact Chandra Honda.</p>
+    <div class="contact">Chandra Honda service desk<br><b>[dealership phone]</b> · [address line]</div>
+  </div>
+
+  <div class="card"><p class="lab">form-already-submitted</p>
+    <div class="icon">[tick]</div>
+    <h2>Thank you — already submitted</h2>
+    <p>We've already received your feedback for this service visit.</p>
+    <div class="contact">Chandra Honda service desk<br><b>[dealership phone]</b> · [address line]</div>
+  </div>
+
+  <div class="card"><p class="lab">form-invalid (unknown token)</p>
+    <div class="icon">[broken link]</div>
+    <h2>Link not valid</h2>
+    <p>We couldn't find this feedback link. Please check the link in your WhatsApp message.</p>
+    <div class="contact">Chandra Honda service desk<br><b>[dealership phone]</b> · [address line]</div>
+  </div>
+
+  <div class="card"><p class="lab">not-allowed (support user opens an /admin page)</p>
+    <div class="icon">[lock]</div>
+    <h2>Not allowed</h2>
+    <p>You don't have access to this page.</p>
+    <div class="btn">Back to My feedback links</div>
+  </div>
+</div>
+</body></html>

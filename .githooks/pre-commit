@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Fast checks before commit. Full gate: scripts/check.sh
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+export PATH="$PWD/.tools:$PATH"
+pnpm exec eslint .
+pnpm exec prettier --check .
+pnpm exec tsc --noEmit
+pnpm exec depcruise src --config .dependency-cruiser.cjs
+if command -v gitleaks >/dev/null 2>&1; then gitleaks protect --staged --redact; fi

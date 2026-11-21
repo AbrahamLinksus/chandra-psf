@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · sign-in</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#222;background:#fafafa;font-size:14px}
+.wrap{max-width:420px;margin:0 auto;padding:24px 16px}
+.box{border:1px solid #888;border-radius:12px;padding:16px;background:#fff;margin-bottom:16px}
+.btn{display:block;width:100%;border:1px solid #444;border-radius:10px;padding:14px;min-height:48px;background:#e6e6e6;text-align:center;margin:8px 0;font-size:15px}
+.btn.primary{background:#444;color:#fff}
+label{display:block;font-size:12px;color:#555;margin-top:10px}
+.input{border:1px solid #888;border-radius:8px;height:48px;padding:14px;background:#fff;color:#777;margin-top:4px}
+.err{border:1px dashed #555;background:#eee;padding:10px;border-radius:8px;margin-top:10px}
+.muted{color:#666;font-size:12px}.tag{border:1px solid #777;border-radius:10px;padding:2px 8px;font-size:11px;background:#eee}
+.logo{width:56px;height:56px;border:1px solid #888;background:#ddd;border-radius:12px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:10px}
+.dialog{border:2px solid #333;border-radius:12px;padding:16px;background:#fff}
+.row{display:flex;gap:8px}.row .btn{flex:1}
+@media(min-width:900px){.page{display:flex;gap:32px;max-width:960px;margin:40px auto;align-items:flex-start}.wrap{flex:1}}
+</style></head><body>
+<div class="page">
+<div class="wrap">
+  <div style="text-align:center;margin-bottom:16px">
+    <div class="logo">[app]</div>
+    <h2 style="margin:4px 0">Chandra Honda · Feedback</h2>
+    <span class="tag">Demo — sample data</span>
+  </div>
+
+  <div class="box">
+    <h3 style="margin-top:0">Quick sign-in (demo)</h3>
+    <div class="btn primary">Sign in as Admin</div>
+    <div class="btn">Sign in as Support 1</div>
+    <div class="btn">Sign in as Support 2</div>
+  </div>
+
+  <div class="box">
+    <h3 style="margin-top:0">Sign in with email</h3>
+    <label>Email</label><div class="input">support1@chandrahonda.demo</div>
+    <label>Password</label><div class="input">••••••••</div>
+    <div class="err">Email or password is incorrect</div>
+    <div class="muted" style="margin-top:4px">(other error state: "Account disabled, contact admin")</div>
+    <div class="btn primary" style="margin-top:14px">Sign in</div>
+    <p class="muted">Demo password: shown here as a hint for presenters</p>
+  </div>
+
+  <p style="text-align:center"><u>Reset demo data</u></p>
+</div>
+
+<div class="wrap">
+  <p class="muted">State: "Reset demo data" tapped (reset-dialog)</p>
+  <div class="dialog">
+    <h3 style="margin-top:0">Reset all demo data?</h3>
+    <p>Every link, response, alert, user and audit entry made in this browser is lost.</p>
+    <div class="row"><div class="btn">Cancel</div><div class="btn primary">Reset</div></div>
+  </div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,13 @@
+.next
+node_modules
+coverage
+playwright-report
+test-results
+.tools
+.results
+pnpm-lock.yaml
+src/data/seed/seed.json
+src/components/ui
+docs
+data
+*.md

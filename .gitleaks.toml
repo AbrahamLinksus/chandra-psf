@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Untracked/generated directories"
+paths = ['''(^|/)node_modules/''', '''(^|/)\.next/''', '''(^|/)\.tools/''', '''(^|/)coverage/''', '''(^|/)playwright-report/''', '''(^|/)test-results/''', '''(^|/)\.results/''', '''(^|/)\.git/''']

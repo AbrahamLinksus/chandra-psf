@@ -1,0 +1,8 @@
+{
+  "_comment": "Root-level Next.js app (src/, scripts/, tests/) fits the plugin defaults; this only adds the Playwright config to the gate files that code-writing roles may not change.",
+  "agents": {
+    "frontend-coder": { "deny": ["playwright.config.*"] },
+    "backend-coder": { "deny": ["playwright.config.*"] },
+    "debugger": { "deny": ["playwright.config.*"] }
+  }
+}

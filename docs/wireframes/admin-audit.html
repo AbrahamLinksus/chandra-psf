@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · admin-audit (/admin/audit)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#222;background:#fafafa;font-size:14px}
+.app{display:flex;min-height:100vh}.side{display:none}
+.side a{display:flex;justify-content:space-between;padding:12px;border-radius:8px}.side a.on{background:#ccc;font-weight:bold}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;border-top:1px solid #888;background:#eee;z-index:5}
+.tabs div{flex:1;text-align:center;padding:10px 0;min-height:56px;font-size:12px}.tabs .on{font-weight:bold;background:#ccc}
+.cnt{display:inline-block;border:1px solid #444;border-radius:10px;padding:0 6px;font-size:11px;background:#fff}
+main{flex:1;padding:16px 16px 80px;min-width:0}
+.tag{border:1px solid #777;border-radius:10px;padding:2px 8px;font-size:11px;background:#ddd}
+.sel{display:inline-block;border:1px solid #888;border-radius:8px;padding:10px 12px;min-height:44px;background:#fff;margin:8px 0}
+.card{border:1px solid #888;border-radius:12px;padding:12px;background:#fff;margin-top:10px}
+.mono{font-family:monospace;font-size:12px;background:#eee;padding:6px;border-radius:6px;margin-top:6px;word-break:break-all}
+.muted{color:#666;font-size:12px}
+table{display:none;width:100%;border-collapse:collapse;background:#fff}th,td{border-bottom:1px solid #ccc;padding:10px;text-align:left;vertical-align:top}th{background:#e6e6e6}
+@media(min-width:900px){.side{display:block;width:230px;border-right:1px solid #888;background:#eee;padding:16px;flex-shrink:0}.tabs{display:none}main{padding:24px}.cards{display:none}table{display:table}}
+</style></head><body>
+<div class="app">
+<nav class="side"><b>Chandra Honda · Feedback</b><p><span class="tag">Demo — sample data</span></p>
+  <a>Overview</a><a>Alerts <span class="cnt">4</span></a><a>Responses</a><a>Recently deleted</a><a class="on">Audit log</a><a>Users</a><hr><a>Reset demo data</a><a>Sign out (Admin)</a></nav>
+<main>
+  <h2 style="margin:0">Audit log</h2>
+  <div class="sel">Action: All ▾</div> <span class="muted">Newest first · read-only</span>
+
+  <div class="cards">
+    <div class="card"><b>admin · alert.status</b><div class="muted">22 Nov 2026, 12:10 IST · Alert · Priya S.</div>
+      <div class="mono">open → contacted · note: "Called, bike rechecked 22 Nov"</div></div>
+    <div class="card"><b>admin · response.restore</b><div class="muted">21 Nov 2026, 11:15 IST · Response · CUST-014</div></div>
+    <div class="card"><b>admin · response.delete</b><div class="muted">21 Nov 2026, 11:02 IST · Response · CUST-014</div>
+      <div class="mono">old {Q1:1, Q12:1, Q15:"Yes", …} → (deleted)</div></div>
+    <div class="card"><b>admin · response.edit</b><div class="muted">20 Nov 2026, 17:30 IST · Response · Priya S.</div>
+      <div class="mono">old {Q6:2, Q6a:["Rude"]} → new {Q6:4}</div></div>
+    <div class="card"><b>admin · user.create</b><div class="muted">19 Nov 2026, 10:00 IST · User · support3@chandrahonda.demo</div></div>
+  </div>
+
+  <table>
+    <tr><th>Time (IST)</th><th>Actor</th><th>Action</th><th>Entity</th><th>Old → New</th></tr>
+    <tr><td>22 Nov 2026, 12:10</td><td>admin</td><td>alert.status</td><td>Alert · Priya S.</td><td><span class="mono">open → contacted · note: "Called, bike rechecked 22 Nov"</span></td></tr>
+    <tr><td>21 Nov 2026, 11:15</td><td>admin</td><td>response.restore</td><td>Response · CUST-014</td><td>—</td></tr>
+    <tr><td>21 Nov 2026, 11:02</td><td>admin</td><td>response.delete</td><td>Response · CUST-014</td><td><span class="mono">{Q1:1, Q12:1, Q15:"Yes", …} → (deleted)</span></td></tr>
+    <tr><td>20 Nov 2026, 17:30</td><td>admin</td><td>response.edit</td><td>Response · Priya S.</td><td><span class="mono">{Q6:2, Q6a:["Rude"]} → {Q6:4}</span></td></tr>
+    <tr><td>19 Nov 2026, 10:00</td><td>admin</td><td>user.create</td><td>User · support3@chandrahonda.demo</td><td>—</td></tr>
+  </table>
+  <p class="muted">No edit or delete controls on this page.</p>
+</main></div>
+<div class="tabs"><div>Overview</div><div>Alerts <span class="cnt">4</span></div><div>Responses</div><div class="on">More</div></div>
+</body></html>

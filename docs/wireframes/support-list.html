@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · support-list (/support)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#222;background:#fafafa;font-size:14px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #888;background:#eee}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.btn{display:inline-block;border:1px solid #444;border-radius:10px;padding:12px 14px;min-height:48px;background:#e6e6e6;text-align:center;font-size:14px}
+.btn.primary{background:#444;color:#fff}.btn.big{display:block;width:100%;font-size:17px;padding:16px}
+.btn.sm{min-height:40px;padding:8px 10px;font-size:13px}
+.input{border:1px solid #888;border-radius:8px;height:48px;padding:14px;background:#fff;color:#777}
+.badge{border:1px solid #555;border-radius:10px;padding:2px 8px;font-size:12px;background:#eee;white-space:nowrap}
+.badge.done{background:#bbb}.badge.exp{border-style:dashed}
+.card{border:1px solid #888;border-radius:12px;padding:12px;background:#fff;margin-top:10px}
+.line{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.muted{color:#666;font-size:12px}.tag{border:1px solid #777;border-radius:10px;padding:2px 8px;font-size:11px;background:#ddd}
+table{display:none;width:100%;border-collapse:collapse;background:#fff;margin-top:12px}
+th,td{border-bottom:1px solid #bbb;padding:10px;text-align:left}th{background:#e6e6e6}
+@media(min-width:900px){.cards{display:none}table{display:table}.btn.big{display:inline-block;width:auto}.tools{display:flex;gap:12px;align-items:center}.tools .input{flex:1}}
+</style></head><body>
+<div class="top"><b>Chandra Honda · Feedback</b> <span><span class="tag">Demo — sample data</span> &nbsp; Support 1 · <u>Sign out</u></span></div>
+<div class="wrap">
+  <h2 style="margin:4px 0 12px">My feedback links</h2>
+  <div class="tools">
+    <div class="btn primary big">+ New feedback link</div>
+    <div class="input" style="margin-top:10px">Search job card / reg. no — e.g. JC-24-1042</div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="line"><b>Ramesh Kumar</b><span class="badge">Created</span></div>
+      <div class="muted">TN 09 BX 4521 · Activa 6G · JC-24-1042 · 14 Nov 2026</div>
+      <div style="margin-top:8px"><span class="btn sm">Resend</span> <span class="btn sm">Regenerate</span></div></div>
+    <div class="card"><div class="line"><b>Priya S.</b><span class="badge">Opened</span></div>
+      <div class="muted">TN 22 CK 7810 · Dio · JC-24-1038 · 13 Nov 2026</div>
+      <div style="margin-top:8px"><span class="btn sm">Resend</span> <span class="btn sm">Regenerate</span></div></div>
+    <div class="card"><div class="line"><b>Arun V.</b><span class="badge done">Completed</span></div>
+      <div class="muted">TN 07 AZ 1123 · Shine · JC-24-1031 · 11 Nov 2026</div></div>
+    <div class="card"><div class="line"><b>Lakshmi R.</b><span class="badge exp">Expired</span></div>
+      <div class="muted">TN 10 BB 3390 · SP125 · JC-24-0987 · 10 Nov 2026</div>
+      <div style="margin-top:8px"><span class="btn sm">Regenerate</span></div></div>
+  </div>
+
+  <table>
+    <tr><th>Customer</th><th>Reg. no</th><th>Model</th><th>Job card</th><th>Service date</th><th>Status</th><th>Actions</th></tr>
+    <tr><td>Ramesh Kumar</td><td>TN 09 BX 4521</td><td>Activa 6G</td><td>JC-24-1042</td><td>14 Nov 2026</td><td><span class="badge">Created</span></td><td><span class="btn sm">Resend</span> <span class="btn sm">Regenerate</span></td></tr>
+    <tr><td>Priya S.</td><td>TN 22 CK 7810</td><td>Dio</td><td>JC-24-1038</td><td>13 Nov 2026</td><td><span class="badge">Opened</span></td><td><span class="btn sm">Resend</span> <span class="btn sm">Regenerate</span></td></tr>
+    <tr><td>Arun V.</td><td>TN 07 AZ 1123</td><td>Shine</td><td>JC-24-1031</td><td>11 Nov 2026</td><td><span class="badge done">Completed</span></td><td>—</td></tr>
+    <tr><td>Lakshmi R.</td><td>TN 10 BB 3390</td><td>SP125</td><td>JC-24-0987</td><td>10 Nov 2026</td><td><span class="badge exp">Expired</span></td><td><span class="btn sm">Regenerate</span></td></tr>
+  </table>
+  <p class="muted">No ratings, answers or comments are shown to support. Status badges are coloured in the real UI (Created · Opened · Completed · Expired).</p>
+  <p class="muted">Empty state: "No links yet — tap New feedback link to send your first one."</p>
+</div>
+</body></html>
