@@ -18,6 +18,7 @@ const eslintConfig = [
       ".tools/**",
       "src/components/ui/**",
       "next-env.d.ts",
+      "src/data/seed/seed.json",
     ],
   },
   ...nextVitals,

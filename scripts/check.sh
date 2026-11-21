@@ -6,6 +6,16 @@ cd "$(dirname "$0")/.."
 export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="${PLAYWRIGHT_HOST_PLATFORM_OVERRIDE:-ubuntu24.04-x64}"
 export PATH="$PWD/.tools:$PATH"
 
+# Fresh clones have no env file (gitignored). The NEXT_PUBLIC_* keys are public demo
+# settings, so fall back to the values in the example file for this run only.
+if [ ! -f .env ] && [ ! -f .env.local ] && [ -f .env.example ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|'#'*) continue ;; esac
+    key="${line%%=*}"; val="${line#*=}"
+    [ -z "${!key+x}" ] && export "$key=$val"
+  done < .env.example
+fi
+
 failed=()
 run() {
   local name="$1"; shift
@@ -33,10 +43,14 @@ if find tests/e2e -type f \( -name '*.spec.ts' -o -name '*.spec.tsx' \) 2>/dev/n
 else
   echo "==> playwright: SKIPPED (no specs in tests/e2e yet)"
 fi
-if command -v gitleaks >/dev/null 2>&1; then
-  run "gitleaks" gitleaks detect --no-git --redact
+GITLEAKS=""
+if command -v gitleaks >/dev/null 2>&1; then GITLEAKS="$(command -v gitleaks)"
+elif [ -x "$HOME/.cache/chandra-psf/tools/gitleaks" ]; then GITLEAKS="$HOME/.cache/chandra-psf/tools/gitleaks"
+elif [ -x "$PWD/.tools/gitleaks" ]; then GITLEAKS="$PWD/.tools/gitleaks"; fi
+if [ -n "$GITLEAKS" ]; then
+  run "gitleaks" "$GITLEAKS" detect --no-git --redact
 else
-  echo "==> gitleaks: NOT FOUND (put the binary in .tools/ or on PATH)"; failed+=("gitleaks")
+  echo "==> gitleaks: NOT FOUND (PATH, ~/.cache/chandra-psf/tools/, or .tools/)"; failed+=("gitleaks")
 fi
 
 echo

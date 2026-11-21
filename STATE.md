@@ -11,16 +11,16 @@
 | Stage | 7 Build |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
-| Runners | TBD |
+| Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
-| Milestone | M1 · Support → customer loop (0/5 tasks) |
-| Next step | T-01 · backend-coder+frontend-coder · foundation |
+| Milestone | M1 · Support → customer loop (1/5 tasks) |
+| Next step | T-02 · sign-in, seed, reset |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-21 18:22 +05:30 |
+| Last updated | 2026-11-21 20:35 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -46,11 +46,17 @@ git config core.hooksPath .githooks          # once per clone (pre-commit hook)
 PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64 pnpm exec playwright install chromium   # Arch fallback
 pnpm dev                                     # http://localhost:8000
 CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
+# gitleaks v8.30.1 lives at ~/.cache/chandra-psf/tools/gitleaks (shared by all worktrees; new machine: copy it there)
 ```
 
 ## Known minors
 | Task | Where | Fix | Size |
 |---|---|---|---|
+| T-01 | docs/LLD.md (store.ts `read`) | LLD doc drift | ≈2 min |
+| T-01 | scripts/check.sh, playwright.config.ts | review minor #9 (gate files) | ≈3 min |
+| T-01 | src/hooks/useFiltersFromUrl.ts dateOf | regex accepts impossible dates (2026-13-45) | ≈2 min |
+| T-01 | src/data/local/repos/token.ts isPayload | Date.parse accepts loose formats | ≈2 min |
+| T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions
 | Role | Also read | Why (from gap report) |

@@ -1,0 +1,25 @@
+{
+  "users": [
+    { "id": "u-admin", "name": "Admin", "email": "admin@chandrahonda.demo", "role": "admin", "active": true, "mustSetPassword": false, "createdAt": { "dayOffset": -90, "minute": 600 } },
+    { "id": "u-support1", "name": "Support 1", "email": "support1@chandrahonda.demo", "role": "support", "active": true, "mustSetPassword": false, "createdAt": { "dayOffset": -90, "minute": 601 } },
+    { "id": "u-support2", "name": "Support 2", "email": "support2@chandrahonda.demo", "role": "support", "active": true, "mustSetPassword": false, "createdAt": { "dayOffset": -90, "minute": 602 } }
+  ],
+  "advisors": [{ "id": "a-suresh", "name": "Suresh" }],
+  "jobCards": [
+    {
+      "jobCardNo": "JC-24-1042",
+      "customerName": "Ramesh Kumar",
+      "phone": "+91 98400 12345",
+      "regNo": "TN 09 BX 4521",
+      "model": "Activa 6G",
+      "vehicleType": "scooter",
+      "serviceType": "Paid service",
+      "serviceDate": { "dayOffset": -7, "minute": 0 },
+      "advisorId": "a-suresh"
+    }
+  ],
+  "visits": [],
+  "responses": [],
+  "alerts": [],
+  "audit": []
+}

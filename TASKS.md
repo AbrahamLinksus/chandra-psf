@@ -18,7 +18,7 @@ wire-up task at the end, not an edit inside each feature.
 
 Size: medium (cap 15) · 12 tasks · production gate: `docs/PRODUCTION.md`
 
-Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/app/providers.tsx, src/app/globals.css, src/app/admin/layout.tsx, src/app/support/layout.tsx, src/components/ui/**, src/components/shared/**, src/hooks/**, src/data/access/**, src/data/local/{store,bus,fault,crypto,seed,createLocalDataAccess}.ts, src/data/local/repos/token.ts, src/data/local/repos/auditWriter.ts, src/domain/{types,schemas,questionnaire,answers,time,visitStatus,constants,visibility,alertRules}.ts, src/config/env.ts, tests/support/**, gate configs (tsconfig.json, eslint.config.mjs, prettier config, .dependency-cruiser.cjs, vitest.config.ts, playwright.config.ts, postcss.config.mjs, components.json, scripts/check.sh, .env.example)
+Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/app/providers.tsx, src/app/globals.css, src/app/admin/layout.tsx, src/app/support/layout.tsx, src/components/ui/**, src/components/shared/**, src/hooks/**, src/data/access/**, src/data/local/store.ts, src/data/local/bus.ts, src/data/local/fault.ts, src/data/local/crypto.ts, src/data/local/seed.ts, src/data/local/createLocalDataAccess.ts, src/data/local/db.ts, src/data/local/ids.ts, src/data/local/repoDeps.ts, src/data/local/results.ts, src/data/local/session.ts, src/data/local/repos/token.ts, src/data/local/repos/auditWriter.ts, src/domain/types.ts, src/domain/schemas.ts, src/domain/questionnaire.ts, src/domain/answers.ts, src/domain/time.ts, src/domain/visitStatus.ts, src/domain/constants.ts, src/domain/visibility.ts, src/domain/alertRules.ts, src/config/env.ts, tests/support/**, gate configs (tsconfig.json; eslint.config.mjs; prettier config; .dependency-cruiser.cjs; vitest.config.ts; playwright.config.ts; postcss.config.mjs; components.json; scripts/check.sh; .env.example)
 
 > Planner additions to the LLD frozen list (shared by 2+ slices, so built by the foundation):
 > `src/domain/constants.ts` (CONVENTIONS §5), `src/domain/visibility.ts` (form + responses editor),
@@ -33,17 +33,17 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-01 · Foundation: app shell, data layer and shared UI
 - Owner: backend-coder, frontend-coder
 - Depends on: —
-- Files: package.json, pnpm-lock.yaml, next.config.ts, tsconfig.json, eslint.config.mjs, .prettierrc*, .prettierignore, .dependency-cruiser.cjs, vitest.config.ts, playwright.config.ts, postcss.config.mjs, components.json, scripts/check.sh, .env.example, src/config/env.ts, src/domain/{types,schemas,questionnaire,answers,time,visitStatus,constants,visibility,alertRules}.ts, src/data/access/**, src/data/local/{store,bus,fault,crypto,seed,createLocalDataAccess}.ts, src/data/local/repos/auditWriter.ts, src/data/local/repos/** (stubs), src/data/seed/seed.json, src/hooks/**, src/components/ui/**, src/components/shared/**, src/app/** (layout, providers, globals.css, page, robots, not-found, not-allowed, admin/support layouts, placeholder page.tsx for every LLD §0.2 route), tests/support/**, tests/unit/foundation/**, tests/e2e/foundation/**
+- Files: package.json, pnpm-lock.yaml, next.config.ts, tsconfig.json, eslint.config.mjs, .prettierrc*, .prettierignore, .dependency-cruiser.cjs, vitest.config.ts, playwright.config.ts, postcss.config.mjs, components.json, scripts/check.sh, .env.example, src/config/env.ts, src/domain/types.ts, src/domain/schemas.ts, src/domain/questionnaire.ts, src/domain/answers.ts, src/domain/time.ts, src/domain/visitStatus.ts, src/domain/constants.ts, src/domain/visibility.ts, src/domain/alertRules.ts, src/data/access/**, src/data/local/store.ts, src/data/local/bus.ts, src/data/local/fault.ts, src/data/local/crypto.ts, src/data/local/seed.ts, src/data/local/createLocalDataAccess.ts, src/data/local/repos/auditWriter.ts, src/data/local/db.ts, src/data/local/ids.ts, src/data/local/repoDeps.ts, src/data/local/results.ts, src/data/local/session.ts, src/data/local/repos/** (stubs), src/data/seed/seed.json, src/hooks/**, src/components/ui/**, src/components/shared/**, src/app/** (layout; providers; globals.css; page; robots; not-found; not-allowed; admin/support layouts; placeholder page.tsx for every LLD §0.2 route), tests/support/**, tests/unit/foundation/**, tests/e2e/foundation/**
 - Context: SPEC §0, §7 (Navigation, Visual system), §4 Rules for every flow · LLD §0.2, §0.3, §0.4, §0.5, §1.1, §1.2, §1.3, §1.5 (visitStatus, time), §2, §3, §4 (Runtime), §5, §6, §9 (Token) · docs/CONVENTIONS.md · files: /AGENTS.md
 - Why separate: the single foundation; every slice builds on its frozen interfaces.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] `pnpm dev` → `/` redirects to `/sign-in` (placeholder with the "Demo — sample data" label); with a test session `/admin` shows the AdminShell (sidebar at 1440 px, bottom tab bar at 360 px, every nav item opens a placeholder page), a support session on `/admin` shows "You don't have access to this page", and an unknown URL shows a friendly not-found page with no stack trace (G-W7)
   - [ ] Every LLD §2.2 repo method exists with its LLD signature and returns `UNAVAILABLE` "Not built yet"; `token.ts` encode → decode round-trips; unit tests cover every SPEC F-3 trigger in `visibility` and the alert rules (Q12 = 1 + Q15 = Yes → "Callback requested · Q12 rated 1"; Q3 = Yes alone → none; `reconcileAlert` auto-resolve note text)
   - [ ] Data written through the store is still there after a page reload and from a new store instance (G-02); two tabs writing at once never drop each other's data and a write in one tab refreshes queries in the other (S-06)
   - [ ] With `?demoFail=1` the next write returns `SAVE_FAILED` and `SaveState` shows "Couldn't save, try again" with Retry (S-13)
   - [ ] `scripts/check.sh` runs every CONVENTIONS §6 check and passes (seed check skipped until `scripts/build-seed.ts` exists; `pnpm seed` script declared); gitleaks clean; `.env.example` lists the three LLD §0.5 keys and only `env.ts` reads them (G-04); robots disallow all + noindex meta; `tests/support` provides in-memory Storage, fixed Clock, `signInAs` (sets the session without the UI), `resetDemo`, `openSecondTab`; the minimal `seed.json` (1 admin, 2 support, 1 advisor, `JC-24-1042`) passes `SeedSchema`
-- Result: —
+- Result: foundation built · 117 unit + 16 e2e · coverage 95% · review 0 crit/0 major · ≈$0.00
 
 ### T-02 · Sign in to the seeded demo, set a password, reset the demo
 - Owner: backend-coder, frontend-coder
@@ -63,7 +63,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-03 · Support: look up a job card, send the link on WhatsApp, manage my links
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/domain/{jobCard,phone,whatsapp}.ts, src/data/local/repos/{jobCards,visits}.ts, src/features/support/**, src/app/support/page.tsx, src/app/support/new/**, tests/unit/support/**, tests/e2e/support/**
+- Files: src/domain/jobCard.ts, src/domain/phone.ts, src/domain/whatsapp.ts, src/data/local/repos/jobCards.ts, src/data/local/repos/visits.ts, src/features/support/**, src/app/support/page.tsx, src/app/support/new/**, tests/unit/support/**, tests/e2e/support/**
 - Context: SPEC US-02, US-03, US-04, US-05, US-06, F-2, §5 F-2 rows · LLD §1.5, §2, §5, §6, §8 · files: src/data/local/repos/{token,auditWriter}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own screens (`/support`, `/support/new`) and repos; independent of the form and admin slices.
 - Status: Backlog
@@ -153,7 +153,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-09 · Audit log
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/data/local/repos/audit.ts (read side, listAudit only), src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/admin-audit/**, tests/e2e/admin-audit/**
+- Files: src/data/local/repos/audit.ts (read side; listAudit only), src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/admin-audit/**, tests/e2e/admin-audit/**
 - Context: SPEC US-19, F-6 step 5 · LLD §1.1 (AuditEntry), §2, §5, §6 (EmptyState), §13 · files: src/data/local/repos/{audit,auditWriter}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own route and read-only repo method; small but independent of every other admin slice.
 - Status: Backlog
