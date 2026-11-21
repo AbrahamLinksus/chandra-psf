@@ -59,7 +59,7 @@ export function SetPasswordScreen() {
           />
         </div>
         {problem !== null && (
-          <p role="alert" className="text-danger text-sm">
+          <p role="alert" className="text-sm text-danger">
             {problem}
           </p>
         )}

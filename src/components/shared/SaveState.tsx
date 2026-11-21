@@ -23,7 +23,7 @@ export function SaveState({ status, error, onRetry }: SaveStateProps) {
       ? "Couldn't save, try again"
       : error.message;
   return (
-    <div role="alert" className="text-danger flex flex-wrap items-center gap-3 text-sm">
+    <div role="alert" className="flex flex-wrap items-center gap-3 text-sm text-danger">
       <span>{message}</span>
       <Button type="button" variant="outline" className="h-12" onClick={onRetry}>
         Retry

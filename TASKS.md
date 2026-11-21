@@ -63,10 +63,11 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-01s · Shared change: dealership red accent tokens
 - Owner: frontend-coder
 - Depends on: T-01
-- Files: src/app/globals.css
+- Files: src/app/globals.css, src/components/shared/ConfirmDialog.tsx, src/components/shared/DemoLabel.tsx, src/components/shared/PasswordPromptDialog.tsx, src/components/shared/SaveState.tsx, src/features/auth/CredentialsForm.tsx, src/features/auth/SetPasswordScreen.tsx (prettier class re-sort only)
 - Context: SPEC §7 Visual system (SPEC-input §12 colour rules) · LLD §6 · docs/CONVENTIONS.md
 - Why separate: globals.css is frozen; owner asked (T-02 card) for the red accent before round 3.
-- Status: Backlog
+- Status: Done
+- Result: Honda red primary + success/warning/danger tokens, AA contrast · review batched at M1 end · cost not measured
 - Acceptance criteria:
   - [ ] `--primary` (buttons, progress, highlights, focus ring) is the dealership red with WCAG AA contrast for its foreground text; neutrals stay slate/white; status tokens success/warning/danger (green/amber/red) are defined and distinct from the brand red; dark-mode token block kept
   - [ ] Screenshots of sign-in and admin shell at 360 and 1440 show red primary buttons; check.sh passes
@@ -77,7 +78,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/domain/jobCard.ts, src/domain/phone.ts, src/domain/whatsapp.ts, src/data/local/repos/jobCards.ts, src/data/local/repos/visits.ts, src/features/support/**, src/app/support/page.tsx, src/app/support/new/**, tests/unit/support/**, tests/e2e/support/**
 - Context: SPEC US-02, US-03, US-04, US-05, US-06, F-2, §5 F-2 rows · LLD §1.5, §2, §5, §6, §8 · files: src/data/local/repos/{token,auditWriter}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own screens (`/support`, `/support/new`) and repos; independent of the form and admin slices.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] `JC-24-1042` autofills the SPEC §5 row (Ramesh Kumar · +91 98400 12345 · TN 09 BX 4521 · Activa 6G · Scooter · Paid service · 14 Nov · Suresh) (AC-1); ` jc241042` and `JC 24 1042` find it (S-02); `JC-99-0000` → "Job card not found. Check the number on the job card." and an empty input is blocked (G-01, G-05); the hint lists the fresh seeded job cards (S-07)
   - [ ] Generate → a `/f/<token>` link that opens the customer form for that visit, status Created, expiry 7 days (AC-2); Send on WhatsApp opens exactly the SPEC §5 `wa.me` URL; Copy link shows "Copied" (S-01)
@@ -92,7 +93,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/data/local/repos/feedback.ts, src/features/feedback-form/**, src/app/f/**, tests/unit/feedback-form/**, tests/e2e/feedback-form/**
 - Context: SPEC US-07, US-08, US-09, US-10, US-11, US-12, F-3, F-4 step 1, §5 F-3 rows · LLD §1.2, §1.3, §2, §5, §9 · files: src/domain/{questionnaire,visibility,alertRules}.ts, src/data/local/repos/token.ts, src/components/shared/*, /AGENTS.md
 - Why separate: the public `/f/[token]` flow with its own repo; needs no staff screens.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Welcome reads "Hi Ramesh Kumar, how was your Activa 6G's service on 14 Nov?" + "Takes about 2 minutes" and sets the visit to Opened (AC-3); steps show "Step n of 6", faces with label, Yes/No chips, Next disabled until the step is complete, Back keeps answers, tap targets ≥ 48 px, usable at 360 px (AC-11)
   - [ ] Every SPEC F-3 trigger slides its follow-up open/closed; Q1 = 2 opens Q1a; Q7 No → Yes hides Q7a and Q7a is not saved; reloading on step 4 restores answers (S-04, AC-4)

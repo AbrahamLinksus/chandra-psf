@@ -52,7 +52,7 @@ export function CredentialsForm({ busy, error, onSubmit }: Props) {
         />
       </div>
       {error !== null && (
-        <p role="alert" className="text-danger text-sm">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}

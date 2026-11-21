@@ -51,7 +51,7 @@ export function ConfirmDialog({
           <AlertDialogCancel className="h-12">Cancel</AlertDialogCancel>
           <AlertDialogAction
             className={
-              destructive === true ? "bg-danger hover:bg-danger/90 h-12 text-white" : "h-12"
+              destructive === true ? "h-12 bg-danger text-white hover:bg-danger/90" : "h-12"
             }
             onClick={(e) => {
               e.preventDefault();

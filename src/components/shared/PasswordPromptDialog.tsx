@@ -81,7 +81,7 @@ export function PasswordPromptDialog({
               aria-invalid={message !== null}
             />
             {message !== null && (
-              <p role="alert" className="text-danger text-sm">
+              <p role="alert" className="text-sm text-danger">
                 {message}
               </p>
             )}
