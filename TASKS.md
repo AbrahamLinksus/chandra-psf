@@ -75,7 +75,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-03 · Support: look up a job card, send the link on WhatsApp, manage my links
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/domain/jobCard.ts, src/domain/phone.ts, src/domain/whatsapp.ts, src/data/local/repos/jobCards.ts, src/data/local/repos/visits.ts, src/features/support/**, src/app/support/page.tsx, src/app/support/new/**, tests/unit/support/**, tests/e2e/support/**
+- Files: src/domain/jobCard.ts, src/domain/phone.ts, src/domain/whatsapp.ts, src/data/local/repos/jobCards.ts, src/data/local/repos/visits.ts, src/features/support/**, src/app/support/page.tsx, src/app/support/new/**, tests/unit/support/**, tests/e2e/support/**, tests/unit/foundation/repos.test.ts, src/app/globals.css (whatsapp token, owner-approved rework), src/data/access/repos/visits.ts (VisitSummary ownership field)
 - Context: SPEC US-02, US-03, US-04, US-05, US-06, F-2, §5 F-2 rows · LLD §1.5, §2, §5, §6, §8 · files: src/data/local/repos/{token,auditWriter}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own screens (`/support`, `/support/new`) and repos; independent of the form and admin slices.
 - Status: In progress
@@ -90,7 +90,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-04 · Customer feedback form on a phone
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/data/local/repos/feedback.ts, src/features/feedback-form/**, src/app/f/**, tests/unit/feedback-form/**, tests/e2e/feedback-form/**
+- Files: src/data/local/repos/feedback.ts, src/features/feedback-form/**, src/app/f/**, tests/unit/feedback-form/**, tests/e2e/feedback-form/**, tests/unit/foundation/repos.test.ts
 - Context: SPEC US-07, US-08, US-09, US-10, US-11, US-12, F-3, F-4 step 1, §5 F-3 rows · LLD §1.2, §1.3, §2, §5, §9 · files: src/domain/{questionnaire,visibility,alertRules}.ts, src/data/local/repos/token.ts, src/components/shared/*, /AGENTS.md
 - Why separate: the public `/f/[token]` flow with its own repo; needs no staff screens.
 - Status: In progress

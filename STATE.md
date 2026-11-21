@@ -7,20 +7,20 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Active |
+| Status | Paused (owner: continue tomorrow) |
 | Stage | 7 Build |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
-| Milestone | M1 · Support → customer loop (2/5 tasks) |
-| Next step | T-01s brand red + round 3 (T-03, T-04, T-06) |
+| Milestone | M1 · Support → customer loop (3/6 tasks: T-01, T-02, T-01s done) |
+| Next step | Resume T-03 rework at `rework-frontend` and T-04 rework at `test+review` (fresh runners; see Notes) |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-21 21:07 +05:30 |
+| Last updated | 2026-11-21 22:08 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -69,3 +69,10 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 
 ## Notes for the next session
 - Owner's input spec is saved verbatim in docs/SPEC-input.md. Owner wants a dummy/clickable UI first, architected so it can be made "very interactive" later.
+
+- PAUSED 2026-11-21 22:08 +05:30. Both open tasks are mid-rework, branches checkpointed (wip/T-03, wip/T-04).
+  - T-03 rework (owner-approved): WhatsApp green token + icon, hide actions on another user's link (VisitSummary.isMine — backend DONE), truncate long URL, minors ≤5 min. Resume at `rework-frontend` (frontend-coder was stopped mid-step; check partial files), then test+review (Sonnet reviewer, rework diff only), sync. T-03 Files temporarily include src/app/globals.css and src/data/access/repos/visits.ts.
+  - T-04 rework (owner-approved): red progress/selected states, expired-mid-form → Expired page, close animation, grapheme-safe 1,000-char cut. Backend, frontend and debug rounds DONE. Resume at `test+review`: tester fixes 3 stale unit tests + adds regression tests; reviewer (Sonnet) on rework diff; sync; retake screenshots after animations settle.
+  - After both: M1 left = T-05 Vercel preview (owner must sign in to Vercel + link). T-06 (M2) waits until M1 ends.
+  - Cost tool (cost.py) reports $0 — costs shown as "not measured".
+  - Batch queue: empty. Known plugin quirks: guard splits Files on commas (no {a,b} or commas in parens); guard sometimes blocks harmless shell commands; check.sh needs PORT per task to avoid port 8000 collisions.
