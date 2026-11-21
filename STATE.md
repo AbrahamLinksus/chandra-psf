@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
-| Milestone | M1 · Support → customer loop (1/5 tasks) |
-| Next step | T-02 · sign-in, seed, reset |
+| Milestone | M1 · Support → customer loop (2/5 tasks) |
+| Next step | T-01s brand red + round 3 (T-03, T-04, T-06) |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-21 20:35 +05:30 |
+| Last updated | 2026-11-21 21:07 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -52,6 +52,9 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 ## Known minors
 | Task | Where | Fix | Size |
 |---|---|---|---|
+| T-02 | src/features/auth hooks | ['session'] query key hard-coded (use shared key) | ≈3 min |
+| T-02 | auth redirect | admin with mustSetPassword goes to /support after set-password | ≈3 min |
+| T-02 | src/data/local/repos/auth.ts | branch coverage 78.6% | ≈10 min |
 | T-01 | docs/LLD.md (store.ts `read`) | LLD doc drift | ≈2 min |
 | T-01 | scripts/check.sh, playwright.config.ts | review minor #9 (gate files) | ≈3 min |
 | T-01 | src/hooks/useFiltersFromUrl.ts dateOf | regex accepts impossible dates (2026-13-45) | ≈2 min |

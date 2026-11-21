@@ -43,22 +43,33 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] Data written through the store is still there after a page reload and from a new store instance (G-02); two tabs writing at once never drop each other's data and a write in one tab refreshes queries in the other (S-06)
   - [ ] With `?demoFail=1` the next write returns `SAVE_FAILED` and `SaveState` shows "Couldn't save, try again" with Retry (S-13)
   - [ ] `scripts/check.sh` runs every CONVENTIONS §6 check and passes (seed check skipped until `scripts/build-seed.ts` exists; `pnpm seed` script declared); gitleaks clean; `.env.example` lists the three LLD §0.5 keys and only `env.ts` reads them (G-04); robots disallow all + noindex meta; `tests/support` provides in-memory Storage, fixed Clock, `signInAs` (sets the session without the UI), `resetDemo`, `openSecondTab`; the minimal `seed.json` (1 admin, 2 support, 1 advisor, `JC-24-1042`) passes `SeedSchema`
-- Result: foundation built · 117 unit + 16 e2e · coverage 95% · review 0 crit/0 major · ≈$0.00
+- Result: foundation built · 117 unit + 16 e2e · coverage 95% · review 0 crit/0 major · cost not measured (cost tool returned $0)
 
 ### T-02 · Sign in to the seeded demo, set a password, reset the demo
 - Owner: backend-coder, frontend-coder
 - Depends on: T-01
-- Files: scripts/build-seed.ts, src/data/seed/seed.json, src/data/local/repos/auth.ts, src/data/local/repos/demo.ts, src/features/auth/**, src/app/sign-in/**, src/app/set-password/**, tests/unit/seed/**, tests/unit/auth/**, tests/e2e/auth/**
+- Files: scripts/build-seed.ts, scripts/seed/answers.ts, scripts/seed/data.ts, scripts/seed/entities.ts, data/seed/Honda_PSF_Survey_30_Dummy_Customer_Responses.xlsx, src/data/seed/seed.json, src/data/local/repos/auth.ts, src/data/local/repos/demo.ts, src/features/auth/**, src/app/sign-in/**, src/app/set-password/**, tests/unit/seed/**, tests/unit/auth/**, tests/e2e/auth/**
 - Context: SPEC US-01, US-20 (set-password part), US-22, F-1, F-8, §5 F-1/F-8 rows, §6 · LLD §1.1, §2, §3.1, §4, §5, §6 (RoleGuard, ResetDemoDialog), §7 · files: src/data/local/seed.ts, src/data/local/repos/{auth,demo}.ts, src/components/shared/*, data/seed/Honda_PSF_Survey_30_Dummy_Customer_Responses.xlsx, /AGENTS.md
 - Why separate: seed + sign-in is the data every other slice reads; kept apart so support, form and admin slices run in parallel after it.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] "Sign in as Support 1" → `/support`, "Sign in as Admin" → `/admin`; `support1@chandrahonda.demo` + demo password (shown as hint) works; wrong password → "Email or password is incorrect"; deactivated user → "Account disabled, contact admin" (G-01); passwords are stored only as hashes and Sign out ends the session (G-W1)
   - [ ] A user with `mustSetPassword` lands on "Set your password"; under 8 characters or a mismatch shows a message and saves nothing (G-05); Save → `/support`, audit `user.set_password` (S-15)
   - [ ] `pnpm seed` builds `seed.json` from the xlsx deterministically (`--check` passes): ~33 responses, Q11 via `ceil(x/2)`, Q15 = Yes on CUST-006/014/022, 2–3 extra rating-1 responses, 4 advisors, 5 models, ~10 unanswered visits (some expired), ~10 job cards with no visit incl. `JC-24-1042` (S-07)
   - [ ] On a fresh load on any day, seed service dates span the 3 months before today, the last 30 days contain responses and some seeded links are still Created/Opened (S-07)
   - [ ] "Reset demo data" (sign-in link and admin More) shows the SPEC US-22 warning → confirm restores the seed and signs out every open tab (US-22, S-06); "Simulate failed save" in More makes the next write fail (S-13)
-- Result: —
+- Result: sign-in, set password, reset, xlsx seed (33 responses, rebased dates) · 38 e2e · coverage 96.6% · 1 debugger round · cost not measured
+
+### T-01s · Shared change: dealership red accent tokens
+- Owner: frontend-coder
+- Depends on: T-01
+- Files: src/app/globals.css
+- Context: SPEC §7 Visual system (SPEC-input §12 colour rules) · LLD §6 · docs/CONVENTIONS.md
+- Why separate: globals.css is frozen; owner asked (T-02 card) for the red accent before round 3.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `--primary` (buttons, progress, highlights, focus ring) is the dealership red with WCAG AA contrast for its foreground text; neutrals stay slate/white; status tokens success/warning/danger (green/amber/red) are defined and distinct from the brand red; dark-mode token block kept
+  - [ ] Screenshots of sign-in and admin shell at 360 and 1440 show red primary buttons; check.sh passes
 
 ### T-03 · Support: look up a job card, send the link on WhatsApp, manage my links
 - Owner: backend-coder, frontend-coder

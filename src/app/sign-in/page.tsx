@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { SignInScreen } from "@/features/auth/SignInScreen";
 
 export default function SignInPage() {
-  return <PlaceholderScreen title="Sign in" showDemoLabel />;
+  return <SignInScreen />;
 }

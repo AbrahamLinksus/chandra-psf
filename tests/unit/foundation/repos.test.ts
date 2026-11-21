@@ -15,12 +15,6 @@ function make(search = ""): { da: DataAccess; storage: MemoryStorage } {
 
 const noSession = { password: "x" };
 const stubCalls: [string, (da: DataAccess) => Promise<unknown>][] = [
-  ["auth.signIn", (d) => d.auth.signIn("a@b.c", "pw")],
-  ["auth.signInAsDemo", (d) => d.auth.signInAsDemo("admin")],
-  ["auth.setOwnPassword", (d) => d.auth.setOwnPassword("longenough")],
-  ["auth.signOut", (d) => d.auth.signOut()],
-  ["demo.resetDemoData", (d) => d.demo.resetDemoData()],
-  ["demo.armFailedSave", (d) => d.demo.armFailedSave()],
   ["jobCards.getJobCard", (d) => d.jobCards.getJobCard("JC-24-1042")],
   ["jobCards.listFreshJobCards", (d) => d.jobCards.listFreshJobCards()],
   ["visits.listMyVisits", (d) => d.visits.listMyVisits()],

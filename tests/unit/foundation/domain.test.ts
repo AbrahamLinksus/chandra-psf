@@ -167,11 +167,11 @@ describe("reconcileAlert", () => {
 });
 
 describe("seed fixture", () => {
-  it("minimal seed passes SeedSchema with 1 admin, 2 support, 1 advisor and JC-24-1042", () => {
+  it("minimal seed passes SeedSchema with 1 admin, 2 support, 4 advisors and JC-24-1042", () => {
     const seed = SeedSchema.parse(seedJson);
     expect(seed.users.filter((u) => u.role === "admin")).toHaveLength(1);
     expect(seed.users.filter((u) => u.role === "support")).toHaveLength(2);
-    expect(seed.advisors).toHaveLength(1);
+    expect(seed.advisors).toHaveLength(4);
     expect(seed.jobCards.map((j) => j.jobCardNo)).toContain("JC-24-1042");
   });
 });

@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { SetPasswordScreen } from "@/features/auth/SetPasswordScreen";
 
 export default function SetPasswordPage() {
-  return <PlaceholderScreen title="Set password" showDemoLabel />;
+  return <SetPasswordScreen />;
 }
