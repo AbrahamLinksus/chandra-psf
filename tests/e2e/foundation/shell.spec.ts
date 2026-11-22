@@ -28,7 +28,7 @@ test.describe("T-01 routing and shell", () => {
   }) => {
     await signInAs(page, "admin");
     await page.goto("/admin");
-    await expect(page.getByText("Coming soon")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
     const sidebar = page.getByRole("navigation", { name: "Admin", exact: true });
     const tabs = page.getByRole("navigation", { name: "Admin tabs" });
     if (isDesktop(page)) {
@@ -64,8 +64,8 @@ test.describe("T-01 routing and shell", () => {
           .click();
       }
       await expect(page).toHaveURL(new RegExp(`${href}$`));
-      if (href === "/admin/alerts") {
-        await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
+      if (href === "/admin" || href === "/admin/alerts") {
+        await expect(page.getByRole("heading", { name: label })).toBeVisible();
       } else {
         await expect(page.getByText("Coming soon")).toBeVisible();
       }

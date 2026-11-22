@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { AdminOverviewScreen } from "@/features/admin-overview/AdminOverviewScreen";
 
 export default function AdminOverviewPage() {
-  return <PlaceholderScreen title="Overview" />;
+  return <AdminOverviewScreen />;
 }

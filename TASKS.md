@@ -121,17 +121,17 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-06 · Admin overview: KPI tiles, 7 analytics blocks and filters
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/domain/metrics/**, src/data/local/repos/analytics.ts, src/features/admin-overview/**, src/app/admin/page.tsx, tests/unit/admin-overview/**, tests/e2e/admin-overview/**
+- Files: src/domain/metrics/**, src/data/local/repos/analytics.ts, src/features/admin-overview/**, src/app/admin/page.tsx, tests/unit/admin-overview/**, tests/e2e/admin-overview/**, tests/unit/foundation/repos.test.ts, tests/e2e/foundation/shell.spec.ts
 - Context: SPEC US-14, US-15, US-16, F-5, §5 F-5 rows · LLD §1.4, §2, §5, §6 (FilterBar, MetricValue, EmptyState), §10 · files: src/domain/{types,constants}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own route, repo and metric functions; runs beside the other admin slices.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] SPEC §5 metric examples pass: Q1 4, 5, 3 → 75, 100, 50; Q2 Yes/Partially/No → 100/50/0; 40 visits with 30 completed → 75 %; Q3 reversed; cancelled and replaced visits are left out of the response rate (S-14) and a deleted response does not count as completed (S-09)
   - [ ] Default "last 30 days" shows 5 KPI tiles with green/red arrows vs the previous same-length period and all 7 blocks filled with seed data; advisor table sorts; problem breakdown has a follow-up selector (AC-10, S-07)
   - [ ] Every filter (date range, vehicle type, model, advisor) changes every block and is kept in the URL; all blocks filter on the visit's service date (S-11)
   - [ ] A filter matching nothing shows "—" and "No responses for these filters", no arrows, never 0 %, NaN or ∞ (S-10); Recent comments show `<script>` as plain text (G-W3)
   - [ ] A support session gets `FORBIDDEN` from `getAnalytics` and is redirected to the `/not-allowed` page with no data shown when opening `/admin` (G-W2, AC-6; D-15); single column at 360 px, grid at 1440 px
-- Result: —
+- Result: approved 2026-11-22 · 5/5 goals · 253 unit + 122 e2e · cov 97.6% · ≈$1.67 · frontend-coder 49% · backend-coder 42% · merge-main 9%
 
 ### T-07 · Alerts queue with status, notes and nav badge
 - Owner: backend-coder, frontend-coder
@@ -150,10 +150,10 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-08 · Responses: browse, edit with password, delete and restore
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02, T-03
-- Files: src/data/local/repos/responses.ts, src/features/admin-responses/**, src/app/admin/responses/**, tests/unit/admin-responses/**, tests/e2e/admin-responses/**
+- Files: src/data/local/repos/responses.ts, src/features/admin-responses/**, src/app/admin/responses/**, tests/unit/admin-responses/**, tests/e2e/admin-responses/**, tests/unit/foundation/repos.test.ts, tests/e2e/foundation/shell.spec.ts
 - Context: SPEC US-16 (Responses table), US-17, US-18, US-21, F-6, F-4 step 4, §5 F-6 rows, §13 · LLD §1.2, §1.3, §2, §5, §6 (PasswordPromptDialog, ConfirmDialog, FilterBar), §8 (VisitSummary), §12 · files: src/domain/{visibility,alertRules}.ts, src/data/local/repos/{visits,auditWriter}.ts (imports `toVisitSummary(visit, jobCard, now)` from visits.ts without editing it), src/components/shared/*, /AGENTS.md
 - Why separate: own routes and repo; depends on T-03 only for the `VisitSummary` mapper in `repos/visits.ts`.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] `/admin/responses` table filters by service date, vehicle type, model, advisor (S-11, AC-10); a row opens the detail with every answer incl. follow-ups and visit + vehicle info; long text truncated in the list, full on detail; `<script>` shown as plain text (G-W3)
   - [ ] Edit Q6 2 → 4 with the correct password: Q6a disappears live, audit `response.edit` old `{Q6:2,Q6a:["Rude"]}` new `{Q6:4}`; wrong password → "Password incorrect" and nothing saved (AC-9, G-01)
@@ -165,10 +165,10 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-09 · Audit log
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/data/local/repos/audit.ts (read side; listAudit only), src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/admin-audit/**, tests/e2e/admin-audit/**
+- Files: src/data/local/repos/audit.ts (read side; listAudit only), src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/admin-audit/**, tests/e2e/admin-audit/**, tests/unit/foundation/repos.test.ts, tests/e2e/foundation/shell.spec.ts
 - Context: SPEC US-19, F-6 step 5 · LLD §1.1 (AuditEntry), §2, §5, §6 (EmptyState), §13 · files: src/data/local/repos/{audit,auditWriter}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own route and read-only repo method; small but independent of every other admin slice.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] `/admin/audit` lists time (IST), actor, action, entity and old → new, newest first, with seeded entries after a reset
   - [ ] Filter by action narrows the list; long old/new values are truncated with "Show more"

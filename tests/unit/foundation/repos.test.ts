@@ -16,11 +16,6 @@ function make(search = ""): { da: DataAccess; storage: MemoryStorage } {
 const noSession = { password: "x" };
 const stubCalls: [string, (da: DataAccess) => Promise<unknown>][] = [
   [
-    "analytics.getAnalytics",
-    (d) => d.analytics.getAnalytics({ from: "2026-01-01", to: "2026-01-31" }),
-  ],
-  ["analytics.getFilterOptions", (d) => d.analytics.getFilterOptions()],
-  [
     "responses.listResponses",
     (d) => d.responses.listResponses({ from: "2026-01-01", to: "2026-01-31" }),
   ],
