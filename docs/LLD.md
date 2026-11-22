@@ -62,7 +62,7 @@ flowchart LR
 ```
 src/
   app/                         routes only; each page.tsx renders one feature screen
-    layout.tsx providers.tsx robots.ts page.tsx(→/sign-in) not-allowed/
+    layout.tsx providers.tsx robots.ts page.tsx(→/sign-in) not-allowed/ not-found.tsx error.tsx
     sign-in/ set-password/     §7
     support/ layout.tsx page.tsx new/page.tsx              §8
     f/[token]/page.tsx                                     §9
@@ -73,12 +73,12 @@ src/
   components/shared/           §6 shared components (foundation)
   hooks/                       §2.4 generic data hooks (foundation)
   data/access/                 §2 interfaces, Result, provider
-  data/local/                  §3 store, §5 repos/, createLocalDataAccess.ts
+  data/local/                  §3 store, db, bus, fault, crypto, seed; §5 repos/, repoDeps, session, results, ids, createLocalDataAccess.ts
   data/seed/seed.json          §4 generated fixture (committed)
   domain/                      §1 pure code
   config/env.ts                §0.5
-scripts/build-seed.ts  scripts/check.sh
-tests/support/  tests/unit/<area>/  tests/e2e/<feature>/
+scripts/build-seed.ts  scripts/seed/{data,entities,answers}.ts  scripts/check.sh
+tests/support/  tests/unit/<area>/  tests/e2e/<feature>/      docs/DEPLOY.md (Vercel runbook)
 data/seed/Honda_PSF_Survey_30_Dummy_Customer_Responses.xlsx   (input, read-only)
 ```
 
@@ -118,18 +118,19 @@ Exact versions are pinned by env-setup to the latest stable release of the liste
 | gitleaks (binary, CI) | 8 | Secrets scan | detect-secrets |
 
 ### §0.5 Config and secrets
-`src/config/env.ts` parses with zod; all keys in `.env.example`. No secrets exist in phase 1 (everything is public client code); demo values still stay out of source.
-| Key | Example | Use |
-|---|---|---|
-| `NEXT_PUBLIC_DEMO_PASSWORD` | `Demo@2026` | Password of seeded users; shown as sign-in hint |
-| `NEXT_PUBLIC_APP_URL` | `https://psf-demo.vercel.app` | Base of `/f/<token>` links (fallback `window.location.origin`) |
-| `NEXT_PUBLIC_DEALER_PHONE` | `+91 44 0000 0000` | Contact line on link-state pages |
-Site: `robots.ts` disallows all; root metadata `robots: noindex`.
+`src/config/env.ts` is the only reader of `process.env` (literal accesses so Next inlines them) and parses with zod into `env`; all keys in `.env.example`. No secrets exist in phase 1 (everything is public client code); demo values still stay out of source. Values are inlined at build time: changing one needs a redeploy.
+| Key | Required | Example | Use |
+|---|---|---|---|
+| `NEXT_PUBLIC_DEMO_PASSWORD` | yes (`min(1)`) | `Demo@2026` | Password of seeded users. **Intentionally public**: shown as the sign-in hint, stored as a plain (non-secret) Vercel variable |
+| `NEXT_PUBLIC_APP_URL` | **optional** | `https://chandra-psf.vercel.app` | Base of `/f/<token>` links; unset or empty → `window.location.origin` (so preview deployments work); trailing `/` stripped (§8 `linkBase`). Not set in Vercel |
+| `NEXT_PUBLIC_DEALER_PHONE` | yes (`min(1)`) | `+91 44 0000 0000` | Contact line on link-state pages (placeholder until the owner sets the real number) |
+Site: `src/app/robots.ts` disallows all; root metadata `robots: "noindex"`; unknown routes → `src/app/not-found.tsx`, runtime errors → `src/app/error.tsx` (no stack shown).
+**Deployment:** Vercel project `chandra-psf` (https://chandra-psf.vercel.app), framework auto-detected, **no `vercel.json`**; env vars set for Production and Preview. Runbook (setup, redeploy, rollback, verify): `docs/DEPLOY.md`.
 
 ## §1 Domain (pure)
 - **Path:** `src/domain/` · **Depends on:** zod only. Every function deterministic; time comes in as a `now: Date` argument.
 - **Ownership (one task per file):** T-01 foundation, frozen: `types, schemas, questionnaire, answers, time, visitStatus, constants, visibility, alertRules` (visibility/alertRules are shared by seed, form, alerts and responses); T-03 (§8): `jobCard, phone, whatsapp`; T-06 (§10): `metrics/**`.
-- `constants.ts`: `LINK_EXPIRY_DAYS = 7`, `TEXT_MAX_LENGTH = 1000`, `DEFAULT_RANGE_DAYS = 30`, `RECENT_COMMENTS = 10` (CONVENTIONS §5).
+- `constants.ts`: `LINK_EXPIRY_DAYS = 7`, `TEXT_MAX_LENGTH = 1000`, `DEFAULT_RANGE_DAYS = 30`, `RECENT_COMMENTS = 10`, `MIN_PASSWORD_LENGTH = 8`, `AUTO_RESOLVE_NOTE`, `SYSTEM_ACTOR = "system"` (CONVENTIONS §5).
 
 ### §1.1 Types (`types.ts`) and schemas (`schemas.ts`, zod mirrors)
 ```ts
@@ -169,7 +170,7 @@ export const QUESTIONNAIRE_V1: Questionnaire   // content = SPEC F-3 tables verb
 `visibility.ts`: `isVisible(q, answers)`, `visibleQuestions(step, answers): Question[]`, `isStepComplete(step, answers): boolean`, `pruneHidden(answers): AnswerMap`, `validateSubmission(answers): { ok: true; answers: AnswerMap } | { ok: false; missing: QuestionCode[] }` (prunes first, then checks required + `textRequired` + `maxLength`).
 
 ### §1.3 Alert rules (`alertRules.ts`)
-`evaluateAlertReasons(answers): AlertReason[]` (SPEC F-4 step 1; ordered callback first, then Q1, Q6, Q11, Q12) · `formatReasons(r): string` → `"Callback requested · Q12 rated 1"` · `reconcileAlert(existing: Alert | null, reasons, now): { alert: Alert | null; change: 'none' | 'created' | 'reasons_updated' | 'auto_resolved' }` (SPEC F-4 step 4; auto-resolve note text `"Auto-resolved: no alert reason after edit"`).
+`evaluateAlertReasons(answers): AlertReason[]` (SPEC F-4 step 1; ordered callback first, then Q1, Q6, Q11, Q12) · `formatReasons(r): string` → `"Callback requested · Q12 rated 1"` · `reconcileAlert(existing: Alert | null, reasons, now, ids?: { id; responseId }): { alert: Alert | null; change: 'none' | 'created' | 'reasons_updated' | 'auto_resolved' }` (SPEC F-4 step 4; auto-resolve note text `AUTO_RESOLVE_NOTE` = `"Auto-resolved: no alert reason after edit"`). `ids` names a newly created alert (caller generates the id, keeping §1 free of id generation).
 
 ### §1.4 Metrics (`metrics/`)
 `scores.ts`: `ratingScore`, `yesNoScore(code, v)`, `categoryScore(step, answers)` (SPEC F-5 definitions; Q3 reversed, Q2 partial = 50).
@@ -193,9 +194,9 @@ Rules: filter by **service date**; `responses` input already excludes deleted; r
 |---|---|---|
 | `jobCard.ts` | `normalizeJobCardNo(s): string` | upper-case, strip spaces/dashes → compare on `JC241042` (S-02) |
 | `phone.ts` | `toWhatsAppNumber(phone): string \| null` | digits only; 10 digits starting 6–9 → `91…`; `91`+10 → as is; else `null` (landline/blank, S-03) |
-| `whatsapp.ts` | `buildWhatsAppUrl(phone, ctx: { name; model; regNo; url })` | SPEC §5 template, `encodeURIComponent` |
+| `whatsapp.ts` | `buildWhatsAppUrl(phone: string \| null, ctx: WhatsAppContext { name; model; regNo; url }): string \| null` | SPEC §5 template, `encodeURIComponent`; `null` when `toWhatsAppNumber` is null |
 | `visitStatus.ts` | `visitStatus(v, now): VisitStatus` | cancelled › completed › expired (`replacedBy` or `now > expiresAt`) › opened › created |
-| `time.ts` | `formatIST(t)`, `formatISTDate(d)`, `istDateOf(t)`, `addDays` | display only IST |
+| `time.ts` | `formatIST(t)`, `formatISTDate(d, { year? })`, `istDateOf(t \| Date)`, `addDays`, `daysBetween`, `istToISOTime(date, minute)` | display only IST; `istToISOTime` used by seed rebase |
 
 ## §2 Data-access contract
 - **Path:** `src/data/access/`, `src/hooks/` · **Depends on:** §1 types. **Frozen after the foundation.**
@@ -229,33 +230,40 @@ The repo interfaces are declared in `src/data/access/repos/<name>.ts` by the fou
 | `useLiveInvalidation` | `() → void` | mounted once in providers; `da.subscribe` → `queryClient.invalidateQueries()` (all; data is tiny). Phase 2: same hook, `subscribe` backed by polling/SSE |
 | `useSession` | `() → { user: User \| null; isLoading }` | key `['session']` |
 | `useOpenAlertCount` | `() → number` | key `['alerts','openCount']`, used by the admin nav badge |
+| `useShellActions` | `() → { signOut(); simulateFailedSave() }` | both shells; sign out → `/sign-in`, arm fault → toast "The next save will fail" |
+| `useFiltersFromUrl` | `() → { filters: Filters; setFilters(f) }` | §6 `FilterBar`; filters live in the URL query |
 Feature-specific hooks live in their feature folder and are built on these two.
 
 ### §2.5 Phase 2 swap (design check, not built)
 `createRemoteDataAccess()` implements the same §2.2 by calling route handlers; the server re-uses §1 (`validateSubmission`, `evaluateAlertReasons`, `reconcileAlert`, `computeOverview`) with Drizzle repos; `providers.tsx` changes one import. Screens, hooks and §1 unchanged.
 
 ## §3 Local store
-- **Path:** `src/data/local/store.ts`, `bus.ts`, `fault.ts`, `crypto.ts` · **Depends on:** §1 schemas, §2 `Topic`. **Frozen after the foundation.**
+- **Path:** `src/data/local/store.ts`, `db.ts`, `bus.ts`, `fault.ts`, `crypto.ts` · **Depends on:** §1 schemas (`DbSchemas`, `SessionSchema`), §2 `Topic`. **Frozen after the foundation.**
 
 ### §3.1 Interfaces
 ```ts
-interface Clock { now(): Date }
-type Db = { meta: { schemaVersion: 1; seededAt: ISOTime }; users: (User & { passwordHash: string })[]; advisors: Advisor[];
-  jobCards: JobCard[]; visits: Visit[]; responses: ResponseRecord[]; alerts: Alert[]; audit: AuditEntry[] };
-class LocalStore {
-  constructor(deps: { storage: Storage; locks: LockManager | null; bus: ChangeBus; fault: FaultSwitch; win?: Window })
-  read<K extends keyof Db>(k: K): Db[K]                     // parse + zod-validate the key; missing → seed (§4)
-  mutate<T>(keys: (keyof Db)[], fn: (draft: Pick<Db, ...>) => T): Promise<T>
-  ensureSeeded(now: Date): void; wipeAndReseed(now: Date): Promise<void>
-}
-class ChangeBus { emit(topics: Topic[]): void; on(l): () => void }
-class FaultSwitch { armNextWrite(): void; consume(): boolean }   // sessionStorage `psf:fault`, also armed by `?demoFail=1`
+// db.ts: Clock { now(): Date }; StoredUser = User & { passwordHash }; Db { meta: { schemaVersion: 1; seededAt }; users: StoredUser[];
+//   advisors; jobCards; visits; responses; alerts; audit }
+// store.ts: KEY_PREFIX = 'psf:v1:'; class SaveFailed extends Error (default "Couldn't save, try again")
+interface StoreDeps { storage; locks: LockManager | null; bus: ChangeBus; fault: FaultSwitch; clock: Clock;
+  seeder: (now: Date) => Promise<Db> /* injected §4 rebase */; win?: Pick<Window, 'addEventListener' | 'removeEventListener'> }
+class LocalStore { constructor(deps: StoreDeps); readonly fault: FaultSwitch
+  read<K extends keyof Db>(k: K): Db[K]       // sync parse + zod; missing key → [] (meta → throws). Never seeds
+  readSession(): { userId } | null; writeSession(userId | null): void   // emits 'session'
+  whenReady(): Promise<void>                  // = ensureSeeded(clock.now()); every repo awaits it before reading
+  ensureSeeded(now): Promise<void>            // memoised, under the lock; seeds only when `meta` is absent
+  wipeAndReseed(now): Promise<void>           // removes every `psf:` key (session, drafts too), re-seeds, emits all
+  mutate<K extends keyof Db, T>(keys: K[], fn: (draft: Pick<Db, K>) => T): Promise<T> }
+class ChangeBus { emit(topics: Topic[]): void; on(l: TopicListener): () => void }
+class FaultSwitch { constructor(session: SessionStore); armNextWrite(); consume(): boolean; armFromSearch(search) }
+  // sessionStorage `psf:fault`, armed by `?demoFail=1`; throws SaveFailed("Simulated failed save")
 hashPassword(pw: string): Promise<string>   // SHA-256 via crypto.subtle, demo only
 ```
+Seed writes `meta` last (a failed seed never looks seeded). Key → topics: `users → users, session`; `jobCards/advisors/visits → visits`; `responses → responses, visits`; `alerts → alerts, responses`; `meta` / cleared storage → all.
 Keys: `psf:v1:<collection>` (one per `Db` key), `psf:v1:session` (`{ userId }`), drafts `psf:draft:<visitId>` (§9).
 
 ### §3.2 Write sequence (no overwrites, S-06)
-`mutate` → `navigator.locks.request('psf-db', …)` (direct call if unsupported) → if `fault.consume()` throw `SaveFailed` → **re-read** the listed keys fresh from storage → run `fn` on them → write only the changed keys → `bus.emit(topics)`. Other tabs: `window 'storage'` event on `psf:v1:*` → `bus.emit(topicOf(key))` → §2.4 invalidates. `QuotaExceededError` → `SaveFailed`.
+`mutate` → `whenReady()` → `navigator.locks.request('psf-db', …)` (direct call if unsupported) → if `fault.consume()` throw `SaveFailed` → **re-read** the listed keys fresh from storage → run `fn` on them → zod-validate and write only the keys whose JSON changed → `bus.emit(topics)` (nothing changed → no emit). Other tabs: `window 'storage'` event on `psf:v1:*` → `bus.emit(topicsOfKey(key))` → §2.4 invalidates. Any `setItem` failure (incl. `QuotaExceededError`) → keys already written in this call are restored → `SaveFailed`.
 
 ### §3.3 Schema owned
 ```mermaid
@@ -269,20 +277,21 @@ erDiagram
 ```
 
 ## §4 Seed pipeline
-- **Path:** `scripts/build-seed.ts` (run `npm run seed`), output `src/data/seed/seed.json`, runtime `src/data/local/seed.ts` · **Depends on:** §1 (schemas, `evaluateAlertReasons`).
+- **Path:** `scripts/build-seed.ts` (run `npm run seed`; helpers split into `scripts/seed/data.ts`, `entities.ts`, `answers.ts`), output `src/data/seed/seed.json`, runtime `src/data/local/seed.ts` · **Depends on:** §1 (schemas, `evaluateAlertReasons`).
 - **Build time:** reads the xlsx with exceljs; applies SPEC §6 seed rules (Q11 `ceil(x/2)`, follow-ups from Q14 hints, Q15 = Yes on CUST-006/014/022, 2–3 extra rating-1 responses, 4 advisors, 5 models, ~10 unanswered visits incl. expired, ~10 job cards with no visit, 1 admin + 2 support users without passwords); deterministic (fixed PRNG seed) so re-running gives an identical file; validates with `SeedSchema`. Job card `JC-24-1042` = SPEC §5 Ramesh Kumar row and has **no** visit.
 - **Fixture shape:** same as `Db` but every timestamp is `{ dayOffset: number; minute: number }` (≤ 0, relative to load day) and alerts carry their seeded status/notes.
-- **Runtime:** `rebaseSeed(seed, now, password): Promise<Db>` → absolute dates counted back from `now`'s IST day; users get `hashPassword(env.NEXT_PUBLIC_DEMO_PASSWORD)`. Called by `ensureSeeded` (no `meta` key) and `wipeAndReseed`.
+- **Runtime:** `rebaseSeed(seed, now, password): Promise<Db>` → absolute dates counted back from `now`'s IST day; users get `hashPassword(env.NEXT_PUBLIC_DEMO_PASSWORD)`. Injected into `LocalStore` as `seeder` by `createLocalDataAccess` (`rebaseSeed(SeedSchema.parse(seedJson), now, env.NEXT_PUBLIC_DEMO_PASSWORD)`) and run by `ensureSeeded` (no `meta` key) and `wipeAndReseed`.
 
 ## §5 Local repositories
-- **Path:** `src/data/local/repos/<name>.ts`, composition root `src/data/local/createLocalDataAccess.ts` (`(deps: { storage; locks; clock; win }) => DataAccess`). **Depends on:** §1, §2, §3.
-- Each repo is a class taking `{ store: LocalStore; clock: Clock; session: SessionReader }` (`SessionReader.current(): User | null` reads `psf:v1:session` + `users`; deactivated → null).
+- **Path:** `src/data/local/repos/<name>.ts`, composition root `src/data/local/createLocalDataAccess.ts` (`(deps: LocalDataAccessDeps { storage; locks; clock; win: Window }) => DataAccess`; builds `ChangeBus`, `FaultSwitch(win.sessionStorage)` + `armFromSearch(location.search)`, `LocalStore` with the §4 seeder, starts `whenReady()`). **Depends on:** §1, §2, §3.
+- Each repo is a class `Local<Name>Repo` taking `RepoDeps { store: LocalStore; clock: Clock; session: SessionReader }` (`repoDeps.ts`). `session.ts`: `SessionReader.current(): User | null` (impl `StoreSessionReader`: `store.readSession()` + `users`; deactivated or unreadable → null), `toPublicUser(StoredUser): User` strips the hash.
+- Shared frozen helpers: `results.ts` — `guardRead(fn)` / `guardWrite(fn)` turn any thrown error into `UNAVAILABLE` / `SAVE_FAILED` (§2.1), `notBuilt()`, `SAVE_FAILED_MESSAGE`; `ids.ts` — `newId(prefix)`.
 - The foundation (T-01) creates **every** repo file with the full class signature; methods not yet built return `err('UNAVAILABLE', 'Not built yet')`. After T-01 each file below has exactly one owning task, which replaces the bodies; the composition root never changes. Frozen helper files are complete in T-01 and imported, never edited, by feature tasks.
 | File | Exports | Owner task (§) | Milestone |
 |---|---|---|---|
 | `auth.ts`, `demo.ts` | AuthRepo, DemoRepo | T-02 (§7) | M1 |
 | `jobCards.ts` | JobCardRepo | T-03 (§8) | M1 |
-| `visits.ts` | VisitRepo + `toVisitSummary(visit, jobCard, now): VisitSummary` (pure mapper, also imported read-only by `responses.ts`, hence T-08 depends on T-03) | T-03 (§8) | M1 |
+| `visits.ts` | VisitRepo + `toVisitSummary(visit, jobCard, now, meId): VisitSummary` (pure mapper, also imported read-only by `responses.ts`, hence T-08 depends on T-03), `currentVisitOf(visits, jobCardNo): Visit \| null` (newest not replaced/cancelled; used by `jobCards.ts`) | T-03 (§8) | M1 |
 | `feedback.ts` | FeedbackRepo | T-04 (§9) | M1 |
 | `token.ts` | `encodeToken(visit): string`, `decodeToken(token): TokenPayload \| null` (§9 Token) — used by seed runtime, `visits.ts`, `feedback.ts` | T-01, **frozen** | M1 |
 | `auditWriter.ts` | `appendAudit(draft: { audit: AuditEntry[] }, entry: Omit<AuditEntry, 'id' \| 'at'>, now: Date): AuditEntry` — the only audit writer, used by every writing repo | T-01, **frozen** | M1 |
@@ -293,11 +302,12 @@ erDiagram
 | `users.ts` | UserRepo | T-10 (§14) | M2 |
 
 ## §6 App shell & shared UI (foundation)
-- **Paths:** `src/app/layout.tsx`, `providers.tsx` (composition root: QueryClient, `createLocalDataAccess(window…)`, `DataAccessProvider`, `useLiveInvalidation`, `Toaster`), `src/app/admin/layout.tsx`, `src/app/support/layout.tsx`, `src/app/not-allowed/`, `src/components/shared/`, `src/app/globals.css` (tokens: slate base, accent `--brand` dealership red, status green/amber/red, radius 12–16 px).
+- **Paths:** `src/app/layout.tsx`, `providers.tsx` (composition root: QueryClient, `createLocalDataAccess(window…)`, `DataAccessProvider`, `useLiveInvalidation`, `Toaster`), `src/app/admin/layout.tsx`, `src/app/support/layout.tsx`, `src/app/not-allowed/`, `src/components/shared/`, `src/app/globals.css` (shadcn tokens, light + dark: slate base, brand dealership red = `--primary` (hue 29); status `--success` / `--warning` / `--danger` (crimson hue 8, distinct from brand; `--destructive` aliases it); `--whatsapp` / `--whatsapp-foreground` (green, Tailwind `bg-whatsapp`) for the Send button; `--radius: 0.625rem`).
 | Component | Props | Use |
 |---|---|---|
-| `RoleGuard` | `{ role: Role; children }` | no session → `/sign-in`; wrong role → `/not-allowed`; `mustSetPassword` → `/set-password` |
-| `AdminShell` | `{ children }` | sidebar ≥ md, bottom tab bar < md (Overview · Alerts(badge) · Responses · More → Recently deleted, Audit, Users, Simulate failed save, Reset demo data, Sign out); nav items in `adminNav.ts`, complete |
+| `RoleGuard` | `{ role: Role; children }` + pure `guardRedirect(user, role): string \| null` | no session → `/sign-in`; wrong role → `/not-allowed`; `mustSetPassword` → `/set-password` |
+| `AdminShell` | `{ children }` | sidebar ≥ md, bottom tab bar < md (Overview · Alerts(badge) · Responses · More → Recently deleted, Audit, Users, Simulate failed save, Reset demo data, Sign out); nav items `ADMIN_NAV` + `activeNavHref(pathname)` in `adminNav.ts`, complete; parts in `AdminNavParts.tsx` (`AdminSidebar`, `AdminTabBar`, `AdminMoreSheet`), `AdminNavLink.tsx` (`AdminNavLink`, `CountBadge`), `AdminActions.tsx` |
+| `NotAllowedScreen`, `PageSkeleton`, `PlaceholderScreen` | —, —, `{ title; showDemoLabel? }` | `/not-allowed`; provider/loading skeleton; placeholder for routes a later task builds |
 | `SupportShell` | `{ children }` | top bar, user name, Sign out |
 | `DemoLabel` | — | "Demo — sample data" chip in both shells |
 | `StatusBadge` | `{ kind: VisitStatus \| AlertStatus }` | one colour map for the whole app |
@@ -306,32 +316,37 @@ erDiagram
 | `ConfirmDialog` | `{ open; title; body; confirmLabel; destructive?; onConfirm; onClose }` | cancel link, delete, reset |
 | `SaveState` | `{ status; error?; onRetry }` | spinner while saving; "Couldn't save, try again" + Retry (S-13) |
 | `EmptyState` | `{ icon; title; hint? }` | every empty list/block |
-| `MetricValue` | `{ value: number \| null; format }` | renders "—" for null (S-10) |
+| `MetricValue` | `{ value: number \| null; format: MetricFormat }` | renders "—" for null (S-10); pure `formatMetric(value, 'percent'\|'score'\|'count')` in `formatMetric.ts` |
 | `ResetDemoDialog` | `{ open; onClose }` | text of SPEC US-22; calls `da.demo.resetDemoData()` then `/sign-in` |
 
 ## §7 Auth
-- **Paths:** `src/features/auth/` (`SignInScreen`, `SetPasswordScreen`), routes `src/app/sign-in/`, `src/app/set-password/`; repos §5 `auth.ts`, `demo.ts`.
+- **Paths:** `src/features/auth/` (`SignInScreen`, `SetPasswordScreen`, shared `CredentialsForm`, hooks `useSignIn` (+ `DemoWho`), `useSetPassword` (+ pure `passwordProblem(pw, confirm)`), `routes.ts` `landingPath(user)`), routes `src/app/sign-in/`, `src/app/set-password/`; repos §5 `auth.ts`, `demo.ts`.
 ```ts
 interface AuthRepo { signIn(email: string, password: string): Promise<Result<User>>;      // BAD_CREDENTIALS, ACCOUNT_DISABLED
   signInAsDemo(who: 'admin' | 'support1' | 'support2'): Promise<Result<User>>;
-  setOwnPassword(newPassword: string): Promise<Result<User>>;   // VALIDATION (<8 chars, mismatch handled in UI); audit user.set_password
+  setOwnPassword(newPassword: string): Promise<Result<User>>;   // VALIDATION (< MIN_PASSWORD_LENGTH, mismatch handled in UI); audit user.set_password
   signOut(): Promise<Result<void>>; currentUser(): Promise<Result<User | null>> }
 interface DemoRepo { resetDemoData(): Promise<Result<void>>; armFailedSave(): Promise<Result<void>> }
 ```
-- Email match is case-insensitive. After sign-in: admin → `/admin`, support → `mustSetPassword ? /set-password : /support`. Sign-in shows the demo password hint from env and a "Reset demo data" link (§6 `ResetDemoDialog`). Reset signs out every tab (session key removed → `storage` event → `RoleGuard` redirects).
+- Email match is case-insensitive. After sign-in `landingPath`: `mustSetPassword` → `/set-password` (any role), else admin → `/admin`, support → `/support`. Sign-in shows the demo password hint from env and a "Reset demo data" link (§6 `ResetDemoDialog`). Reset signs out every tab (session key removed → `storage` event → `RoleGuard` redirects).
 
 ## §8 Support
-- **Paths:** `src/features/support/` (`SupportListScreen`, `NewLinkScreen`, `LinkActions`, `JobCardDetailsCard`), routes `src/app/support/**`; repos §5 `jobCards.ts`, `visits.ts`. Role: support or admin.
+- **Paths:** `src/features/support/` — screens `MyLinksScreen` (`/support`, hook `useMyLinks`), `NewLinkScreen` (`/support/new`, hook `useNewLink` + `FoundCard`); components `LinkCard`, `LinkActions` (+ hook `useLinkActions`), `JobCardDetails`, `WhatsAppIcon`; routes `src/app/support/**`; repos §5 `jobCards.ts`, `visits.ts`. Role: any signed-in user (support or admin).
 ```ts
 interface VisitSummary { id: string; jobCardNo: string; customerName: string; regNo: string; model: string; serviceDate: ISODate;
-  phone: string | null; status: VisitStatus; createdAt: ISOTime; expiresAt: ISOTime; url: string; whatsappUrl: string | null }
+  phone: string | null; status: VisitStatus; createdAt: ISOTime; expiresAt: ISOTime; url: string; whatsappUrl: string | null;
+  isMine: boolean /* visit.createdBy === signed-in user; admins may still change any link */ }
 interface JobCardRepo { getJobCard(jobCardNo: string): Promise<Result<{ jobCard: JobCard & { advisorName: string }; current: VisitSummary | null }>>; // NOT_FOUND
   listFreshJobCards(): Promise<Result<string[]>> }
 interface VisitRepo { listMyVisits(q?: { search?: string }): Promise<Result<VisitSummary[]>>;   // createdBy = me, current links only (replacedBy null), newest first
-  createVisitLink(i: { jobCardNo: string; phone: string | null }): Promise<Result<VisitSummary>>;   // CONFLICT if a current link exists, ALREADY_COMPLETED
-  regenerateLink(visitId: string): Promise<Result<VisitSummary>>;   // new visit, old.replacedBy = new.id, audit link.regenerate
+  createVisitLink(i: { jobCardNo: string; phone: string | null }): Promise<Result<VisitSummary>>;   // NOT_FOUND, ALREADY_COMPLETED, CONFLICT if a current link exists
+  regenerateLink(visitId: string): Promise<Result<VisitSummary>>;   // new visit (same createdBy as old), old.replacedBy = new.id, audit link.regenerate
   cancelLink(visitId: string): Promise<Result<VisitSummary>> }      // sets cancelledAt, audit link.cancel
+// regenerate/cancel errors: UNAUTHENTICATED; NOT_FOUND; FORBIDDEN "You can only change your own links" (support user, not isMine);
+// CONFLICT "This link can no longer be changed" (replaced, completed or cancelled)
 ```
+- **Ownership:** the repo enforces it (support may change only own links, admin any); the UI mirrors it via `useLinkActions` `canManage = isMine || role === 'admin'`, otherwise `LinkActions` shows "This link was sent by another team member" instead of buttons.
+- Link URL: `linkBase()` = `env.NEXT_PUBLIC_APP_URL` (trailing `/` stripped) or `window.location.origin` (§0.5) + `/f/<token>`. Send button uses the `--whatsapp` token (§6) and `WhatsAppIcon`.
 - Lookup normalises with §1.5 `normalizeJobCardNo`; search matches job card (normalised) or reg. no (spaces ignored).
 - Edited phone is saved on the visit; `whatsappUrl` is `null` when `toWhatsAppNumber` is null → Send button disabled with "Enter a mobile number to send on WhatsApp"; Copy link still works.
 - `current` found → show its status: Completed → "Feedback already received", no actions; otherwise show link + Resend/Regenerate/Cancel instead of Generate.
@@ -339,18 +354,20 @@ interface VisitRepo { listMyVisits(q?: { search?: string }): Promise<Result<Visi
 - Every create/regenerate/cancel writes audit and shows `SaveState`.
 
 ## §9 Feedback form
-- **Paths:** `src/features/feedback-form/` (`FeedbackFlow`, `WelcomeStep`, `QuestionStep`, `CallbackStep`, `ThankYou`, `LinkStateScreen`, `fields/` registry, `useFormMachine.ts`, `draft.ts`), route `src/app/f/[token]/page.tsx`; repo §5 `feedback.ts` (uses frozen `token.ts`). No sign-in.
+- **Paths:** `src/features/feedback-form/` (flat folder) — `FeedbackFormScreen` (entry: `useFormContext(token)` → `LinkStateScreen` or `FeedbackFlowScreen`), `FeedbackFlowScreen` (welcome/steps/thanks via `useFeedbackFlow(token, visitId)`), `WelcomeView`, `StepScreen` + `StepView`, `ThankYouView`, `LinkStateScreen` (states `expired \| completed \| invalid \| already \| error`), `Reveal` (follow-up slide-in), fields `RatingField`, `ChoiceField`, `MultiSelectField`, `TextField` (+ `TextBox`, `clampText`), `fieldTypes.ts`, `fieldRegistry.tsx`, `formMachine.ts`, `submitFlow.ts`, `draft.ts`; route `src/app/f/[token]/page.tsx`; repo §5 `feedback.ts` (uses frozen `token.ts`). No sign-in.
 ```ts
 type FormContext = { state: 'ready'; visitId: string; customerName: string; model: string; regNo: string; serviceDate: ISODate; questionnaire: Questionnaire }
   | { state: 'expired'; replaced: boolean } | { state: 'completed' } | { state: 'invalid' };
 interface FeedbackRepo { getVisitByToken(token: string): Promise<Result<FormContext>>;
   markOpened(token: string): Promise<Result<void>>;                            // sets openedAt once
-  submitResponse(token: string, answers: AnswerMap): Promise<Result<{ callbackRequested: boolean }>> }  // VALIDATION, ALREADY_COMPLETED, NOT_FOUND
+  submitResponse(token: string, answers: AnswerMap): Promise<Result<{ callbackRequested: boolean }>> }  // VALIDATION, ALREADY_COMPLETED, NOT_FOUND, CONFLICT (= expired), SAVE_FAILED
 ```
-- **Token (phase 1 only, `token.ts`):** `base64url(JSON {v: visitId, j: jobCardNo, c: createdAt, e: expiresAt, p: phone}) + '.' + 8 random chars`. `getVisitByToken`: decode fails or job card unknown → `invalid`; visit missing in this browser → import it from the payload (S-12, cross-device); then map `visitStatus` → state (`replacedBy` → `expired, replaced: true`; cancelled → `invalid`). Phase 2 tokens are opaque; screens only see `FormContext`.
-- **Submit (one `mutate` over visits, responses, alerts):** `validateSubmission` → store pruned answers, `questionsVersion` → `completedAt` → `evaluateAlertReasons` → if any, create Alert `open` + audit `alert.create` (actor "system").
-- **UI state:** `useFormMachine` reducer `{ phase: 'welcome' | 'step' | 'thanks'; step: 1..6; answers }`; `QuestionStep` renders `visibleQuestions(step, answers)` through `fields/index.ts`: `Record<QuestionType, FieldComponent>` (new type = new file + one map entry); follow-ups slide in (tw-animate-css). Next disabled until `isStepComplete`. Draft: `draft.ts` saves answers + step to `psf:draft:<visitId>` on every change, restores on load, clears on submit.
-- Failed submit → `SaveState` error, answers kept, Retry. Text fields show counter `n/1000`.
+- **Submit errors (as built):** bad token / unknown job card / cancelled → `NOT_FOUND` "Link not valid"; completed → `ALREADY_COMPLETED`; expired (incl. replaced) → `CONFLICT` "This feedback link has expired"; missing answers → `VALIDATION` with `fields`; thrown → `SAVE_FAILED`. `submitFlow.ts` `submitFeedback()` maps them to `SubmitOutcome`: `done` · `already` (draft cleared) · `invalid` · `expired` · `failed` ("Couldn't save, try again", draft kept). `markOpened` → `NOT_FOUND` on a bad token.
+- **Token (phase 1 only, `token.ts`):** `base64url(JSON {v: visitId, j: jobCardNo, c: createdAt, e: expiresAt, p: phone}) + '.' + 8 random chars`. `getVisitByToken`: decode fails or job card unknown → `invalid`; visit missing in this browser → rebuild it from the payload (`createdBy: "link"`) and persist it on the first write (`markOpened` or submit) (S-12, cross-device); a stored visit is the truth for status and must name the same job card; then map `visitStatus` → state (`replacedBy` → `expired, replaced: true`; cancelled → `invalid`). Phase 2 tokens are opaque; screens only see `FormContext`.
+- **Submit (one `mutate` over visits, jobCards, responses, alerts, audit):** status check → `validateSubmission` → store pruned answers, `questionsVersion` → `openedAt ??=`, `completedAt` → `evaluateAlertReasons` + `reconcileAlert(null, …, ids)` → if any, create Alert `open` + audit `alert.create` (actor `SYSTEM_ACTOR`, name "System"). `callbackRequested = Q15 === "Yes"`.
+- **markOpened:** writes only when status is `created` and `openedAt` is null; if this housekeeping write hits the simulated fault it re-arms the switch so the armed failure lands on the real submit (S-13).
+- **UI state:** `formMachine.ts` `formReducer` over `FormState { phase: 'welcome' | 'step' | 'thanks'; step: 1..LAST_STEP; answers; callbackRequested }`, actions `start | answer | next | back | submitted`; `initialState(draft)` resumes on the saved step; `canGoNext` = `isStepComplete`. `StepView` renders `visibleQuestions(step, answers)` through `fieldRegistry.tsx` `FIELD_REGISTRY: Record<QuestionType, FieldComponent>` (new type = new file + one map entry); follow-ups slide in via `Reveal` (tw-animate-css). Draft: `draft.ts` `saveDraft/loadDraft/clearDraft` on `psf:draft:<visitId>`, saved on every change, restored on load, cleared on success or `already`.
+- Failed submit → `SaveState` error, answers kept, Retry. Text fields show counter `n/1000`; input is cut with `clampText(text, max)` — at most `max` UTF-16 units (what `validateSubmission` counts), cut on `Intl.Segmenter` grapheme boundaries so an emoji or surrogate pair is never split.
 
 ## §10 Admin overview
 - **Paths:** `src/features/admin-overview/` (`OverviewScreen`, `blocks/KpiTiles.tsx`, `CategoryScores.tsx`, `TrendChart.tsx`, `AdvisorTable.tsx`, `ProblemBreakdown.tsx`, `QuestionDetail.tsx`, `RecentComments.tsx`), route `src/app/admin/page.tsx`; repo §5 `analytics.ts`. Role: admin.
@@ -401,9 +418,15 @@ interface UserRepo { listUsers(): Promise<Result<User[]>>;
 - A deactivated user's open session is dropped by `SessionReader` (returns null) → `RoleGuard` → sign-in shows "Account disabled, contact admin" on next attempt.
 
 ## Frozen after the foundation
-`package.json`, lockfile, `next.config.ts`, `src/app/layout.tsx`, `src/app/providers.tsx`, `src/app/globals.css`, `src/app/admin/layout.tsx`, `src/app/support/layout.tsx`, `src/components/ui/**`, `src/components/shared/**`, `src/hooks/**`, `src/data/access/**`, `src/data/local/{store,bus,fault,crypto,seed,createLocalDataAccess}.ts`, `src/data/local/repos/{token,auditWriter}.ts`, `src/domain/{types,schemas,questionnaire,answers,time,visitStatus,constants,visibility,alertRules}.ts`, `src/config/env.ts`, `tests/support/**`, gate configs (tsconfig.json, eslint.config.mjs, prettier config, .dependency-cruiser.cjs, vitest.config.ts, playwright.config.ts, postcss.config.mjs, components.json, scripts/check.sh, .env.example). A feature needing a change here raises `Needs file:`. Repo stubs (§5 table rows not marked frozen), `src/data/seed/seed.json` (minimal in T-01, generated by T-02) and placeholder `page.tsx` routes are created by T-01 and then owned by the single task named in §5 / TASKS.md, so they are not frozen.
+`package.json`, lockfile, `next.config.ts`, `src/app/layout.tsx`, `src/app/providers.tsx`, `src/app/globals.css`, `src/app/admin/layout.tsx`, `src/app/support/layout.tsx`, `src/components/ui/**`, `src/components/shared/**`, `src/hooks/**`, `src/data/access/**`, `src/data/local/{store,db,bus,fault,crypto,seed,ids,repoDeps,results,session,createLocalDataAccess}.ts`, `src/data/local/repos/{token,auditWriter}.ts`, `src/domain/{types,schemas,questionnaire,answers,time,visitStatus,constants,visibility,alertRules}.ts`, `src/config/env.ts`, `tests/support/**`, gate configs (tsconfig.json, eslint.config.mjs, prettier config, .dependency-cruiser.cjs, vitest.config.ts, playwright.config.ts, postcss.config.mjs, components.json, scripts/check.sh, .env.example). A feature needing a change here raises `Needs file:`. Repo stubs (§5 table rows not marked frozen), `src/data/seed/seed.json` (minimal in T-01, generated by T-02) and placeholder `page.tsx` routes are created by T-01 and then owned by the single task named in §5 / TASKS.md, so they are not frozen.
 
 ## Changes since last milestone
 | Milestone | Section | Change | Why | Ref |
 |---|---|---|---|---|
 | plan | §1, §5, §9, §13, Frozen | `constants/visibility/alertRules` and `repos/token.ts` moved to the foundation and frozen; `appendAudit` moved from `repos/audit.ts` to new frozen `repos/auditWriter.ts`; `audit.ts` is the read side (T-09); `toVisitSummary` exported from `visits.ts` (T-03) | Shared by 2+ tasks; one owner per file | TASKS.md planning |
+| M1 | §3.1, §3.2, §4 | `LocalStore.read` returns `[]` for a missing collection (throws for `meta`) and never seeds; seeding is `whenReady()`/`ensureSeeded` (async, memoised) with an injected `seeder`; `readSession`/`writeSession` added; `Db`/`Clock` live in `db.ts`; failed writes roll back keys already written | Sync `read` cannot run the async seed; one seed path under the lock | T-01 (minor) |
+| M1 | §1, §1.3, §1.5, §2.4, §5, §6, Frozen | Foundation helpers documented: `repoDeps.ts`, `session.ts`, `results.ts` (`guardRead`/`guardWrite`), `ids.ts` (added to Frozen); hooks `useShellActions`, `useFiltersFromUrl`; shell parts, `NotAllowedScreen`, `PageSkeleton`, `PlaceholderScreen`, `formatMetric`; constants `MIN_PASSWORD_LENGTH`, `AUTO_RESOLVE_NOTE`, `SYSTEM_ACTOR`; `reconcileAlert(…, ids?)`; `buildWhatsAppUrl` → `null` for no mobile; extra `time.ts` helpers | Built in T-01/T-03, had no home in the LLD; caller-made ids keep §1 pure | T-01, T-03 |
+| M1 | §7 | Real file names (`CredentialsForm`, `useSignIn`, `useSetPassword`, `landingPath`); `mustSetPassword` → `/set-password` applies to any role | As built | T-02 |
+| M1 | §8, §6 | Screens renamed `MyLinksScreen` / `JobCardDetails` (+ `LinkCard`, `WhatsAppIcon`, hooks); `VisitSummary.isMine`; `toVisitSummary(…, meId)` + `currentVisitOf`; ownership FORBIDDEN rule and CONFLICT on non-changeable links; regenerate keeps the original owner. §6 tokens as built: brand red is `--primary` (not `--brand`), `--success/--warning/--danger`, new `--whatsapp` pair, radius 0.625rem | Support may only change own links, admins any (T-03 review m7); WhatsApp Send button colour | T-03 |
+| M1 | §9 | Flat feature folder with real names (`FeedbackFormScreen`, `FeedbackFlowScreen`, `StepView`, `fieldRegistry.tsx`, `formMachine.ts`, `submitFlow.ts`); expired submit → `CONFLICT`, error → `SubmitOutcome` mapping; `markOpened` re-arms the simulated fault; grapheme-safe `clampText` | Expired link needs its own customer screen; S-13; emoji safety | T-04 |
+| M1 | §0.2, §0.5 | `NEXT_PUBLIC_APP_URL` optional (falls back to `window.location.origin`); demo password intentionally public; Vercel project `chandra-psf`, no `vercel.json`, runbook `docs/DEPLOY.md`; `not-found.tsx`, `error.tsx`, `scripts/seed/` | Preview deployments need links on their own origin | T-05 |

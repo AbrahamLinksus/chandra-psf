@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
-| Milestone | M1 · Support → customer loop (6/6 tasks done; milestone wrap-up M1-docs next) |
-| Next step | M1-docs (architect LLD as-built sync + docs README pass), then M1 milestone card |
+| Milestone | M2 · Admin console (M1 approved 2026-11-22; T-12 in progress) |
+| Next step | Run M2 tasks from `taskgraph --ready`; T-12 running |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 10:09 +05:30 |
+| Last updated | 2026-11-22 10:16 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -67,6 +67,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-03 | src/features/support | NEEDS_MOBILE constant in a component file | ≈2 min |
 | T-03 | tests/unit/support | no test for job-card re-lookup after Cancel | ≈5 min |
 | T-05 | Vercel env | NEXT_PUBLIC_DEALER_PHONE is a placeholder (+91 44 0000 0000); set the real number + redeploy | ≈2 min (owner) |
+| M1 | src/data/access/repos/feedback.ts (frozen) | interface comment omits CONFLICT (expired) outcome the UI relies on | ≈2 min |
+| M1 | docs/LLD.md | 432 lines vs 400 cap | ≈10 min |
 | T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions
@@ -85,4 +87,5 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
   - Cost tool (cost.py) reports $0 — costs shown as "not measured".
   - 2026-11-22: T-03 and T-04 approved. Plugin quirk: `taskgit step done` scope check reverts files merged in from main (fixed by hand with `git checkout main -- <files>`); after any catchup/merge, diff the worktree against main before approving.
   - Live demo: https://chandra-psf.vercel.app (Vercel project abrahamlinksus-projects/chandra-psf; linked from the T-05 worktree, re-link from main with `vercel link --yes --project chandra-psf` for redeploys). APP_URL unset on purpose.
+  - T-08 must pass the new 4th argument `meId` to `toVisitSummary` (from M1 LLD sync).
   - Batch queue: empty. Known plugin quirks: guard splits Files on commas (no {a,b} or commas in parens); guard sometimes blocks harmless shell commands; check.sh needs PORT per task to avoid port 8000 collisions.

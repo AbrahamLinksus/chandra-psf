@@ -209,7 +209,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: README.md, docs/DEMO-GUIDE.md
 - Context: SPEC §0, §8, §12, §13 · LLD §0.5 · files: .env.example, docs/DEPLOY.md, package.json
 - Why separate: documentation only; written once the deploy steps exist.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] A fresh clone runs with the README's commands (`pnpm install`, `pnpm dev`, `scripts/check.sh`) (G-06)
   - [ ] README states the data-safety choice: no backup, data lives only in this browser until "Reset demo data", other devices don't see it (G-03)
