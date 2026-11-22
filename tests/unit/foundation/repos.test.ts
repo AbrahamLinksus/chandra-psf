@@ -13,18 +13,7 @@ function make(search = ""): { da: DataAccess; storage: MemoryStorage } {
   return { da, storage };
 }
 
-const noSession = { password: "x" };
 const stubCalls: [string, (da: DataAccess) => Promise<unknown>][] = [
-  [
-    "responses.listResponses",
-    (d) => d.responses.listResponses({ from: "2026-01-01", to: "2026-01-31" }),
-  ],
-  ["responses.getResponse", (d) => d.responses.getResponse("r")],
-  ["responses.editResponse", (d) => d.responses.editResponse("r", {}, noSession)],
-  ["responses.deleteResponse", (d) => d.responses.deleteResponse("r", noSession)],
-  ["responses.restoreResponse", (d) => d.responses.restoreResponse("r", noSession)],
-  ["responses.listDeleted", (d) => d.responses.listDeleted()],
-  ["audit.listAudit", (d) => d.audit.listAudit()],
   ["users.listUsers", (d) => d.users.listUsers()],
   [
     "users.createSupportUser",

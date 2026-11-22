@@ -147,10 +147,22 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] A failed save keeps the typed note and shows "Couldn't save, try again" (S-13); a support session gets `FORBIDDEN` from every alert method (G-W2)
 - Result: approved 2026-11-22 (batch) · 4/4 goals · 214 unit + 106 e2e · ≈$0.76 · frontend-coder 57% · backend-coder 43%
 
+### T-06s · Shared change: retire foundation stub checks for responses and audit
+- Owner: tester
+- Depends on: T-06
+- Files: tests/unit/foundation/repos.test.ts, tests/e2e/foundation/shell.spec.ts
+- Context: T-08 and T-09 both need these files (NEEDS FILE); one edit on main avoids a merge conflict
+- Why separate: shared files claimed by two running tasks
+- Status: Done
+- Acceptance criteria:
+  - [ ] No "Not built yet" stub rows for responses.* or audit.listAudit remain; other stub rows kept, it.each non-empty
+  - [ ] No "Coming soon" assertions remain for /admin/responses or /admin/audit (removed, not replaced); main's check.sh passes
+- Result: approved 2026-11-22 · 2/2 goals · test files only
+
 ### T-08 · Responses: browse, edit with password, delete and restore
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02, T-03
-- Files: src/data/local/repos/responses.ts, src/features/admin-responses/**, src/app/admin/responses/**, tests/unit/admin-responses/**, tests/e2e/admin-responses/**, tests/unit/foundation/repos.test.ts, tests/e2e/foundation/shell.spec.ts
+- Files: src/data/local/repos/responses.ts, src/features/admin-responses/**, src/app/admin/responses/**, tests/unit/admin-responses/**, tests/e2e/admin-responses/**
 - Context: SPEC US-16 (Responses table), US-17, US-18, US-21, F-6, F-4 step 4, §5 F-6 rows, §13 · LLD §1.2, §1.3, §2, §5, §6 (PasswordPromptDialog, ConfirmDialog, FilterBar), §8 (VisitSummary), §12 · files: src/domain/{visibility,alertRules}.ts, src/data/local/repos/{visits,auditWriter}.ts (imports `toVisitSummary(visit, jobCard, now)` from visits.ts without editing it), src/components/shared/*, /AGENTS.md
 - Why separate: own routes and repo; depends on T-03 only for the `VisitSummary` mapper in `repos/visits.ts`.
 - Status: In progress
@@ -165,7 +177,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-09 · Audit log
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/data/local/repos/audit.ts (read side; listAudit only), src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/admin-audit/**, tests/e2e/admin-audit/**, tests/unit/foundation/repos.test.ts, tests/e2e/foundation/shell.spec.ts
+- Files: src/data/local/repos/audit.ts (read side; listAudit only), src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/admin-audit/**, tests/e2e/admin-audit/**
 - Context: SPEC US-19, F-6 step 5 · LLD §1.1 (AuditEntry), §2, §5, §6 (EmptyState), §13 · files: src/data/local/repos/{audit,auditWriter}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own route and read-only repo method; small but independent of every other admin slice.
 - Status: In progress
