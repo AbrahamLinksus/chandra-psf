@@ -124,28 +124,28 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/domain/metrics/**, src/data/local/repos/analytics.ts, src/features/admin-overview/**, src/app/admin/page.tsx, tests/unit/admin-overview/**, tests/e2e/admin-overview/**
 - Context: SPEC US-14, US-15, US-16, F-5, §5 F-5 rows · LLD §1.4, §2, §5, §6 (FilterBar, MetricValue, EmptyState), §10 · files: src/domain/{types,constants}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own route, repo and metric functions; runs beside the other admin slices.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] SPEC §5 metric examples pass: Q1 4, 5, 3 → 75, 100, 50; Q2 Yes/Partially/No → 100/50/0; 40 visits with 30 completed → 75 %; Q3 reversed; cancelled and replaced visits are left out of the response rate (S-14) and a deleted response does not count as completed (S-09)
   - [ ] Default "last 30 days" shows 5 KPI tiles with green/red arrows vs the previous same-length period and all 7 blocks filled with seed data; advisor table sorts; problem breakdown has a follow-up selector (AC-10, S-07)
   - [ ] Every filter (date range, vehicle type, model, advisor) changes every block and is kept in the URL; all blocks filter on the visit's service date (S-11)
   - [ ] A filter matching nothing shows "—" and "No responses for these filters", no arrows, never 0 %, NaN or ∞ (S-10); Recent comments show `<script>` as plain text (G-W3)
-  - [ ] A support session gets `FORBIDDEN` from `getAnalytics` and sees "Not allowed" on `/admin` (G-W2, AC-6); single column at 360 px, grid at 1440 px
+  - [ ] A support session gets `FORBIDDEN` from `getAnalytics` and is redirected to the `/not-allowed` page with no data shown when opening `/admin` (G-W2, AC-6; D-15); single column at 360 px, grid at 1440 px
 - Result: —
 
 ### T-07 · Alerts queue with status, notes and nav badge
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/data/local/repos/alerts.ts, src/features/admin-alerts/**, src/app/admin/alerts/**, tests/unit/admin-alerts/**, tests/e2e/admin-alerts/**
+- Files: src/data/local/repos/alerts.ts, src/features/admin-alerts/**, src/app/admin/alerts/**, tests/unit/admin-alerts/**, tests/e2e/admin-alerts/**, tests/unit/foundation/repos.test.ts, tests/e2e/foundation/shell.spec.ts
 - Context: SPEC US-12, US-13, F-4, §5 F-4 row · LLD §1.3, §2, §5, §6 (StatusBadge, SaveState, EmptyState), §11 · files: src/domain/alertRules.ts, src/data/local/repos/auditWriter.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own route and repo; the nav badge hook is already in the foundation.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] `/admin/alerts` lists alerts newest first with a status filter and rows tinted by status; the nav badge shows the open count and updates after each change (AC-8)
   - [ ] Priya S. → Contacted with note "Called, bike rechecked 22 Nov" → row amber, audit `alert.status · open → contacted` and `alert.note` (AC-8); Resolved can be reopened to Open
   - [ ] The drawer shows customer, phone, vehicle, reasons and links to `/admin/responses/<id>`; alerts of deleted responses are hidden; no alerts → "No alerts — all customers happy"
   - [ ] A failed save keeps the typed note and shows "Couldn't save, try again" (S-13); a support session gets `FORBIDDEN` from every alert method (G-W2)
-- Result: —
+- Result: approved 2026-11-22 (batch) · 4/4 goals · 214 unit + 106 e2e · ≈$0.76 · frontend-coder 57% · backend-coder 43%
 
 ### T-08 · Responses: browse, edit with password, delete and restore
 - Owner: backend-coder, frontend-coder
@@ -200,7 +200,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] Two tabs: a submission in tab B shows as Completed in tab A's support list and raises tab A's alert badge without reload; then moving another alert to Contacted in tab A keeps tab B's response and alert (S-06)
   - [ ] Same browser: support generates a link → opening it shows Opened → submit with Q6 = 1, Q15 = Yes → alert in `/admin/alerts` → Contacted → Resolved, each in `/admin/audit` (AC-3, AC-7, AC-8, S-12)
   - [ ] Delete CUST-014's response → Overview "Responses received" drops by 1, response rate updates and its alert leaves the queue; Restore brings all three back; audit shows `response.delete` then `response.restore` (S-09)
-  - [ ] 360 px and 1440 px screenshots of every SPEC §7 screen in `.results/T-11/` and an accessibility check (labelled inputs) passes (G-W5); a support session sees "Not allowed" on every `/admin` URL (AC-6)
+  - [ ] 360 px and 1440 px screenshots of every SPEC §7 screen in `.results/T-11/` and an accessibility check (labelled inputs) passes (G-W5); a support session is redirected to `/not-allowed` from every `/admin` URL, no data shown (AC-6; D-15)
 - Result: —
 
 ### T-12 · README and presenter guide
@@ -209,9 +209,9 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: README.md, docs/DEMO-GUIDE.md
 - Context: SPEC §0, §8, §12, §13 · LLD §0.5 · files: .env.example, docs/DEPLOY.md, package.json
 - Why separate: documentation only; written once the deploy steps exist.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] A fresh clone runs with the README's commands (`pnpm install`, `pnpm dev`, `scripts/check.sh`) (G-06)
   - [ ] README states the data-safety choice: no backup, data lives only in this browser until "Reset demo data", other devices don't see it (G-03)
   - [ ] `docs/DEMO-GUIDE.md` covers demo logins (from `.env.example`), fresh job cards to use, the two-tab demo, the cross-device limitation, "Simulate failed save" and the public link
-- Result: —
+- Result: approved 2026-11-22 (batch) · 3/3 goals · docs only · ≈$1.12 · docs 100%

@@ -64,7 +64,11 @@ test.describe("T-01 routing and shell", () => {
           .click();
       }
       await expect(page).toHaveURL(new RegExp(`${href}$`));
-      await expect(page.getByText("Coming soon")).toBeVisible();
+      if (href === "/admin/alerts") {
+        await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
+      } else {
+        await expect(page.getByText("Coming soon")).toBeVisible();
+      }
     }
   });
 
@@ -73,7 +77,7 @@ test.describe("T-01 routing and shell", () => {
     await page.goto("/admin/alerts");
     await page.reload();
     await expect(page).toHaveURL(/\/admin\/alerts$/);
-    await expect(page.getByText("Coming soon")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
   });
 
   test("AC-1 / a support session on /admin is told it has no access", async ({ page }) => {

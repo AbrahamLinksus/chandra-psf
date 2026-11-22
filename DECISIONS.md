@@ -17,6 +17,7 @@
 | D-12 | 2026-11-21 | Team | frontend, backend, tester, reviewer, debugger, docs, devops; no optional agents | — | + data-cleaner | plan |
 | D-13 | 2026-11-21 | Env install | Approved plan .results/env/plan.md: pnpm; TS 5.9.3, ESLint 9.39.5, Vitest 4.1.12, dep-cruiser 17.4.3 (newer majors break on node 25); + @testing-library/dom, @vitejs/plugin-react; gitleaks into .tools/; .githooks pre-commit; engines node>=24 | ~1h to bump later | newest majors | plan |
 | D-14 | 2026-11-21 | Brand red accent | Shared-change task T-01s before round 3 | — | later; keep near-black | T-01s |
+| D-15 | 2026-11-22 | Support on /admin URLs | Role guard redirects to /not-allowed ("You don't have access to this page"), no data | — | Render "Not allowed" in place on each admin page (frozen guard change) | T-06 |
 
 ## Tier 2 — decided by agents (overrule any time)
 | ID | Date | Decision | Chosen | Agent | Task |

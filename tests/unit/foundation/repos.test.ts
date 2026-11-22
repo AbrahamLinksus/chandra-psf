@@ -20,9 +20,6 @@ const stubCalls: [string, (da: DataAccess) => Promise<unknown>][] = [
     (d) => d.analytics.getAnalytics({ from: "2026-01-01", to: "2026-01-31" }),
   ],
   ["analytics.getFilterOptions", (d) => d.analytics.getFilterOptions()],
-  ["alerts.listAlerts", (d) => d.alerts.listAlerts()],
-  ["alerts.countOpen", (d) => d.alerts.countOpen()],
-  ["alerts.updateAlert", (d) => d.alerts.updateAlert("a", { note: "n" })],
   [
     "responses.listResponses",
     (d) => d.responses.listResponses({ from: "2026-01-01", to: "2026-01-31" }),

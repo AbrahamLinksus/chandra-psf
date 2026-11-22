@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { AlertsScreen } from "@/features/admin-alerts/AlertsScreen";
 
 export default function AdminAlertsPage() {
-  return <PlaceholderScreen title="Alerts" />;
+  return <AlertsScreen />;
 }

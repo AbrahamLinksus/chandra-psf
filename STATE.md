@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 10:16 +05:30 |
+| Last updated | 2026-11-22 10:38 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -69,6 +69,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-05 | Vercel env | NEXT_PUBLIC_DEALER_PHONE is a placeholder (+91 44 0000 0000); set the real number + redeploy | ≈2 min (owner) |
 | M1 | src/data/access/repos/feedback.ts (frozen) | interface comment omits CONFLICT (expired) outcome the UI relies on | ≈2 min |
 | M1 | docs/LLD.md | 432 lines vs 400 cap | ≈10 min |
+| T-12 | src/config/env.ts | `pnpm dev` fails without .env (README says cp .env.example .env); add dev fallback like check.sh | ≈5 min |
 | T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions
