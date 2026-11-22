@@ -7,20 +7,20 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Paused (owner: continue tomorrow) |
+| Status | Active |
 | Stage | 7 Build |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
-| Milestone | M1 · Support → customer loop (3/6 tasks: T-01, T-02, T-01s done) |
+| Milestone | M1 · Support → customer loop (4/6 tasks: T-01, T-02, T-01s, T-04 done) |
 | Next step | Resume T-03 rework at `rework-frontend` and T-04 rework at `test+review` (fresh runners; see Notes) |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-21 22:08 +05:30 |
+| Last updated | 2026-11-22 08:57 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -59,6 +59,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-01 | scripts/check.sh, playwright.config.ts | review minor #9 (gate files) | ≈3 min |
 | T-01 | src/hooks/useFiltersFromUrl.ts dateOf | regex accepts impossible dates (2026-13-45) | ≈2 min |
 | T-01 | src/data/local/repos/token.ts isPayload | Date.parse accepts loose formats | ≈2 min |
+| T-04 | src/features/feedback-form TextField | Intl.Segmenter built at module load, no fallback (old browsers) | ≈5 min |
+| T-04 | feedback-form Reveal | focus lost when follow-up collapses; stays mounted 300 ms under reduced motion | ≈10 min |
 | T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions

@@ -21,9 +21,6 @@ const stubCalls: [string, (da: DataAccess) => Promise<unknown>][] = [
   ["visits.createVisitLink", (d) => d.visits.createVisitLink({ jobCardNo: "x", phone: null })],
   ["visits.regenerateLink", (d) => d.visits.regenerateLink("v")],
   ["visits.cancelLink", (d) => d.visits.cancelLink("v")],
-  ["feedback.getVisitByToken", (d) => d.feedback.getVisitByToken("t")],
-  ["feedback.markOpened", (d) => d.feedback.markOpened("t")],
-  ["feedback.submitResponse", (d) => d.feedback.submitResponse("t", {})],
   [
     "analytics.getAnalytics",
     (d) => d.analytics.getAnalytics({ from: "2026-01-01", to: "2026-01-31" }),

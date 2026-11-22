@@ -93,14 +93,14 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/data/local/repos/feedback.ts, src/features/feedback-form/**, src/app/f/**, tests/unit/feedback-form/**, tests/e2e/feedback-form/**, tests/unit/foundation/repos.test.ts
 - Context: SPEC US-07, US-08, US-09, US-10, US-11, US-12, F-3, F-4 step 1, §5 F-3 rows · LLD §1.2, §1.3, §2, §5, §9 · files: src/domain/{questionnaire,visibility,alertRules}.ts, src/data/local/repos/token.ts, src/components/shared/*, /AGENTS.md
 - Why separate: the public `/f/[token]` flow with its own repo; needs no staff screens.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] Welcome reads "Hi Ramesh Kumar, how was your Activa 6G's service on 14 Nov?" + "Takes about 2 minutes" and sets the visit to Opened (AC-3); steps show "Step n of 6", faces with label, Yes/No chips, Next disabled until the step is complete, Back keeps answers, tap targets ≥ 48 px, usable at 360 px (AC-11)
   - [ ] Every SPEC F-3 trigger slides its follow-up open/closed; Q1 = 2 opens Q1a; Q7 No → Yes hides Q7a and Q7a is not saved; reloading on step 4 restores answers (S-04, AC-4)
   - [ ] Submit with Q12 = 1, Q15 = Yes → success animation + "Our team will call you soon", visit Completed, one alert "Callback requested · Q12 rated 1" stored (AC-7); Q3 = Yes alone stores no alert
   - [ ] Completed link → "Thank you — already submitted"; seeded 8-day-old link → "This feedback link has expired. Please contact Chandra Honda."; regenerated link → adds "A newer link was sent to you on WhatsApp" (S-05); unknown or cancelled token → "Link not valid" (AC-5, S-14, G-01); a link opened in a fresh browser shows the personal welcome and, after submit, that browser holds the visit, response and alert (S-12)
   - [ ] Text answers stop at 1,000 characters with an `n/1000` counter, accept Tamil and emoji, and `<script>` text is stored and shown as plain text (G-05, G-W3); a failed submit shows "Couldn't save, try again", keeps every answer and Retry succeeds (S-13)
-- Result: —
+- Result: approved 2026-11-22 · 5/5 goals · 186 unit + 64 e2e · cov 96.87% · ≈$0.28 · tester 67% · reviewer 33%
 
 ### T-05 · Public Vercel preview the client can open on a phone
 - Owner: devops

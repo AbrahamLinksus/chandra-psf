@@ -1,5 +1,6 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { FeedbackFormScreen } from "@/features/feedback-form/FeedbackFormScreen";
 
-export default function FeedbackFormPage() {
-  return <PlaceholderScreen title="Feedback form" showDemoLabel />;
+export default async function FeedbackFormPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  return <FeedbackFormScreen token={token} />;
 }
