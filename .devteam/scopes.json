@@ -1,7 +1,19 @@
 {
-  "_comment": "Root-level Next.js app (src/, scripts/, tests/) fits the plugin defaults; this only adds the Playwright config to the gate files that code-writing roles may not change.",
+  "_comment": "Root-level Next.js app (src/, scripts/, tests/). Adds the Playwright config to the gate files code-writing roles may not change. CR-1 phase 2: server code lives in src/server/**, src/app/api/**, src/proxy.ts, drizzle/** and the maintainer scripts; the default backend_dirs glob (server/**) does not match src/server, so the frontend coder is denied them explicitly (LLD-phase2 §15.2).",
   "agents": {
-    "frontend-coder": { "deny": ["playwright.config.*"] },
+    "frontend-coder": {
+      "deny": [
+        "playwright.config.*",
+        "src/server/**",
+        "src/app/api/**",
+        "src/proxy.ts",
+        "drizzle/**",
+        "drizzle.config.*",
+        "scripts/admin.ts",
+        "scripts/migrate.ts",
+        "scripts/golive-check.ts"
+      ]
+    },
     "backend-coder": { "deny": ["playwright.config.*"] },
     "debugger": { "deny": ["playwright.config.*"] }
   }

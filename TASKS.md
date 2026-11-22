@@ -1,4 +1,4 @@
-# TASKS — Chandra Honda PSF (phase 1 demo)
+# TASKS — Chandra Honda PSF (phase 1 demo · phase 2 production, CR-1)
 
 Status: Backlog → In progress → Review → Needs you → Done
 
@@ -16,9 +16,16 @@ scope guard enforces it). `Frozen:` lists the shared code the foundation builds;
 task that claims a frozen path itself may change it. Work that touches every feature is one
 wire-up task at the end, not an edit inside each feature.
 
-Size: medium (cap 15) · 12 tasks · production gate: `docs/PRODUCTION.md`
+Size: phase 1 medium (cap 15) · 12 tasks, all Done · phase 2 (CR-1) large (cap 30) · 31 tasks (one over: see T-18 `Why separate`) · production gate: `docs/PRODUCTION.md`
 
-Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/app/providers.tsx, src/app/globals.css, src/app/admin/layout.tsx, src/app/support/layout.tsx, src/components/ui/**, src/components/shared/**, src/hooks/**, src/data/access/**, src/data/local/store.ts, src/data/local/bus.ts, src/data/local/fault.ts, src/data/local/crypto.ts, src/data/local/seed.ts, src/data/local/createLocalDataAccess.ts, src/data/local/db.ts, src/data/local/ids.ts, src/data/local/repoDeps.ts, src/data/local/results.ts, src/data/local/session.ts, src/data/local/repos/token.ts, src/data/local/repos/auditWriter.ts, src/domain/types.ts, src/domain/schemas.ts, src/domain/questionnaire.ts, src/domain/answers.ts, src/domain/time.ts, src/domain/visitStatus.ts, src/domain/constants.ts, src/domain/visibility.ts, src/domain/alertRules.ts, src/config/env.ts, tests/support/**, gate configs (tsconfig.json; eslint.config.mjs; prettier config; .dependency-cruiser.cjs; vitest.config.ts; playwright.config.ts; postcss.config.mjs; components.json; scripts/check.sh; .env.example)
+Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/app/providers.tsx, src/app/globals.css, src/app/admin/layout.tsx, src/app/support/layout.tsx, src/components/ui/**, src/components/shared/**, src/hooks/**, src/data/access/**, src/data/remote/**, src/domain/types.ts, src/domain/schemas.ts, src/domain/questionnaire.ts, src/domain/answers.ts, src/domain/time.ts, src/domain/visitStatus.ts, src/domain/constants.ts, src/domain/visibility.ts, src/domain/alertRules.ts, src/domain/roles.ts, src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/passwordPolicy.ts, src/domain/retention.ts, src/domain/erasure.ts, src/config/env.ts, src/server/env.ts, src/server/log.ts, src/server/ctx.ts, src/server/scope.ts, src/server/audit.ts, src/server/tokens.ts, src/server/rateLimit.ts, src/server/erasure.ts, src/server/csv.ts, src/server/createServerDataAccess.ts, src/server/db/**, src/server/auth/**, src/server/rpc/index.ts, src/app/api/rpc/**, src/proxy.ts, drizzle/**, drizzle.config.ts, vercel.json, scripts/migrate.ts, scripts/admin.ts, tests/support/**, gate configs (tsconfig.json; eslint.config.mjs; prettier config; .dependency-cruiser.cjs; vitest.config.ts; playwright.config.ts; postcss.config.mjs; components.json; scripts/check.sh; .env.example)
+
+> CR-1: Frozen line = LLD-phase2 "Frozen after the phase-2 foundation" plus the phase-1 list minus the
+> files T-01b deletes (`src/data/local/**`). The phase-2 entries are built by T-15…T-18, T-01b and T-22;
+> `src/server/tokens.ts` is built by T-03c, `src/server/csv.ts` by T-24 and `src/server/erasure.ts` by
+> T-25 (only their slices and the cron use them). Every task that changes a frozen path claims it in
+> its own `Files:`; each feature slice claims its own `src/data/access/repos/<name>.ts`.
+> `drizzle/**` is serial: only T-15 writes migrations in this plan.
 
 > Planner additions to the LLD frozen list (shared by 2+ slices, so built by the foundation):
 > `src/domain/constants.ts` (CONVENTIONS §5), `src/domain/visibility.ts` (form + responses editor),
@@ -275,4 +282,423 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] Every known minor of ≈5 min or less fixed; larger ones on the handover card
   - [ ] CI, as-built LLD/ARCHITECTURE/WALKTHROUGH, README, OWNER.md, PRODUCTION gate; handover lint clean
 - Result: approved 2026-11-22 · CI, ~30 minors fixed, as-built docs, OWNER.md, PRODUCTION gate 0 open, fresh clone 11/11 · ≈$6.74
+
+## M3 · Empty system you can sign into, on a preview deploy
+
+### T-13 · Freeze the demo before the first phase-2 merge
+- Owner: devops
+- Depends on: —
+- Files: docs/DEPLOY.md (demo section)
+- Context: SPEC §0, §0.1 · LLD-phase2 §27 · files: docs/DEPLOY.md, vercel.json
+- Why separate: owner's Vercel account; gates every later merge to main. The tag and branch are git writes made by the Orchestrator / git-pr; devops only writes the owner steps.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] Tag `demo-v1` on current main and branch `demo` from it exist (made by the Orchestrator / git-pr) (S-28)
+  - [ ] **Owner step:** devops stops with plain steps; the owner sets the demo Vercel project `chandra-psf` to deploy from `demo` (or turns its Git deploys off); the task waits in "Needs you" until the owner confirms
+  - [ ] A test push to main does not redeploy https://chandra-psf.vercel.app; `docs/DEPLOY.md` records how the demo is frozen and how to take it offline at launch
+- Result: —
+
+### T-14 · Env setup: approved packages, Neon free project, PGlite
+- Owner: env-setup
+- Depends on: T-13
+- Files: package.json, pnpm-lock.yaml, .env.example, .gitignore
+- Context: LLD-phase2 §15.4, §15.5, §16.2 · files: package.json, .env.example
+- Why separate: package installs are env-setup only; needs the owner's Neon account.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] drizzle-orm 0.45.4, @neondatabase/serverless 1.2.1, @node-rs/argon2 2.2.2, server-only 0.0.1, dev drizzle-kit 0.31.11 and @electric-sql/pglite pinned exactly (licence recorded); argon2's native build allowed in pnpm settings; `pnpm install --frozen-lockfile` works on a fresh clone; scripts `db:generate`, `db:migrate`, `admin`, `golive:check` declared
+  - [ ] **Owner step:** the owner signs up to Neon with their own account and creates project `chandra-psf` in the Singapore region (free plan) with branches `main` and `dev`; the team never sees the password or connection strings; the task waits in "Needs you"
+  - [ ] `.env.example` documents every LLD §15.5 key with placeholders (local `DATABASE_URL=pglite:./.pglite`), `.pglite*` is git-ignored; gitleaks clean; `CHECK_NO_COVERAGE=1 scripts/check.sh` passes (G-04)
+- Result: —
+
+### T-15 · Database foundation: schema, init migration, db client, migrate script
+- Owner: backend-coder
+- Depends on: T-14
+- Files: src/server/db/**, src/server/env.ts, src/server/log.ts, drizzle/**, drizzle.config.ts, scripts/migrate.ts, scripts/check.sh (migrations-in-sync step), tests/support/pglite.ts, tests/unit/server/db/**
+- Context: LLD-phase2 §15.2, §15.5, §16, §16.1, §16.2 · CONVENTIONS §5 (P2 database and logging) · files: .env.example, src/config/env.ts
+- Why separate: the schema is the data every slice reads and locks the data model (M3 checkpoint); migrations are serial.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `pnpm db:migrate` on a fresh PGlite creates all 14 LLD §16.1 tables, enums and indexes from `drizzle/0000_init.sql`; check.sh's migrations-in-sync step passes (`drizzle-kit generate` adds nothing)
+  - [ ] Tests on PGlite prove these are rejected: duplicate `lower(email)`; duplicate job card key in one branch (the same number in two branches is allowed); two live tokens for one visit; a main admin with a branch
+  - [ ] `audit_log` rejects DELETE and any UPDATE unless `psf.redact = 'on'` (then only old/new/note)
+  - [ ] `src/server/env.ts` rejects `pglite:` when `VERCEL_ENV=production` and missing production secrets; `log.ts` writes JSON lines with ids and counts only (a test proves a name or phone field is refused)
+- Result: —
+
+### T-16 · Phase-2 domain rules (pure)
+- Owner: backend-coder
+- Depends on: T-13
+- Files: src/domain/roles.ts, src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/passwordPolicy.ts, src/domain/retention.ts, src/domain/erasure.ts, src/domain/constants.ts, tests/unit/domain/phase2/**
+- Context: SPEC F-2 field table, §5 F-2 and F-10 rows, US-28, US-31 · LLD-phase2 §17.2 (§1.1 Role row), §18.1, §22, §24, §25 · files: src/domain/types.ts, src/domain/constants.ts, src/domain/phone.ts, src/domain/jobCard.ts
+- Why separate: pure functions shared by job cards, users, cron and erasure; runs beside T-14 and T-15.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `jobCardInputSchema(now)` with the SPEC §5 rows: `tn09bx4521` → "TN 09 BX 4521"; `98400 12345` → +91 98400 12345; 25 Nov 2026 entered on 22 Nov → "Service date can't be in the future"; 61 days ago rejected; model "Other" needs a name and a vehicle type
+  - [ ] `passwordProblem`: under 8 characters → too_short, a top-1000 password (any case) → too_common; `isAdmin` / `isMainAdmin` correct for the three roles
+  - [ ] Retention cut-offs (IST dates): served 14 Nov 2026 unanswered → due 12 Feb 2027; answered → 14 Nov 2029; `stripFreeText` drops Q14, Q2a, Q13a and every `.text` and keeps ratings and chips
+  - [ ] Idle, lockout, rate-limit and retention numbers are named constants (CONVENTIONS §5)
+- Result: —
+
+### T-17 · Server core: request context, sessions, scope, audit writer
+- Owner: backend-coder
+- Depends on: T-15, T-16
+- Files: src/server/ctx.ts, src/server/scope.ts, src/server/audit.ts, src/server/auth/session.ts, src/server/auth/cookies.ts, tests/support/serverCtx.ts, tests/unit/server/core/**
+- Context: LLD-phase2 §17.1, §18.2, §19 · CONVENTIONS §2 (P2), §3 · files: src/server/db/**, src/domain/roles.ts, src/domain/constants.ts
+- Why separate: every server repo builds on `RequestCtx`, `Scope` and sessions; kept under ~400 changed lines apart from the transport (T-18).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The session token is 32 random bytes and only its SHA-256 is stored; cookie `__Host-psf_session` (production) is httpOnly, Secure, SameSite=Lax, 7 days; a test proves the raw token is never in the database or the log
+  - [ ] `readSession` rejects: inactive user, inactive branch, support idle > 2 h, admin idle > 12 h, > 7 days since sign-in (S-27); touch moves `last_active_at` at most once per 60 s
+  - [ ] `scopeOf`, `requireStaff` / `requireAdmin` / `requireMainAdmin`, `branchFilter` (a branch user's `wanted` branch is ignored) and `inScope` are covered by the LLD §19 table
+  - [ ] `guard(fn)` maps thrown errors to `SAVE_FAILED` / `UNAVAILABLE` and logs the error class only; the audit writer stamps actor, branch and time
+- Result: —
+
+### T-18 · RPC transport, remote client and server stubs
+- Owner: backend-coder
+- Depends on: T-17
+- Files: src/server/rpc/**, src/server/repos/** (UNAVAILABLE stubs), src/server/createServerDataAccess.ts, src/server/rateLimit.ts, src/app/api/rpc/**, src/data/remote/createRemoteDataAccess.ts, src/data/remote/rpcClient.ts, next.config.ts (security headers), .dependency-cruiser.cjs, eslint.config.mjs, tests/unit/server/rpc/**, tests/unit/remote/**
+- Context: LLD-phase2 §15.3, §17.1, §17.3, §18.5 (headers) · CONVENTIONS §2 (P2) · files: src/data/access/**, src/server/ctx.ts, src/server/scope.ts
+- Why separate: the 31st task (cap 30): the server core and the transport together exceed the ~400-line limit of one session; it is the only data door (CSRF) and needs its own review.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `POST /api/rpc/<repo>/<method>`: wrong Origin → 403; unknown method → 404; bad args → `VALIDATION`; staff method without a session → `UNAUTHENTICATED`; stub method → `UNAVAILABLE`; every reply has `Cache-Control: no-store` (G-W1, G-W2)
+  - [ ] The per-IP flood limit of 300/h on public methods returns `RATE_LIMITED`; the IP is stored only as an HMAC with `IP_HASH_PEPPER`
+  - [ ] Remote client: a network failure → `SAVE_FAILED` or `UNAVAILABLE` by method kind; it sends `x-psf-active`; `UNAUTHENTICATED` invalidates the session query
+  - [ ] The LLD §15.3 layer rules (server-hidden, server-no-ui, remote-hidden, repos-via-root) and the ESLint import bans fail the check on a planted violation; the LLD §18.5 security headers are present
+- Result: —
+
+### T-01b · Switch the app to the server and remove the demo code
+- Owner: backend-coder, frontend-coder, env-setup
+- Depends on: T-18
+- Files: src/domain/types.ts, src/domain/schemas.ts, src/data/access/**, src/data/local/**, src/data/seed/**, scripts/build-seed.ts, scripts/seed/**, data/seed/**, src/server/createServerDataAccess.ts, src/server/repos/branches.ts, src/server/repos/advisors.ts, src/server/repos/customers.ts, src/server/rpc/index.ts, src/server/rpc/branches.ts, src/server/rpc/advisors.ts, src/server/rpc/customers.ts, src/app/providers.tsx, src/config/env.ts, .env.example, package.json, pnpm-lock.yaml, scripts/check.sh, .dependency-cruiser.cjs, src/components/shared/**, src/hooks/**, src/features/auth/**, src/features/support/**, src/app/sign-in/**, src/app/admin/layout.tsx, src/app/support/layout.tsx, src/app/account/** (placeholder), src/app/admin/branches/** (placeholder), src/app/admin/advisors/** (placeholder), src/app/admin/customers/** (placeholder), tests/support/**, tests/unit/** (retire tests of deleted code), tests/e2e/** (demo specs deleted; feature specs test.fixme with the rebuilding task id)
+- Context: SPEC §0.1, §7 Navigation · LLD-phase2 §17.2 (§1.1, §2.1, §2.2 rows), §19 (roles), §27 · CONVENTIONS §2 · files: src/app/providers.tsx, src/components/shared/*
+- Why separate: the single switch point; nothing runs on the server until it lands and every slice needs it. env-setup removes exceljs (installs and removals are env-setup only).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `pnpm dev` on PGlite → `/sign-in` shows email + password only: no picker, no password hint, no "Demo — sample data" label, no Reset demo data; admin More has no Simulate failed save; `/support/new` has no fresh job card hint (SPEC §0.1, DoD last item)
+  - [ ] `src/data/local`, the seed files, exceljs, `NEXT_PUBLIC_DEMO_PASSWORD` / `NEXT_PUBLIC_APP_URL` and check.sh's seed step are gone; only `providers.tsx` imports `@/data/remote`; check.sh passes
+  - [ ] LLD §17.2 shared types applied (three roles + branch, `Branch`, new audit actions, error codes, topics); `DataAccess` loses demo and gains branches / advisors / customers (stubbed on the server); nav shows Branches and Customers to main admins only, Advisors to branch admins, My account in both portals (placeholder pages)
+  - [ ] Shared hook and screen unit tests run on `tests/support/fakeDataAccess.ts`; every phase-1 feature e2e spec is either deleted (demo-only) or `fixme` with the id of the rework task that rebuilds it
+- Result: —
+
+### T-19 · First admin from nothing: setup script + e2e harness
+- Owner: backend-coder, tester
+- Depends on: T-01b
+- Files: scripts/admin.ts, tests/unit/server/admin/**, playwright.config.ts, tests/support/e2e.ts, tests/e2e/global-setup.ts
+- Context: SPEC US-23, F-9 step 1, §5 F-9 rows · LLD-phase2 §26 (`scripts/admin.ts`) · CONVENTIONS §5 (P2 tests) · files: src/server/db/**, src/server/audit.ts, src/domain/questionnaire.ts
+- Why separate: setup is a maintainer tool outside the app (a back door if wrong); the e2e harness every later slice uses needs it.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `admin init --name --email` on an empty database installs questionnaire v1 and one main admin with a printed 16-character one-time password, `must_set_password`, expiry 72 h, audited actor "system"; a second run prints "Users already exist; nothing changed" and changes nothing (S-16, G-14)
+  - [ ] `reissue --email` works only for users still `must_set_password`; `recover --email --no-admin-can-sign-in` works only for an existing main admin and refuses without the flag; both audited actor "system", passwords never in the audit
+  - [ ] Playwright globalSetup creates a fresh PGlite data dir, migrates and runs `init` before `next dev` starts; `tests/support/e2e.ts` gives specs the admin's one-time password and helpers that create branches and users through RPC (no seed file)
+- Result: —
+
+### T-02b · Staff sign-in, set password and sign-out on the server
+- Owner: backend-coder, frontend-coder
+- Depends on: T-19
+- Files: src/server/auth/password.ts, src/server/repos/auth.ts, src/server/rpc/auth.ts, src/data/access/repos/auth.ts, src/proxy.ts, src/features/auth/**, src/app/sign-in/**, src/app/set-password/**, tests/unit/server/auth/**, tests/e2e/auth/**
+- Context: SPEC US-01, US-23 (first sign-in), F-1, §5 F-1 and F-9 rows · LLD-phase2 §18.1, §18.3 (steps 3–7), §18.5, §17.3 (UNAUTHENTICATED handling) · files: src/server/auth/session.ts, src/server/auth/cookies.ts, src/features/auth/*
+- Why separate: every later slice signs in through it.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The first admin signs in with the one-time password → "Set your password" (≥ 8, not common, confirm) → `/admin`; support → `/support`; wrong password or unknown email → "Email or password is incorrect" (equal timing via `DUMMY_HASH`); deactivated user or branch → "Account disabled, contact admin"; a one-time password older than 72 h → "This one-time password has expired. Ask for a new one." (S-16, G-14, G-01)
+  - [ ] Passwords are stored only as argon2id hashes; "Sign out" in the support top bar and the admin menu deletes the session on the server; the sign-in screen shows "Forgot your password? Ask your admin to reset it." (S-18, G-2, G-13, G-W1)
+  - [ ] Without a cookie `/admin/*`, `/support/*` and `/account` redirect to `/sign-in?next=`; after the session ends the next action shows "Your session has ended. Sign in again." and returns to the same page after sign-in; a support session on `/admin` gets "Not allowed" (AC-6)
+  - [ ] Audit `auth.sign_in`; no password or token in the audit or the logs
+- Result: —
+
+### T-20 · Sign-in lockout, step-up password, My account
+- Owner: backend-coder, frontend-coder
+- Depends on: T-02b
+- Files: src/server/auth/stepUp.ts, src/server/repos/auth.ts, src/server/rpc/auth.ts, src/data/access/repos/auth.ts, src/features/account/**, src/app/account/**, tests/unit/server/auth-limits/**, tests/e2e/account/**
+- Context: SPEC US-01 (lockout), US-28, F-1 step 4, F-6 (5 wrong step-ups) · LLD-phase2 §18.3 (steps 1–2), §18.4, §17.2 (§7 AuthRepo row) · files: src/server/auth/*, src/server/repos/auth.ts
+- Why separate: lockout and step-up are shared by responses and erasure; kept apart from sign-in to stay one session.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The 6th wrong password for one email within 15 min → "Too many attempts. Try again in 15 minutes.", `auth.lockout` audited once; 30 failures from one address in 15 min → limited; an admin reset clears the email's lock (S-27, G-13)
+  - [ ] `verifyStepUp`: wrong → "Password incorrect"; 5 wrong in 15 min end that user's sessions
+  - [ ] My account shows name, email, role and branch; Change password: wrong current → "Password incorrect", a weak new one is rejected, success ends my other sessions and is audited `user.change_password` (US-28)
+- Result: —
+
+### T-21 · Branches and advisors
+- Owner: backend-coder, frontend-coder
+- Depends on: T-02b
+- Files: src/server/repos/branches.ts, src/server/repos/advisors.ts, src/server/rpc/branches.ts, src/server/rpc/advisors.ts, src/data/access/repos/branches.ts, src/data/access/repos/advisors.ts, src/features/admin-branches/**, src/app/admin/branches/**, src/app/admin/advisors/**, src/features/admin-overview/FirstRun*.tsx, tests/unit/server/branches/**, tests/e2e/admin-branches/**
+- Context: SPEC US-23 (empty states), US-24, US-25, F-9 steps 2–3, §5 F-9 rows · LLD-phase2 §19, §23 (BranchRepo, AdvisorRepo) · files: src/server/scope.ts, src/server/audit.ts, src/components/shared/*
+- Why separate: own routes and repos; the branch is the scope key and users and job cards need branches and advisors.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] Fresh system: `/admin` shows "Add your first branch" → `/admin/branches` → add "Velachery" and "Chennai"; a duplicate name → "A branch with this name already exists"; rename; deactivate / reactivate, never delete; each audited (US-23, US-24)
+  - [ ] Branch page: add advisor "Suresh", rename, deactivate / reactivate; branch admins manage only their branch at `/admin/advisors`; support can list only their branch's active advisors (US-25)
+  - [ ] Deactivating a branch ends its staff's sessions and blocks their sign-in ("Account disabled, contact admin"); branch screens are main-admin only (others see "Not allowed")
+- Result: —
+
+### T-10b · Staff accounts: add, edit, move, deactivate, reset password
+- Owner: backend-coder, frontend-coder
+- Depends on: T-21
+- Files: src/server/repos/users.ts, src/server/rpc/users.ts, src/data/access/repos/users.ts, src/features/admin-users/**, src/app/admin/users/**, tests/unit/server/users/**, tests/e2e/admin-users/**
+- Context: SPEC US-20, US-27, F-7, §5 F-7 and F-1 rows · LLD-phase2 §23 (UserRepo, `assertCanManage`), §18.2 (End) · files: src/server/auth/session.ts, src/features/admin-users/*
+- Why separate: own route and repo; needs branches.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The Velachery admin adds `arun@chandrahonda.in`: the role picker offers only Support and the branch is fixed; the main admin adds any role and branch; no branches yet → "Add a branch first"; duplicate → "Email already in use"; the new user's first sign-in forces "Set your password" (S-15, G-01, G-05)
+  - [ ] The main admin changes Arun's email and role → saved, Arun's sessions end, audit old → new (S-20, G-9); a branch admin can edit only name and email of their own support users; nobody changes their own role, branch or active flag; the last active main admin can't be deactivated or demoted
+  - [ ] Reset password while Priya is signed in → her next action goes to sign-in, the temp password → "Set your password", her lock is cleared, audit without the password (US-27, S-18, S-27); deactivate ends sessions at once
+  - [ ] A branch admin opening another branch's user → "Not found"; support → FORBIDDEN (US-29, S-19, G-W2)
+- Result: —
+
+### T-05b · Preview deploy on a new Vercel project
+- Owner: devops
+- Depends on: T-02b, T-10b
+- Files: vercel.json, docs/DEPLOY.md
+- Context: SPEC §8 Hosting, §9 Security · HLD Free now / paid later, Risks · LLD-phase2 §15.5, §16.2, §26 · files: .env.example, package.json
+- Why separate: owner's accounts; the M3 risk checkpoint (first real host + real database; argon2 on Vercel unverified).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] **Owner step:** the owner creates a NEW Vercel project (not `chandra-psf`) from the repo and sets the Preview env (Neon `dev` pooled + unpooled URLs, `IP_HASH_PEPPER`, `CRON_SECRET`, `APP_URL`, public placeholders); the team never sees secrets; production deploys stay off until T-28 (`git.deploymentEnabled` for main = false) (G-04)
+  - [ ] The build runs `pnpm db:migrate && next build` against Neon `dev`; **owner step:** the maintainer runs `pnpm admin init` against `dev` from their laptop
+  - [ ] On the preview over HTTPS: the first admin signs in → sets a password → adds a branch and a support user who signs in (360 px captures in `.results/T-05b/`); argon2 hash time measured on Vercel (p95 logged; under 100 ms → parameters raised per LLD §18.1)
+  - [ ] `robots` noindex, security headers present, an unknown path → the not-found page with no stack trace (G-W7); `docs/DEPLOY.md` has the new-project and Neon setup steps
+- Result: —
+
+## M4 · Support → customer loop across devices
+
+### T-03b · Support: find a job card or type in a new one
+- Owner: backend-coder, frontend-coder
+- Depends on: T-02b, T-21
+- Files: src/server/repos/jobCards.ts, src/server/rpc/jobCards.ts, src/data/access/repos/jobCards.ts, src/features/support/**, src/app/support/new/**, tests/unit/server/jobCards/**, tests/e2e/support-jobcards/**
+- Context: SPEC US-02, US-26, F-2 steps 1–4, §5 F-2 rows · LLD-phase2 §22 · files: src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/jobCard.ts, src/domain/phone.ts, src/features/support/*
+- Why separate: own repo (personal data, branch scope); links (T-03c) need a saved job card.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] SPEC §5 row Ramesh Kumar · 98400 12345 · tn09bx4521 · Activa 6G · Paid service · 14 Nov 2026 · Suresh → details card "+91 98400 12345 · TN 09 BX 4521 · Scooter · Advisor: Suresh"; ` jc241042` finds it (S-02); not found → "No job card JC-24-1042 at this branch yet" + New job card with the number prefilled
+  - [ ] Tambaram support looking up Velachery's `JC-24-1042` → not found (US-29); a duplicate at the same branch → "JC-24-1042 already exists at this branch" + Open it; a retry with the same request id after a lost reply → the saved card (S-29, G-15)
+  - [ ] No advisors → "Ask your admin to add advisors for this branch"; a future date → "Service date can't be in the future"; editing phone or details is audited `jobcard.update` old → new and blocked with "Feedback already received" after completion (S-03, G-05)
+  - [ ] A failed save keeps the form and shows "Couldn't save, try again" (S-13)
+- Result: —
+
+### T-03c · Support: generate and send a link, My links / All branch links
+- Owner: backend-coder, frontend-coder
+- Depends on: T-03b
+- Files: src/server/tokens.ts, src/server/repos/visits.ts, src/server/rpc/visits.ts, src/data/access/repos/visits.ts, src/features/support/**, src/app/support/**, tests/unit/server/visits/**, tests/e2e/support-links/**
+- Context: SPEC US-03, US-04, US-05, F-2 steps 5–7, §5 F-2 WhatsApp row · LLD-phase2 §21 (LinkIssued, VisitRepo list and create, tokens) · files: src/domain/whatsapp.ts, src/features/support/*
+- Why separate: own repo (link secrecy); the customer form needs issued links.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] Generate → `/f/<43-char code>` shown once with Send on WhatsApp (the exact SPEC §5 `wa.me` URL with `APP_URL`) and Copy link ("Copied"); the database holds only the SHA-256; status Created, expires in 7 days (AC-2, D-11, S-01)
+  - [ ] Leaving and reopening the job card shows the link's status but no link and no Copy (G-1, S-17); a current link offers Resend / Regenerate, no duplicate; Completed → "Feedback already received"
+  - [ ] `/support` shows My links by default and an All branch links toggle with created-by, search by job card / reg. no, no answers or ratings; empty → "No feedback links yet. Tap New feedback link to start."; a user moved to Tambaram sees only Tambaram's links (G-8, S-19)
+  - [ ] No mobile number → Send disabled with "Enter a mobile number to send on WhatsApp", Copy works (S-03)
+- Result: —
+
+### T-03d · Support: resend, regenerate and cancel any branch link
+- Owner: backend-coder, frontend-coder
+- Depends on: T-03c
+- Files: src/server/repos/visits.ts, src/server/rpc/visits.ts, src/features/support/**, tests/unit/server/visits-actions/**, tests/e2e/support-link-actions/**
+- Context: SPEC US-06, F-2 step 7, §5 F-2 Resend rows · LLD-phase2 §21 (resend, regenerate, cancel) · files: src/server/tokens.ts, src/features/support/*
+- Why separate: second half of the link repo; runs beside the customer form slice.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] A link of 15 Nov resent on 18 Nov → new code, WhatsApp opens with it, Copy offered, still expires 22 Nov; the 15 Nov code shows "A newer link was sent to you on WhatsApp"; audit `link.resend` (G-1, S-17)
+  - [ ] Arun resends a link Priya made, from All branch links → audit actor Arun (G-8); Regenerate → a new 7-day visit and the old link shows the newer-link page (S-05); Cancel (confirm) → Cancelled, the link shows "Link not valid", audit `link.cancel` (S-14)
+  - [ ] Resend on an expired link → CONFLICT (use Regenerate); any action on a completed, cancelled or replaced link → "This link can no longer be changed"; another branch's visit id → NOT_FOUND (US-29); a failed save shows "Couldn't save, try again" (S-13)
+- Result: —
+
+### T-04b · Customer form on any phone, privacy notice and `/privacy`
+- Owner: backend-coder, frontend-coder
+- Depends on: T-03c
+- Files: src/server/repos/feedback.ts, src/server/rpc/feedback.ts, src/data/access/repos/feedback.ts, src/features/feedback-form/**, src/app/f/**, src/features/privacy/**, src/app/privacy/**, tests/unit/server/feedback/**, tests/e2e/feedback-form/**
+- Context: SPEC US-07 to US-12, F-3, §9 Privacy notice, §5 F-3 rows · LLD-phase2 §21 (getVisitByToken, markOpened, submitResponse), LLD §9 (draft) · files: src/domain/alertRules.ts, src/domain/answers.ts, src/domain/visibility.ts, src/server/tokens.ts, src/server/rateLimit.ts
+- Why separate: the public flow with its own repo (abuse, personal data); no staff screens.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The welcome shows the greeting, "Takes about 2 minutes", the SPEC §9 notice with placeholder company and phone, 3 years, providers possibly outside India, and "How we use your answers" → `/privacy` (S-26, G-12); fetching the page without running its script does not set Opened, a real browser does (US-07, AC-3)
+  - [ ] Submit with Q12 = 1, Q15 = Yes → thank-you "Our team will call you soon"; the server stores one response and the alert "Callback requested · Q12 rated 1" for the visit's branch; hidden follow-ups and text over 1,000 characters are rejected by the server; `<script>` text is shown as plain text (AC-7, US-11, G-05, G-W3)
+  - [ ] Two contexts submit the same link → one response, the other sees "Thank you — already submitted"; a same-phone retry with the same submission id → the normal thank-you with the callback line (S-29, G-15); expired, replaced, cancelled and erased links → their pages (AC-5, S-05, S-14)
+  - [ ] 45 submits of different links from one address in an hour are all accepted; the 6th submit on one link in an hour → "Too many requests, try again in a few minutes" (S-22, G-7); a failed submit keeps every answer and Retry succeeds (S-13)
+- Result: —
+
+### T-22 · Live refresh only while staff use the screen
+- Owner: frontend-coder
+- Depends on: T-01b
+- Files: src/data/remote/activity.ts, src/data/remote/poller.ts, src/app/providers.tsx, tests/unit/remote/poller/**
+- Context: SPEC US-05, §4 Rules (Shared data on every device), DoD G-6 item · LLD-phase2 §20 · files: src/data/remote/*
+- Why separate: client-only refresh engine with no repo (free-plan budget).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] A visible tab used in the last 15 min → all staff topics refresh every `POLL_SECONDS`; hidden, or idle > 15 min → no requests (fake timers, request counter) (S-23, G-6)
+  - [ ] Returning to the tab, or the first input after idle → one refresh at once; `x-psf-active: 1` only within 60 s of input
+  - [ ] No polling on `/f/*`, `/privacy`, `/sign-in` or without a staff session; the form query never refetches
+- Result: —
+
+### T-07b · Alerts queue on the server, by branch
+- Owner: backend-coder, frontend-coder
+- Depends on: T-04b
+- Files: src/server/repos/alerts.ts, src/server/rpc/alerts.ts, src/data/access/repos/alerts.ts, src/features/admin-alerts/**, src/app/admin/alerts/**, tests/unit/server/alerts/**, tests/e2e/admin-alerts/**
+- Context: SPEC US-12, US-13, F-4, §5 F-4 row · LLD-phase2 §17.2 (§11 row), §19 · files: src/domain/alertRules.ts, src/features/admin-alerts/*
+- Why separate: own repo and route.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The Velachery admin sees only Velachery alerts and badge count; the main admin sees all with a Branch filter and a branch column (US-13, S-30)
+  - [ ] Priya S. → Contacted with note "Called, bike rechecked 22 Nov" → amber row, audit `alert.status` + note (AC-8); a stale version → "Someone else changed this alert. Reload to see the latest." and the typed note is kept (S-13)
+  - [ ] Another branch's alert id → "Not found"; support → FORBIDDEN (US-29, AC-6, G-W2); alerts of deleted responses are hidden; an erased customer shows "Erased customer"
+- Result: —
+
+### T-23 · Wire-up: support → customer loop across devices on the preview
+- Owner: devops
+- Depends on: T-03d, T-04b, T-22, T-07b, T-05b
+- Files: tests/e2e/preview/**
+- Context: SPEC DoD items 3–6, §5 F-3 rows · HLD Live refresh · files: docs/DEPLOY.md
+- Why separate: the M4 risk checkpoint on the real host + Neon; no feature edits (fixes raise `Needs file:` on the owning slice).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] On the preview: a support laptop generates a link; a different phone (360 px) opens it → the laptop shows Opened within 30 s, then Completed after submit, with no reload (DoD 5, US-05, S-12)
+  - [ ] Q15 = Yes creates the alert for that branch; Velachery's admin sees it, Tambaram's does not (S-30)
+  - [ ] A laptop tab left idle 15+ min makes no requests (Vercel / Neon logs or a network capture) and refreshes at once on return (G-6, S-23); captures in `.results/T-23/`
+- Result: —
+
+## M5 · Admin console, privacy, clean-up, go-live readiness
+
+### T-06b · Overview analytics on the server, with the branch filter
+- Owner: backend-coder, frontend-coder
+- Depends on: T-04b, T-21
+- Files: src/server/repos/analytics.ts, src/server/rpc/analytics.ts, src/data/access/repos/analytics.ts, src/features/admin-overview/**, src/app/admin/page.tsx, tests/unit/server/analytics/**, tests/e2e/admin-overview/**
+- Context: SPEC US-14 to US-16, F-5, §5 F-5 rows · LLD-phase2 §17.2 (§10 row), §19 · files: src/domain/metrics/*, src/features/admin-overview/*
+- Why separate: own repo and route (scope leaks in numbers).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] Velachery 40 visits / 30 completed and Tambaram 10 / 5 → the Velachery admin sees 75 %, the main admin "All branches" 70 % and "Tambaram" 50 % (S-30); the Branch filter is shown only to main admins; the advisor list follows the branch
+  - [ ] Launch day (no responses) → every block "—" / "No responses for these filters", no arrows (S-10); Open alerts excludes alerts of deleted responses (T-06r regression, S-09); all blocks filter on the service date (S-11)
+  - [ ] Support → FORBIDDEN from `getAnalytics` (403 in logs) and "Not allowed" on `/admin` (AC-6, G-W2); anonymised responses are still counted
+- Result: —
+
+### T-08b · Responses on the server: browse, edit, delete, restore
+- Owner: backend-coder, frontend-coder
+- Depends on: T-04b, T-20
+- Files: src/server/repos/responses.ts, src/server/rpc/responses.ts, src/data/access/repos/responses.ts, src/features/admin-responses/**, src/app/admin/responses/**, tests/unit/server/responses/**, tests/e2e/admin-responses/**
+- Context: SPEC US-17, US-18, US-21, F-6, F-4 step 4, §5 F-6 rows · LLD-phase2 §17.2 (§12 row), §18.4 · files: src/domain/alertRules.ts, src/domain/visibility.ts, src/server/auth/stepUp.ts
+- Why separate: own repo and routes (data changes behind step-up).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] Edit Q6 2 → 4 with the right password (checked on the server) → Q6a removed, audit old `{Q6:2,Q6a:{options:["Rude"]}}` new `{Q6:4}`; wrong → "Password incorrect" and nothing saved; a stale version → "Someone else changed this. Reload to see the latest." (AC-9, G-01)
+  - [ ] Edit Q12 1 → 4 on an only-reason alert → Resolved "Auto-resolved: no alert reason after edit"; Q15 No → Yes → a new Open alert (S-08)
+  - [ ] Delete on 1 Dec 2026 → Recently deleted shows "Removed for good on 31 Dec 2026"; Restore brings the answers and the alert back; both audited (US-21, S-09, G-03)
+  - [ ] The Tambaram admin opening a Velachery response URL → "Not found", no data (US-29); a failed edit keeps the edited answers and shows "Couldn't save, try again" (S-13)
+- Result: —
+
+### T-09b · Audit log on the server: scoped, branch column, paging
+- Owner: backend-coder, frontend-coder
+- Depends on: T-02b
+- Files: src/server/repos/audit.ts, src/server/rpc/audit.ts, src/data/access/repos/audit.ts, src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/server/audit/**, tests/e2e/admin-audit/**
+- Context: SPEC US-19, F-6 step 5 · LLD-phase2 §17.2 (§13 row), §16.1 (audit_log) · files: src/features/admin-audit/*
+- Why separate: own read-only repo and route.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] A branch admin sees only their branch's entries, the main admin all with a Branch filter; columns time (IST), actor, branch, action, entity, old → new; system entries show "System"
+  - [ ] 100 per page with "Load more" (cursor); action filter; no edit or delete controls and no write method in the RPC table
+  - [ ] Support → FORBIDDEN (G-W2)
+- Result: —
+
+### T-24 · Privacy requests: find a customer across branches and download
+- Owner: backend-coder, frontend-coder
+- Depends on: T-03b
+- Files: src/server/repos/customers.ts, src/server/rpc/customers.ts, src/server/csv.ts, src/data/access/repos/customers.ts, src/features/admin-customers/**, src/app/admin/customers/**, tests/unit/server/customers/**, tests/e2e/admin-customers/**
+- Context: SPEC US-30, F-10 steps 1–3, §5 F-10 rows · LLD-phase2 §24 (CustomerRepo, CSV) · files: src/features/admin-customers/*
+- Why separate: own repo and route (personal data export); erase (T-25) builds on its screen.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The main admin searches `98400 12345` → two rows (Ramesh Kumar · Velachery · 14 Nov 2026; Lakshmi Kumar · Tambaram · 2 Dec 2026), none ticked; no match → "No customer found with that number" (S-21)
+  - [ ] Download with only Ramesh ticked → a CSV (UTF-8 BOM) of that job card's link and answers only; a value starting `=` is prefixed with `'`; audit `customer.export {count}` without personal values
+  - [ ] Nothing ticked → Download disabled; branch admin and support → "Not allowed" / FORBIDDEN (G-4, G-W2)
+- Result: —
+
+### T-25 · Erase a customer's personal data (and re-apply after restore)
+- Owner: backend-coder, frontend-coder
+- Depends on: T-24, T-20
+- Files: src/server/erasure.ts, src/server/repos/customers.ts, src/server/rpc/customers.ts, src/features/admin-customers/**, scripts/admin.ts (reapply-erasures command), tests/unit/server/erasure/**, tests/e2e/admin-customers-erase/**
+- Context: SPEC US-30, F-10 step 4, US-32 (G-5), §5 F-10 rows · LLD-phase2 §24 (`eraseJobCards`), §26 (Restore) · files: src/domain/erasure.ts, src/server/auth/stepUp.ts
+- Why separate: the irreversible path gets its own tester + reviewer; the cron reuses `eraseJobCards`.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] Ramesh ticked → confirm ("This can't be undone", 1 row) + password → "Erased customer"; phone, reg. no and Q14 gone (incl. Recently deleted and audit old/new → "[erased]"); Lakshmi untouched; Overview counts unchanged; his open link → "Link not valid"; audit `customer.erase {count}` (S-21)
+  - [ ] Erasure writes `erasure_journal` and one log event with job card ids only, no personal data (G-5)
+  - [ ] `admin reapply-erasures --from <url>` re-erases journal ids newer than a restore point; running it twice changes nothing (S-24)
+- Result: —
+
+### T-26 · Daily clean-up: retention, purge, expired sessions
+- Owner: backend-coder
+- Depends on: T-25, T-05b
+- Files: src/app/api/cron/daily/**, src/server/jobs/cleanup.ts, vercel.json, tests/unit/server/cleanup/**
+- Context: SPEC US-31, US-21 (30 days), F-10 step 5, §5 F-10 retention rows · LLD-phase2 §25 · files: src/server/erasure.ts, src/domain/retention.ts
+- Why separate: own route and job (automatic deletion).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `GET /api/cron/daily` without the right `Bearer CRON_SECRET` → 401 (constant-time compare); `vercel.json` schedule `30 21 * * *`
+  - [ ] Clock at 12 Feb 2027: the unanswered visit served 14 Nov 2026 is erased; the answered one is untouched until 14 Nov 2029; a response deleted 1 Dec 2026 is purged on 31 Dec with `response.purge` (no answers) (US-31)
+  - [ ] Expired sessions and attempts / limits older than 24 h removed (G-11); one `system.cleanup` audit with counts; a second run the same day changes nothing; batches stop at 240 s and the next run continues
+- Result: —
+
+### T-27 · Wire-up: branch isolation check across every server method
+- Owner: tester
+- Depends on: T-03d, T-04b, T-06b, T-07b, T-08b, T-09b, T-10b, T-20, T-21, T-25
+- Files: tests/unit/server/scope-matrix/**
+- Context: SPEC US-29, §2 Role rules, DoD scope item · LLD-phase2 §19 table, §17.3 · files: src/server/rpc/*
+- Why separate: one whole-app check that needs every repo; fixes raise `Needs file:` on the owning slice.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] Every RPC method in the registry is called as support, as branch admin of the other branch and as main admin against a two-branch PGlite fixture; results match the LLD §19 table (out of scope → NOT_FOUND / FORBIDDEN, never partial data) (US-29, AC-6, G-W2)
+  - [ ] A `branchId` argument from a branch user never widens their scope; a new RPC method without a matrix row fails the test
+- Result: —
+
+### T-11b · Wire-up: phase-2 Definition-of-done walkthrough on Postgres
+- Owner: frontend-coder, tester
+- Depends on: T-03d, T-04b, T-06b, T-07b, T-08b, T-09b, T-10b, T-20, T-21, T-22, T-25, T-26
+- Files: tests/e2e/walkthrough/**
+- Context: SPEC §12 (DoD), §5 · files: tests/support/*, docs/scenarios.md (S-16 to S-30)
+- Why separate: the whole-app check; no feature edits (fixes raise `Needs file:` on the owning slice).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] On a fresh PGlite server: init → the owner sets a password → "Add your first branch" → two branches, advisors, a branch admin and a support user each → each lands on their portal (DoD 1–2, S-16)
+  - [ ] Two browser contexts: job card → link → customer form at 360 px with the notice → the laptop shows Opened then Completed without reload → alert → Contacted → Resolved, all in the audit (DoD 3–8, S-06, S-12)
+  - [ ] Edit / delete / restore with the password; lockout + admin reset; erase one ticked customer; clean-up run by clock (DoD 11–14, S-09, S-21, S-27)
+  - [ ] 360 px and 1440 px screenshots of every SPEC §7 screen in `.results/T-11b/`; an accessibility check (labelled inputs) passes (G-W5); no demo label, picker or Reset anywhere (DoD last item)
+- Result: —
+
+### T-28 · Production deploy on the new vercel.app address
+- Owner: devops
+- Depends on: T-26, T-05b
+- Files: vercel.json, docs/DEPLOY.md
+- Context: SPEC §8, §12 DoD (DEPLOY.md item), US-23, US-32 · HLD Free now / paid later · LLD-phase2 §15.5, §16.2, §25, §26 · files: .env.example
+- Why separate: owner's accounts; the production database.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] **Owner step:** Production env on the new project (Neon `main` URLs, its own `CRON_SECRET`, `IP_HASH_PEPPER`, `APP_URL` = the new `….vercel.app` address, public placeholders); production deploys switched on; the maintainer runs `admin init` against `main` → only questionnaire v1 + one main admin exist (DoD 1, G-04)
+  - [ ] The cron is visible in Vercel and one run returns 200 with an audit `system.cleanup`
+  - [ ] `docs/DEPLOY.md` holds setup, first admin, re-issue / recovery, the free → paid upgrade (plans + 7-day history setting), partial restore into a branch and full rollback with `reapply-erasures` (US-32, G-5, S-24, DoD 15)
+- Result: —
+
+### T-29 · Go-live gate checklist
+- Owner: backend-coder, devops
+- Depends on: T-28
+- Files: scripts/golive-check.ts, docs/PRODUCTION.md, docs/DEPLOY.md (gate section), tests/unit/golive/**
+- Context: SPEC §12.1, §9 Security · HLD Go-live gate · LLD-phase2 §26 (`golive-check`) · files: docs/PRODUCTION.md, .env.example
+- Why separate: the gate the owner ticks before the first real customer link.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `pnpm golive:check` fails on any placeholder company name / phone / email / dealer phone, a non-production `APP_URL`, or a production database holding more than the questionnaire + main admins before launch, and passes when they're real (S-25)
+  - [ ] `docs/PRODUCTION.md` phase-2 rows are each marked done with their task or `N/A (reason)`; an owner checklist for the six SPEC §12.1 items with plain steps (Vercel Pro, Neon paid + 7-day history, restore rehearsal, company details, legal check, demo project offline) (S-28)
+- Result: —
+
+### T-30 · Handover (CR-1)
+- Owner: devops, backend-coder, frontend-coder, tester, architect, docs
+- Depends on: T-29, T-11b, T-27, T-23
+- Files: .github/workflows/ci.yml, README.md, OWNER.md, docs/** (as-built LLD and ARCHITECTURE and WALKTHROUGH; DEMO-GUIDE.md removed from main), src/** (known minors of 5 min or less), tests/**
+- Context: stage 8 handover · STATE.md Known minors · batched review
+- Why separate: final handover; folds in the T-12 README / demo-guide rework.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] CI runs check.sh with PGlite (no external database) and passes on a fresh clone; the README covers `pnpm install`, local PGlite, `db:migrate`, `admin init`, `scripts/check.sh` (G-06)
+  - [ ] As-built docs updated; OWNER.md explains roles, branches, resets, privacy requests and the go-live gate; known minors fixed or listed
+- Result: —
 

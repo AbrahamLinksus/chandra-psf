@@ -7,20 +7,20 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Complete |
-| Stage | 8 Handover (done) |
+| Status | Active (CR-1 production phase 2) |
+| Stage | 7 Build (CR-1 planning) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
 | Milestone | M2 · Admin console (all tasks done) |
-| Next step | Owner: set dealer phone on Vercel. Maintenance via /setup-project fix|add |
+| Next step | CR-1: planner SPEC update → researcher → architect → impact → What-changes card |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 17:28 +05:30 |
+| Last updated | 2026-11-22 18:17 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |

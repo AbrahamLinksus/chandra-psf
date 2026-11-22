@@ -1,5 +1,6 @@
-# Low-level design — Chandra Honda PSF (phase 1 demo)
+# Low-level design — Chandra Honda PSF (phase 1 as built · phase 2 in `docs/LLD-phase2.md` §15–§27)
 
+> **Phase 2 (CR-1):** production design continues in `docs/LLD-phase2.md` (§15–§27; system view `docs/HLD.md`). It supersedes §2.5 and removes §3–§5 and the demo parts of §6–§7; §17.2 lists the amendments to §1, §2, §6–§14.
 > Numbered, self-contained sections: brief a task with only the sections it needs (e.g. `LLD §2, §8`).
 > **Numbers are stable** — update in place, new sections get new numbers, removed ones are marked `(removed)`. Size cap: medium, 400 lines.
 > Product rules (questions, triggers, metric formulas, copy) live in `docs/SPEC.md`; this file says where and how they are built. As-built at the M2 handover. Diagram source: `.results/lld/dataflow.mmd`.
@@ -204,8 +205,7 @@ Repo interfaces live in `src/data/access/repos/<name>.ts` with the signatures in
 | `useFiltersFromUrl` | `() → { filters: Filters; setFilters(f) }` + exported `dateOf(raw): string \| null` | filters live in the URL query (needs `<Suspense>`); `dateOf` accepts only `YYYY-MM-DD` that **round-trips** as a real calendar date (rejects `2026-13-45`, `2026-02-30`); bad `from`/`to` fall back to the default range |
 Feature-specific hooks live in their feature folder and are built on these.
 
-### §2.5 Phase 2 swap (design check, not built)
-`createRemoteDataAccess()` implements §2.2 via route handlers re-using §1 (`validateSubmission`, `evaluateAlertReasons`, `reconcileAlert`, `computeOverview`) with Drizzle repos; `providers.tsx` changes one import.
+### §2.5 Phase 2 swap — superseded by LLD-phase2 §17 (RPC route + server repos + `createRemoteDataAccess`)
 
 ## §3 Local store
 - **Path:** `src/data/local/store.ts`, `db.ts`, `bus.ts`, `fault.ts`, `crypto.ts` · **Depends on:** §1 schemas (`DbSchemas`, `SessionSchema`), §2 `Topic`. **Frozen after the foundation.**
