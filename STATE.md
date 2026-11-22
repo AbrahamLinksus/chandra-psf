@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
-| Milestone | M1 · Support → customer loop (4/6 tasks: T-01, T-02, T-01s, T-04 done) |
-| Next step | Resume T-03 rework at `rework-frontend` and T-04 rework at `test+review` (fresh runners; see Notes) |
+| Milestone | M1 · Support → customer loop (5/6 tasks: T-01, T-02, T-01s, T-03, T-04 done) |
+| Next step | T-05 Vercel preview (owner signs in to Vercel + links project), then M1 milestone end |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 08:57 +05:30 |
+| Last updated | 2026-11-22 09:30 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -61,6 +61,11 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-01 | src/data/local/repos/token.ts isPayload | Date.parse accepts loose formats | ≈2 min |
 | T-04 | src/features/feedback-form TextField | Intl.Segmenter built at module load, no fallback (old browsers) | ≈5 min |
 | T-04 | feedback-form Reveal | focus lost when follow-up collapses; stays mounted 300 ms under reduced motion | ≈10 min |
+| T-03 | src/features/support NewLinkScreen | list item may widen at 360 px | ≈2 min |
+| T-03 | src/features/support copy flash | timeout not cleared on unmount | ≈3 min |
+| T-03 | support link card | "sent by another team member" wording not from SPEC (owner approved as-is) | ≈1 min |
+| T-03 | src/features/support | NEEDS_MOBILE constant in a component file | ≈2 min |
+| T-03 | tests/unit/support | no test for job-card re-lookup after Cancel | ≈5 min |
 | T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions
@@ -77,4 +82,5 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
   - T-04 rework (owner-approved): red progress/selected states, expired-mid-form → Expired page, close animation, grapheme-safe 1,000-char cut. Backend, frontend and debug rounds DONE. Resume at `test+review`: tester fixes 3 stale unit tests + adds regression tests; reviewer (Sonnet) on rework diff; sync; retake screenshots after animations settle.
   - After both: M1 left = T-05 Vercel preview (owner must sign in to Vercel + link). T-06 (M2) waits until M1 ends.
   - Cost tool (cost.py) reports $0 — costs shown as "not measured".
+  - 2026-11-22: T-03 and T-04 approved. Plugin quirk: `taskgit step done` scope check reverts files merged in from main (fixed by hand with `git checkout main -- <files>`); after any catchup/merge, diff the worktree against main before approving.
   - Batch queue: empty. Known plugin quirks: guard splits Files on commas (no {a,b} or commas in parens); guard sometimes blocks harmless shell commands; check.sh needs PORT per task to avoid port 8000 collisions.

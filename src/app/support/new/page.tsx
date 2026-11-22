@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { NewLinkScreen } from "@/features/support/NewLinkScreen";
 
 export default function SupportNewPage() {
-  return <PlaceholderScreen title="New feedback link" />;
+  return <NewLinkScreen />;
 }

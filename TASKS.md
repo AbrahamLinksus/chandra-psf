@@ -78,14 +78,14 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/domain/jobCard.ts, src/domain/phone.ts, src/domain/whatsapp.ts, src/data/local/repos/jobCards.ts, src/data/local/repos/visits.ts, src/features/support/**, src/app/support/page.tsx, src/app/support/new/**, tests/unit/support/**, tests/e2e/support/**, tests/unit/foundation/repos.test.ts, src/app/globals.css (whatsapp token, owner-approved rework), src/data/access/repos/visits.ts (VisitSummary ownership field)
 - Context: SPEC US-02, US-03, US-04, US-05, US-06, F-2, §5 F-2 rows · LLD §1.5, §2, §5, §6, §8 · files: src/data/local/repos/{token,auditWriter}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own screens (`/support`, `/support/new`) and repos; independent of the form and admin slices.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] `JC-24-1042` autofills the SPEC §5 row (Ramesh Kumar · +91 98400 12345 · TN 09 BX 4521 · Activa 6G · Scooter · Paid service · 14 Nov · Suresh) (AC-1); ` jc241042` and `JC 24 1042` find it (S-02); `JC-99-0000` → "Job card not found. Check the number on the job card." and an empty input is blocked (G-01, G-05); the hint lists the fresh seeded job cards (S-07)
   - [ ] Generate → a `/f/<token>` link that opens the customer form for that visit, status Created, expiry 7 days (AC-2); Send on WhatsApp opens exactly the SPEC §5 `wa.me` URL; Copy link shows "Copied" (S-01)
   - [ ] Landline or blank phone: Send is disabled with "Enter a mobile number to send on WhatsApp"; an edited mobile number is used in the `wa.me` link and saved on the visit; Copy still works (S-03)
   - [ ] `/support` lists only my current links (badge, search by job card / reg. no, no ratings or answers anywhere); Support 2 never sees Support 1's links (G-W2); an existing link shows its status with Resend / Regenerate / Cancel, a Completed one shows "Feedback already received"
   - [ ] Regenerate replaces the link (old visit gets `replacedBy`, list shows the new one, audit `link.regenerate`), Resend reopens WhatsApp with the current link (S-05); Cancel (confirm) → Cancelled + audit `link.cancel` (S-14); a failed save shows "Couldn't save, try again" and keeps the edited phone (S-13)
-- Result: —
+- Result: approved 2026-11-22 · 5/5 goals · 207 unit + 92 e2e (after main merge) · cov 97.1% · ≈$0.78 · merge-main 35% · tester 31% · reviewer 19% · frontend-coder 15%
 
 ### T-04 · Customer feedback form on a phone
 - Owner: backend-coder, frontend-coder

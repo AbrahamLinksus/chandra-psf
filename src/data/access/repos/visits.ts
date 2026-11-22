@@ -14,6 +14,8 @@ export interface VisitSummary {
   expiresAt: ISOTime;
   url: string;
   whatsappUrl: string | null;
+  /** true when the signed-in user created this link (admins may still change any link) */
+  isMine: boolean;
 }
 
 export interface VisitRepo {

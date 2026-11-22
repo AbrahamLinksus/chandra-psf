@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { MyLinksScreen } from "@/features/support/MyLinksScreen";
 
 export default function SupportPage() {
-  return <PlaceholderScreen title="My feedback links" />;
+  return <MyLinksScreen />;
 }

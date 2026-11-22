@@ -15,12 +15,6 @@ function make(search = ""): { da: DataAccess; storage: MemoryStorage } {
 
 const noSession = { password: "x" };
 const stubCalls: [string, (da: DataAccess) => Promise<unknown>][] = [
-  ["jobCards.getJobCard", (d) => d.jobCards.getJobCard("JC-24-1042")],
-  ["jobCards.listFreshJobCards", (d) => d.jobCards.listFreshJobCards()],
-  ["visits.listMyVisits", (d) => d.visits.listMyVisits()],
-  ["visits.createVisitLink", (d) => d.visits.createVisitLink({ jobCardNo: "x", phone: null })],
-  ["visits.regenerateLink", (d) => d.visits.regenerateLink("v")],
-  ["visits.cancelLink", (d) => d.visits.cancelLink("v")],
   [
     "analytics.getAnalytics",
     (d) => d.analytics.getAnalytics({ from: "2026-01-01", to: "2026-01-31" }),

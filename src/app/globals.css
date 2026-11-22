@@ -26,6 +26,8 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-foreground: var(--whatsapp-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -64,6 +66,8 @@
   --warning-foreground: oklch(0.25 0.05 70);
   --danger: oklch(0.42 0.18 8);
   --danger-foreground: oklch(1 0 0);
+  --whatsapp: oklch(0.5 0.14 152);
+  --whatsapp-foreground: oklch(1 0 0);
   --destructive: var(--danger);
   --destructive-foreground: var(--danger-foreground);
   --border: oklch(0.922 0 0);
@@ -97,6 +101,8 @@
   --warning-foreground: oklch(0.145 0 0);
   --danger: oklch(0.7 0.19 8);
   --danger-foreground: oklch(0.145 0 0);
+  --whatsapp: oklch(0.72 0.19 152);
+  --whatsapp-foreground: oklch(0.145 0 0);
   --destructive: var(--danger);
   --destructive-foreground: var(--danger-foreground);
   --border: oklch(1 0 0 / 10%);
