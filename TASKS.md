@@ -301,15 +301,15 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-14 · Env setup: approved packages, Neon free project, PGlite
 - Owner: env-setup
 - Depends on: T-13
-- Files: package.json, pnpm-lock.yaml, .env.example, .gitignore
+- Files: package.json, pnpm-lock.yaml, .env.example, .gitignore, tests/unit/foundation/config.test.ts
 - Context: LLD-phase2 §15.4, §15.5, §16.2 · files: package.json, .env.example
 - Why separate: package installs are env-setup only; needs the owner's Neon account.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] drizzle-orm 0.45.4, @neondatabase/serverless 1.2.1, @node-rs/argon2 2.2.2, server-only 0.0.1, dev drizzle-kit 0.31.11 and @electric-sql/pglite pinned exactly (licence recorded); argon2's native build allowed in pnpm settings; `pnpm install --frozen-lockfile` works on a fresh clone; scripts `db:generate`, `db:migrate`, `admin`, `golive:check` declared
   - [ ] **Owner step:** the owner signs up to Neon with their own account and creates project `chandra-psf` in the Singapore region (free plan) with branches `main` and `dev`; the team never sees the password or connection strings; the task waits in "Needs you"
   - [ ] `.env.example` documents every LLD §15.5 key with placeholders (local `DATABASE_URL=pglite:./.pglite`), `.pglite*` is git-ignored; gitleaks clean; `CHECK_NO_COVERAGE=1 scripts/check.sh` passes (G-04)
-- Result: —
+- Result: approved 2026-11-22 · 3/3 goals · packages pinned, Neon production+dev (owner) · ≈$0.31 · env-setup 54% · env-test 46%
 
 ### T-15 · Database foundation: schema, init migration, db client, migrate script
 - Owner: backend-coder
@@ -328,10 +328,10 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-16 · Phase-2 domain rules (pure)
 - Owner: backend-coder
 - Depends on: T-13
-- Files: src/domain/roles.ts, src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/passwordPolicy.ts, src/domain/retention.ts, src/domain/erasure.ts, src/domain/constants.ts, tests/unit/domain/phase2/**
+- Files: src/domain/roles.ts, src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/passwordPolicy.ts, src/domain/retention.ts, src/domain/erasure.ts, src/domain/constants.ts, tests/unit/domain/phase2/**, src/domain/commonPasswords.ts
 - Context: SPEC F-2 field table, §5 F-2 and F-10 rows, US-28, US-31 · LLD-phase2 §17.2 (§1.1 Role row), §18.1, §22, §24, §25 · files: src/domain/types.ts, src/domain/constants.ts, src/domain/phone.ts, src/domain/jobCard.ts
 - Why separate: pure functions shared by job cards, users, cron and erasure; runs beside T-14 and T-15.
-- Status: Backlog
+- Status: Needs you (batch)
 - Acceptance criteria:
   - [ ] `jobCardInputSchema(now)` with the SPEC §5 rows: `tn09bx4521` → "TN 09 BX 4521"; `98400 12345` → +91 98400 12345; 25 Nov 2026 entered on 22 Nov → "Service date can't be in the future"; 61 days ago rejected; model "Other" needs a name and a vehicle type
   - [ ] `passwordProblem`: under 8 characters → too_short, a top-1000 password (any case) → too_common; `isAdmin` / `isMainAdmin` correct for the three roles

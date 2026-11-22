@@ -14,7 +14,7 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (1/13) |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (2/13) |
 | Next step | T-14 env setup (owner: Neon free sign-up) + T-16 domain rules |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
@@ -52,8 +52,12 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 ## Known minors
 | Task | Where | Fix | Size |
 |---|---|---|---|
+| T-16 | docs/LLD-phase2.md §25 | retention cut-off says `<`; code + SPEC use inclusive `<=` (12 Feb 2027 example) | ≈1 min |
+| T-16 | src/domain/commonPasswords.ts | ~900 hand-built entries, not a real top-1000 list | ≈5 min |
+| T-16 | src/domain/types.ts Role | switch phase-1 Role to StaffRole (T-01b/T-17) | ≈5 min |
 
 ## Owner actions (outside the repo)
+- Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
 - Set the real dealer phone on Vercel (NEXT_PUBLIC_DEALER_PHONE, Production + Preview) and redeploy — see docs/DEPLOY.md.
 - Redeploy to Vercel to publish M2 (the live site is still the T-05 build).
 
@@ -76,4 +80,4 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
   - Live demo: https://chandra-psf.vercel.app (Vercel project abrahamlinksus-projects/chandra-psf; linked from the T-05 worktree, re-link from main with `vercel link --yes --project chandra-psf` for redeploys). APP_URL unset on purpose.
   - T-08 must pass the new 4th argument `meId` to `toVisitSummary` (from M1 LLD sync).
   - Handover: fix SPEC S-09 wording ("rate still reads 75%") to match D-17; seed has no CUST-014 / "Priya S." alert (walkthrough uses r-s005 Kavitha P).
-  - Batch queue: empty. Known plugin quirks: guard splits Files on commas (no {a,b} or commas in parens); guard sometimes blocks harmless shell commands; check.sh needs PORT per task to avoid port 8000 collisions.
+  - Batch queue: T-16 (card ready). Known plugin quirks: guard splits Files on commas (no {a,b} or commas in parens); guard sometimes blocks harmless shell commands; check.sh needs PORT per task to avoid port 8000 collisions.
