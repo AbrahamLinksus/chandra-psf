@@ -165,14 +165,14 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/data/local/repos/responses.ts, src/features/admin-responses/**, src/app/admin/responses/**, tests/unit/admin-responses/**, tests/e2e/admin-responses/**
 - Context: SPEC US-16 (Responses table), US-17, US-18, US-21, F-6, F-4 step 4, §5 F-6 rows, §13 · LLD §1.2, §1.3, §2, §5, §6 (PasswordPromptDialog, ConfirmDialog, FilterBar), §8 (VisitSummary), §12 · files: src/domain/{visibility,alertRules}.ts, src/data/local/repos/{visits,auditWriter}.ts (imports `toVisitSummary(visit, jobCard, now)` from visits.ts without editing it), src/components/shared/*, /AGENTS.md
 - Why separate: own routes and repo; depends on T-03 only for the `VisitSummary` mapper in `repos/visits.ts`.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] `/admin/responses` table filters by service date, vehicle type, model, advisor (S-11, AC-10); a row opens the detail with every answer incl. follow-ups and visit + vehicle info; long text truncated in the list, full on detail; `<script>` shown as plain text (G-W3)
   - [ ] Edit Q6 2 → 4 with the correct password: Q6a disappears live, audit `response.edit` old `{Q6:2,Q6a:["Rude"]}` new `{Q6:4}`; wrong password → "Password incorrect" and nothing saved (AC-9, G-01)
   - [ ] Edit Q12 1 → 4 on an only-reason alert → alert Resolved with "Auto-resolved: no alert reason after edit" audited; edit Q15 No → Yes → new Open alert "Callback requested", badge +1 (S-08)
   - [ ] Delete (confirm + password) moves the response to Recently deleted and out of the table; Restore (password) brings back its answers and its alert with the previous status; audit `response.delete` then `response.restore`; empty list → "Nothing deleted" (US-21, G-03)
   - [ ] A failed edit keeps the edited answers and shows "Couldn't save, try again" (S-13); a support session gets `FORBIDDEN` from every response method (G-W2)
-- Result: —
+- Result: approved 2026-11-22 after owner rework (4 fixes) · 5/5 goals · 286 unit + 164 e2e · cov 97.8% · ≈$2.84 · tester 46% · frontend-coder 27% · backend-coder 15% · reviewer 11%
 
 ### T-09 · Audit log
 - Owner: backend-coder, frontend-coder

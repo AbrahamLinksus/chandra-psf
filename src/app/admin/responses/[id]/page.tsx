@@ -1,5 +1,10 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { ResponseDetailScreen } from "@/features/admin-responses/ResponseDetailScreen";
 
-export default function AdminResponseDetailPage() {
-  return <PlaceholderScreen title="Response" />;
+export default async function AdminResponseDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <ResponseDetailScreen id={id} />;
 }

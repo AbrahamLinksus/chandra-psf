@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 13:47 +05:30 |
+| Last updated | 2026-11-22 14:43 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -75,6 +75,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-10 | src/features/admin-users/UsersScreen.tsx:29 | Retry after failed reactivate only clears error; should re-apply | ≈5 min |
 | T-10 | src/data/local/repos/users.ts:71 | denied() re-reads session; pass `me` | ≈2 min |
 | T-10 | docs/LLD.md §14 | AddUserDialog → inline AddUserForm (M2 sync) | ≈1 min |
+| T-08 | src/features/admin-responses useDeleted | unreachable empty-restore guard message | ≈1 min |
+| T-06 | tests/unit/admin-overview/overviewUi.test.tsx | unused eslint-disable warning | ≈1 min |
 | T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions

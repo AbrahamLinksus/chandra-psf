@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { ResponsesScreen } from "@/features/admin-responses/ResponsesScreen";
 
 export default function AdminResponsesPage() {
-  return <PlaceholderScreen title="Responses" />;
+  return <ResponsesScreen />;
 }
