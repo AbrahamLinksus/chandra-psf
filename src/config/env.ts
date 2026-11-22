@@ -9,7 +9,7 @@ const EnvSchema = z.object({
 // Public sample values from .env.example; used whenever NODE_ENV is not "production" (local dev and unit tests, incl. "test"), so `pnpm dev` works without a .env.
 const DEV_FALLBACK = {
   NEXT_PUBLIC_DEMO_PASSWORD: "Demo@2026",
-  NEXT_PUBLIC_APP_URL: "https://psf-demo.vercel.app",
+  NEXT_PUBLIC_APP_URL: "",
   NEXT_PUBLIC_DEALER_PHONE: "+91 44 0000 0000",
 } as const;
 

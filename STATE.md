@@ -52,13 +52,9 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 ## Known minors
 | Task | Where | Fix | Size |
 |---|---|---|---|
-| T-01 | docs/LLD.md (store.ts `read`) | LLD doc drift | ≈2 min |
 | T-01 | scripts/check.sh, playwright.config.ts | review minor #9 (gate files) | ≈3 min |
 | T-04 | feedback-form Reveal | focus lost when follow-up collapses; stays mounted 300 ms under reduced motion | ≈10 min |
-| T-03 | tests/unit/support | no test for job-card re-lookup after Cancel | ≈5 min |
 | T-05 | Vercel env | NEXT_PUBLIC_DEALER_PHONE is a placeholder (+91 44 0000 0000); set the real number + redeploy | ≈2 min (owner) |
-| M1 | docs/LLD.md | 432 lines vs 400 cap | ≈10 min |
-| T-10 | docs/LLD.md §14 | AddUserDialog → inline AddUserForm (M2 sync) | ≈1 min |
 
 ## Context additions
 | Role | Also read | Why (from gap report) |

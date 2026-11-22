@@ -2,7 +2,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "../../support/e2e";
 
-const BASE = "https://psf-demo.vercel.app";
 const NOT_FOUND = "Job card not found. Check the number on the job card.";
 const NEEDS_MOBILE = "Enter a mobile number to send on WhatsApp";
 
@@ -85,7 +84,7 @@ test.describe("T-03 support: look up, send, manage links", () => {
     await lookup(page, "JC-24-1042");
     await page.getByRole("button", { name: "Generate link" }).click();
     const url = (await page.getByTestId("link-url").textContent()) ?? "";
-    expect(url).toMatch(new RegExp(`^${BASE}/f/[^/\\s]+$`));
+    expect(url).toMatch(new RegExp(`^${new URL(page.url()).origin}/f/[^/\\s]+$`)); // APP_URL empty: links use the page origin
     await expect(page.getByText("Created", { exact: true })).toBeVisible();
     await expect(page.getByText(/^Expires /)).toBeVisible();
     const send = page.getByRole("link", { name: "Send on WhatsApp" });

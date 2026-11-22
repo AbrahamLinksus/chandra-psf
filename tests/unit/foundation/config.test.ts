@@ -48,7 +48,7 @@ describe("env fallback", () => {
   it("falls back to the .env.example sample values outside production", async () => {
     const { env } = await load("development");
     expect(env.NEXT_PUBLIC_DEMO_PASSWORD).toBe("Demo@2026");
-    expect(env.NEXT_PUBLIC_APP_URL).toBe("https://psf-demo.vercel.app");
+    expect(env.NEXT_PUBLIC_APP_URL).toBe("");
     expect(env.NEXT_PUBLIC_DEALER_PHONE).toBe("+91 44 0000 0000");
   });
 

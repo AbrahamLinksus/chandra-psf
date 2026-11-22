@@ -252,6 +252,18 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] tests for each; scripts/check.sh passes
 - Result: approved 2026-11-22 · 2/2 goals · review 0 major · ≈$0.35 · implement-backend 31% · review 23% · implement-frontend 22% · session-key 13% · review-minors 11%
 
+### T-12t · Shared change: empty sample APP_URL in .env.example
+- Owner: devops
+- Depends on: T-12s
+- Files: .env.example, tests/unit/foundation/config.test.ts, src/config/env.ts, tests/unit/foundation/repos.test.ts, tests/support/env.ts, tests/e2e/support/support.spec.ts
+- Context: owner decision at handover; the dev fallback (T-12s) uses .env.example values, so local WhatsApp links pointed at psf-demo.vercel.app
+- Why separate: .env.example is a frozen gate file
+- Status: Done
+- Acceptance criteria:
+  - [ ] NEXT_PUBLIC_APP_URL in .env.example is empty (app uses the page's own address); a comment explains it's optional
+  - [ ] config.test.ts expects the new fallback; scripts/check.sh passes
+- Result: approved 2026-11-22 · 2/2 goals · check passes
+
 ### handover · Handover: known minors, CI, as-built docs, owner guide
 - Owner: devops, backend-coder, frontend-coder, tester, architect, docs
 - Depends on: T-11
