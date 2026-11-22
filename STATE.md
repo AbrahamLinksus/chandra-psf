@@ -77,6 +77,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-10 | docs/LLD.md §14 | AddUserDialog → inline AddUserForm (M2 sync) | ≈1 min |
 | T-08 | src/features/admin-responses useDeleted | unreachable empty-restore guard message | ≈1 min |
 | T-06 | tests/unit/admin-overview/overviewUi.test.tsx | unused eslint-disable warning | ≈1 min |
+| T-06r | analytics.ts / alerts.ts | "live alert" rule duplicated; share one helper | ≈5 min |
 | T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions
@@ -96,4 +97,5 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
   - 2026-11-22: T-03 and T-04 approved. Plugin quirk: `taskgit step done` scope check reverts files merged in from main (fixed by hand with `git checkout main -- <files>`); after any catchup/merge, diff the worktree against main before approving.
   - Live demo: https://chandra-psf.vercel.app (Vercel project abrahamlinksus-projects/chandra-psf; linked from the T-05 worktree, re-link from main with `vercel link --yes --project chandra-psf` for redeploys). APP_URL unset on purpose.
   - T-08 must pass the new 4th argument `meId` to `toVisitSummary` (from M1 LLD sync).
+  - Handover: fix SPEC S-09 wording ("rate still reads 75%") to match D-17; seed has no CUST-014 / "Priya S." alert (walkthrough uses r-s005 Kavitha P).
   - Batch queue: empty. Known plugin quirks: guard splits Files on commas (no {a,b} or commas in parens); guard sometimes blocks harmless shell commands; check.sh needs PORT per task to avoid port 8000 collisions.

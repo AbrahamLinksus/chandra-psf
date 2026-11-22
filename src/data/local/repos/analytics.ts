@@ -32,7 +32,9 @@ export class LocalAnalyticsRepo implements AnalyticsRepo {
       const v = response.deletedAt === null ? byId.get(response.visitId) : undefined;
       return v === undefined ? [] : [{ response, ...v }];
     });
-    const openAlerts = store.read("alerts").filter((a) => a.status === "open").length;
+    // Same rule as the alerts queue: an alert is live only if its response is live and joined.
+    const liveIds = new Set(responses.map((r) => r.response.id));
+    const openAlerts = store.read("alerts").filter((a) => a.status === "open" && liveIds.has(a.responseId)).length;
     return { visits, responses, openAlerts, now: clock.now() };
   }
 

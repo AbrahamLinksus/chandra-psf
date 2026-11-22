@@ -201,13 +201,25 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] A failed save keeps the form contents and shows "Couldn't save, try again" (S-13); a support session gets `FORBIDDEN` (G-W2)
 - Result: approved 2026-11-22 · 4/4 goals · cov 97.9% · ≈$1.16 · tester 49% · frontend-coder 26% · backend-coder 13% · reviewer 13%
 
+### T-06r · Fix: Overview "Open alerts" counts alerts of deleted responses
+- Owner: backend-coder
+- Depends on: T-06, T-08
+- Files: src/data/local/repos/analytics.ts, tests/unit/admin-overview/**
+- Context: found by T-11 walkthrough (S-09): after deleting r-s005 the KPI stays 3, alerts queue shows 2 · LLD §5, §9 · files: src/data/local/repos/alerts.ts, src/data/local/repos/responses.ts
+- Why separate: bug in an approved slice; T-11 adds no feature edits
+- Status: Done
+- Acceptance criteria:
+  - [ ] "Open alerts" KPI excludes alerts whose response is soft-deleted, matching the alerts queue; restore brings it back
+  - [ ] Regression unit test; scripts/check.sh passes
+- Result: approved 2026-11-22 · 2/2 goals · 287 unit + 164 e2e · ≈$0.23 · tester 53% · reviewer 27% · backend-coder 21%
+
 ### T-11 · Wire-up: Definition-of-done walkthrough across all screens
 - Owner: frontend-coder
 - Depends on: T-03, T-04, T-06, T-07, T-08, T-09, T-10
 - Files: tests/e2e/walkthrough/**
 - Context: SPEC §12, §5 (F-6 delete/restore row, two-tab row), §7 · LLD §0.0, §2.4, §3.2 · files: tests/support/*, docs/scenarios.md, /AGENTS.md
 - Why separate: the one whole-app check that needs every feature; no feature edits (fixes raise `Needs file:` on the owning slice).
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Two tabs: a submission in tab B shows as Completed in tab A's support list and raises tab A's alert badge without reload; then moving another alert to Contacted in tab A keeps tab B's response and alert (S-06)
   - [ ] Same browser: support generates a link → opening it shows Opened → submit with Q6 = 1, Q15 = Yes → alert in `/admin/alerts` → Contacted → Resolved, each in `/admin/audit` (AC-3, AC-7, AC-8, S-12)
