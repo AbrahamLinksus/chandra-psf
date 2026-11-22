@@ -105,16 +105,16 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-05 · Public Vercel preview the client can open on a phone
 - Owner: devops
 - Depends on: T-03, T-04
-- Files: vercel.json, docs/DEPLOY.md
+- Files: vercel.json, docs/DEPLOY.md, .gitignore (.vercel line, owner-approved)
 - Context: SPEC §8 (Hosting), §9 (Security & privacy), §10, §12 DoD item 8 · LLD §0.5 · files: .env.example, next.config.ts, /AGENTS.md
 - Why separate: needs the owner's Vercel account and the end-to-end loop; no feature code.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] **Owner step:** devops stops with plain step-by-step instructions; the owner signs in to their own Vercel account and links the project (the team never sees the password); the task waits in "Needs you" until the owner confirms
   - [ ] `NEXT_PUBLIC_DEMO_PASSWORD`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_DEALER_PHONE` are set in the Vercel project, no values committed (G-04)
   - [ ] The preview URL is served over HTTPS; an unknown path shows the not-found page, no stack trace; `/robots.txt` disallows all and pages carry `noindex` (G-W7)
   - [ ] 360 px captures of the deployed sign-in → `/support/new` → generated `/f/<token>` → thank-you in `.results/T-05/` (DoD item 8); redeploy steps written in `docs/DEPLOY.md`
-- Result: —
+- Result: approved 2026-11-22 · live https://chandra-psf.vercel.app · 4/4 goals · ≈$0.70
 
 ## M2 · Admin console
 
