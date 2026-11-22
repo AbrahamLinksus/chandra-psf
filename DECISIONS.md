@@ -23,6 +23,14 @@
 | D-18 | 2026-11-22 | Production gate G-W1 (session expiry, argon2id) | Waived for the phase-1 demo | Sessions never expire; hashing runs in the browser; sample data only — must be built server-side before real customer data (phase 2) | Build session expiry now | handover |
 | D-19 | 2026-11-22 | Known minor "T-01 review #9 (gate files)" | Waived | Details unrecoverable; CI and fresh-clone runs pass | Devops re-review | handover |
 
+| D-20 | 2026-11-22 | CR-1 Production phase 2 | Server + Neon Postgres + own DB-session sign-in; 31 tasks in M3–M5 | ≈$70–100 build | Stay a demo | CR-1 |
+| D-21 | 2026-11-22 | Phase-2 inputs | Job cards typed in by support; click-to-send WhatsApp; several branches; start empty | — | DMS/upload; WhatsApp API | CR-1 |
+| D-22 | 2026-11-22 | Hosting budget | Free tiers first; paid upgrade (Vercel Pro + Neon paid) is a go-live gate; no code change | Hobby is non-commercial; 6 h restore | Paid from day one | CR-1 |
+| D-23 | 2026-11-22 | Roles + resets | Branch admin = full admin for own branch; password reset by admin temp password at launch (email link later) | Staff without admin depend on admins | Email reset now | CR-1 |
+| D-24 | 2026-11-22 | Privacy | Retention 3 years (unanswered links 90 days); export/erase by main admin across branches; notice placeholder until go-live | Notice needs legal check | Branch-scoped erase | CR-1 |
+| D-25 | 2026-11-22 | Addresses + demo | Production on a new vercel.app address; demo frozen (tag demo-v1, demo branch) and taken offline at launch | — | Take over demo address | CR-1 |
+| D-26 | 2026-11-22 | Phase-2 packages + contracts | drizzle-orm 0.45.4, @neondatabase/serverless 1.2.1, @node-rs/argon2 2.2.2, server-only; dev drizzle-kit 0.31.11, PGlite; exceljs removed; contract changes per LLD-phase2; free-plan backups = test data only | — | Auth.js / Better Auth; nightly encrypted dump | CR-1 |
+
 ## Tier 2 — decided by agents (overrule any time)
 | ID | Date | Decision | Chosen | Agent | Task |
 |---|---|---|---|---|---|
