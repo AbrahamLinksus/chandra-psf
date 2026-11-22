@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
-| Milestone | M2 · Admin console (M1 approved 2026-11-22; T-12 in progress) |
-| Next step | Run M2 tasks from `taskgraph --ready`; T-12 running |
+| Milestone | M2 · Admin console (all tasks done) |
+| Next step | Stage 8 handover: batched review (T-06, T-07, T-09, T-11, T-12), then as-built docs |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 14:43 +05:30 |
+| Last updated | 2026-11-22 15:02 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |

@@ -219,13 +219,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: tests/e2e/walkthrough/**
 - Context: SPEC §12, §5 (F-6 delete/restore row, two-tab row), §7 · LLD §0.0, §2.4, §3.2 · files: tests/support/*, docs/scenarios.md, /AGENTS.md
 - Why separate: the one whole-app check that needs every feature; no feature edits (fixes raise `Needs file:` on the owning slice).
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] Two tabs: a submission in tab B shows as Completed in tab A's support list and raises tab A's alert badge without reload; then moving another alert to Contacted in tab A keeps tab B's response and alert (S-06)
   - [ ] Same browser: support generates a link → opening it shows Opened → submit with Q6 = 1, Q15 = Yes → alert in `/admin/alerts` → Contacted → Resolved, each in `/admin/audit` (AC-3, AC-7, AC-8, S-12)
   - [ ] Delete CUST-014's response → Overview "Responses received" drops by 1, response rate updates and its alert leaves the queue; Restore brings all three back; audit shows `response.delete` then `response.restore` (S-09)
   - [ ] 360 px and 1440 px screenshots of every SPEC §7 screen in `.results/T-11/` and an accessibility check (labelled inputs) passes (G-W5); a support session is redirected to `/not-allowed` from every `/admin` URL, no data shown (AC-6; D-15)
-- Result: —
+- Result: approved 2026-11-22 · 4/4 goals · 182 e2e · 46 screenshots · ≈$0.92 · frontend-coder 100%
 
 ### T-12 · README and presenter guide
 - Owner: docs
