@@ -55,3 +55,11 @@ In the Vercel dashboard, open Deployments, pick an earlier deployment and choose
 
 - `.vercel/` (created by `vercel link`) and `.env.local` are git-ignored. Never commit them.
 - Never paste environment values into chat, commit messages or issue trackers.
+
+## Demo (phase 1) — frozen
+
+- Git tag `demo-v1` (annotated) and branch `demo`, both at commit `67ceeb1`, hold the exact code live on https://chandra-psf.vercel.app.
+- The demo Vercel project `chandra-psf` is not connected to GitHub (checked 2026-11-22 and confirmed by the owner). It was deployed with the Vercel CLI, so pushes and merges to main never redeploy it.
+- To redeploy the demo (only if ever needed): switch a checkout to the `demo` branch, link it to the `chandra-psf` project with the Vercel CLI, and run a production deploy. If the link step edits `.gitignore`, undo that edit.
+- To take it offline at launch (D-25): Vercel dashboard → project `chandra-psf` → Settings → Advanced → Delete Project (or pause it).
+- Phase-2 production is a separate Vercel project (preview in T-05b, production in T-28), never `chandra-psf`.

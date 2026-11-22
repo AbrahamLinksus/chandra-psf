@@ -291,12 +291,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: docs/DEPLOY.md (demo section)
 - Context: SPEC §0, §0.1 · LLD-phase2 §27 · files: docs/DEPLOY.md, vercel.json
 - Why separate: owner's Vercel account; gates every later merge to main. The tag and branch are git writes made by the Orchestrator / git-pr; devops only writes the owner steps.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] Tag `demo-v1` on current main and branch `demo` from it exist (made by the Orchestrator / git-pr) (S-28)
   - [ ] **Owner step:** devops stops with plain steps; the owner sets the demo Vercel project `chandra-psf` to deploy from `demo` (or turns its Git deploys off); the task waits in "Needs you" until the owner confirms
   - [ ] A test push to main does not redeploy https://chandra-psf.vercel.app; `docs/DEPLOY.md` records how the demo is frozen and how to take it offline at launch
-- Result: —
+- Result: approved 2026-11-22 · 3/3 goals · demo-v1 + demo at 67ceeb1; demo not Git-connected (owner confirmed) · ≈$0.23 · implement 37% · deploy-doc-2 37% · deploy-doc 26%
 
 ### T-14 · Env setup: approved packages, Neon free project, PGlite
 - Owner: env-setup

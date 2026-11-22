@@ -14,8 +14,8 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (0/13) |
-| Next step | T-13 Freeze the demo (owner step: demo Vercel project → demo branch) |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (1/13) |
+| Next step | T-14 env setup (owner: Neon free sign-up) + T-16 domain rules |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
@@ -58,6 +58,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 - Redeploy to Vercel to publish M2 (the live site is still the T-05 build).
 
 ## Context additions
+<!-- note: planner assigned docs/** files to devops in some tasks; devops scope excludes docs/** — route those edits to the docs agent -->
 | Role | Also read | Why (from gap report) |
 |---|---|---|
 | frontend-coder, backend-coder | <wt>/AGENTS.md + node_modules/next/dist/docs/ (relevant guide) | Next 16.4 has breaking API changes vs training data |
