@@ -14,8 +14,8 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (3/13) |
-| Next step | T-14 env setup (owner: Neon free sign-up) + T-16 domain rules |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (4/13) |
+| Next step | T-17 server core |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
@@ -52,6 +52,11 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 ## Known minors
 | Task | Where | Fix | Size |
 |---|---|---|---|
+| T-15 | src/server/env.ts | drop runtime DATABASE_URL_UNPOOLED requirement (review m-8; src + test change) | ≈5 min |
+| T-15 | review minors m-3, m-11, m-13, m-17 | optional/larger items in .results T-15 review (copied below at merge) | ≈10 min |
+| T-15 | next.config.ts (frozen) | add @electric-sql/pglite to serverExternalPackages (review m-6) — do in T-01b, which first runs PGlite inside Next | ≈2 min |
+| T-15 | T-24/T-25 erasure | must use SET LOCAL for psf.redact on pooled connections (review m-2) | ≈2 min |
+| T-15 | docs/LLD-phase2.md §16 | getDb returns Promise<Db>, LLD says Db (review m-4) | ≈2 min |
 | T-16 | docs/LLD-phase2.md §25 | retention cut-off says `<`; code + SPEC use inclusive `<=` (12 Feb 2027 example) | ≈1 min |
 | T-16 | src/domain/commonPasswords.ts | ~900 hand-built entries, not a real top-1000 list | ≈5 min |
 | T-16 | src/domain/types.ts Role | switch phase-1 Role to StaffRole (T-01b/T-17) | ≈5 min |

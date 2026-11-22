@@ -57,9 +57,12 @@ describe("config (G-04, LLD 0.5)", () => {
     for (const v of Object.values(vars)) expect(v).not.toMatch(/postgres(ql)?:\/\/[^/]*@/);
   });
 
-  it("only src/config/env.ts reads process.env", () => {
+  it("only src/config/env.ts and src/server/env.ts read process.env", () => {
     const readers = sources("src").filter((f) => readFileSync(f, "utf8").includes("process.env"));
-    expect(readers).toEqual([join("src", "config", "env.ts")]);
+    expect(readers.sort()).toEqual([
+      join("src", "config", "env.ts"),
+      join("src", "server", "env.ts"),
+    ]);
   });
 });
 

@@ -314,16 +314,16 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-15 · Database foundation: schema, init migration, db client, migrate script
 - Owner: backend-coder
 - Depends on: T-14
-- Files: src/server/db/**, src/server/env.ts, src/server/log.ts, drizzle/**, drizzle.config.ts, scripts/migrate.ts, scripts/check.sh (migrations-in-sync step), tests/support/pglite.ts, tests/unit/server/db/**, tests/unit/foundation/config.test.ts
+- Files: src/server/db/**, src/server/env.ts, src/server/log.ts, drizzle/**, drizzle.config.ts, scripts/migrate.ts, scripts/check.sh (migrations-in-sync step), tests/support/pglite.ts, tests/unit/server/db/**, tests/unit/foundation/config.test.ts, vitest.config.ts
 - Context: LLD-phase2 §15.2, §15.5, §16, §16.1, §16.2 · CONVENTIONS §5 (P2 database and logging) · files: .env.example, src/config/env.ts
 - Why separate: the schema is the data every slice reads and locks the data model (M3 checkpoint); migrations are serial.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] `pnpm db:migrate` on a fresh PGlite creates all 14 LLD §16.1 tables, enums and indexes from `drizzle/0000_init.sql`; check.sh's migrations-in-sync step passes (`drizzle-kit generate` adds nothing)
   - [ ] Tests on PGlite prove these are rejected: duplicate `lower(email)`; duplicate job card key in one branch (the same number in two branches is allowed); two live tokens for one visit; a main admin with a branch
   - [ ] `audit_log` rejects DELETE and any UPDATE unless `psf.redact = 'on'` (then only old/new/note)
   - [ ] `src/server/env.ts` rejects `pglite:` when `VERCEL_ENV=production` and missing production secrets; `log.ts` writes JSON lines with ids and counts only (a test proves a name or phone field is refused)
-- Result: —
+- Result: approved 2026-11-22 · 4/4 goals · 375 tests · cov 98.2% · review 0 major · ≈$2.23 · backend-coder 30% · review 25% · review-fix-tests 13% · tests 10% · check-gate 6% · coverage-gate 6% · review-fix-backend 5% · review-fix-gate 5%
 
 ### T-16 · Phase-2 domain rules (pure)
 - Owner: backend-coder
@@ -370,7 +370,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-01b · Switch the app to the server and remove the demo code
 - Owner: backend-coder, frontend-coder, env-setup
 - Depends on: T-18
-- Files: src/domain/types.ts, src/domain/schemas.ts, src/data/access/**, src/data/local/**, src/data/seed/**, scripts/build-seed.ts, scripts/seed/**, data/seed/**, src/server/createServerDataAccess.ts, src/server/repos/branches.ts, src/server/repos/advisors.ts, src/server/repos/customers.ts, src/server/rpc/index.ts, src/server/rpc/branches.ts, src/server/rpc/advisors.ts, src/server/rpc/customers.ts, src/app/providers.tsx, src/config/env.ts, .env.example, package.json, pnpm-lock.yaml, scripts/check.sh, .dependency-cruiser.cjs, src/components/shared/**, src/hooks/**, src/features/auth/**, src/features/support/**, src/app/sign-in/**, src/app/admin/layout.tsx, src/app/support/layout.tsx, src/app/account/** (placeholder), src/app/admin/branches/** (placeholder), src/app/admin/advisors/** (placeholder), src/app/admin/customers/** (placeholder), tests/support/**, tests/unit/** (retire tests of deleted code), tests/e2e/** (demo specs deleted; feature specs test.fixme with the rebuilding task id)
+- Files: next.config.ts, src/domain/types.ts, src/domain/schemas.ts, src/data/access/**, src/data/local/**, src/data/seed/**, scripts/build-seed.ts, scripts/seed/**, data/seed/**, src/server/createServerDataAccess.ts, src/server/repos/branches.ts, src/server/repos/advisors.ts, src/server/repos/customers.ts, src/server/rpc/index.ts, src/server/rpc/branches.ts, src/server/rpc/advisors.ts, src/server/rpc/customers.ts, src/app/providers.tsx, src/config/env.ts, .env.example, package.json, pnpm-lock.yaml, scripts/check.sh, .dependency-cruiser.cjs, src/components/shared/**, src/hooks/**, src/features/auth/**, src/features/support/**, src/app/sign-in/**, src/app/admin/layout.tsx, src/app/support/layout.tsx, src/app/account/** (placeholder), src/app/admin/branches/** (placeholder), src/app/admin/advisors/** (placeholder), src/app/admin/customers/** (placeholder), tests/support/**, tests/unit/** (retire tests of deleted code), tests/e2e/** (demo specs deleted; feature specs test.fixme with the rebuilding task id)
 - Context: SPEC §0.1, §7 Navigation · LLD-phase2 §17.2 (§1.1, §2.1, §2.2 rows), §19 (roles), §27 · CONVENTIONS §2 · files: src/app/providers.tsx, src/components/shared/*
 - Why separate: the single switch point; nothing runs on the server until it lands and every slice needs it. env-setup removes exceljs (installs and removals are env-setup only).
 - Status: Backlog

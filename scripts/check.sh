@@ -27,6 +27,39 @@ run "eslint" pnpm exec eslint .
 run "prettier" pnpm exec prettier --check .
 run "tsc" pnpm exec tsc --noEmit
 run "depcruise" pnpm exec depcruise src --config .dependency-cruiser.cjs
+# Removes a check_drift migration (sql, snapshot, journal entry) left by an interrupted run.
+clean_stray_drift() {
+  find drizzle -maxdepth 1 -name '*_check_drift*' -delete 2>/dev/null
+  find drizzle/meta -maxdepth 1 -name '*_snapshot.json' 2>/dev/null | while read -r f; do
+    n="$(basename "$f" | cut -d_ -f1)"
+    if ! ls drizzle/"${n}"_*.sql >/dev/null 2>&1; then rm -f "$f"; fi
+  done
+  if [ -f drizzle/meta/_journal.json ] && grep -q check_drift drizzle/meta/_journal.json; then
+    node -e 'const fs=require("fs"),f="drizzle/meta/_journal.json",j=JSON.parse(fs.readFileSync(f,"utf8"));j.entries=j.entries.filter(e=>!e.tag.includes("check_drift"));fs.writeFileSync(f,JSON.stringify(j,null,2)+"\n")'
+  fi
+}
+migrations_in_sync() {
+  # Runs in a subshell so the EXIT trap is scoped to this step and never leaks to others.
+  # drizzle-kit check/generate only read the schema and drizzle/ files; no DB connection.
+  (
+    clean_stray_drift
+    pnpm exec drizzle-kit check || exit 1
+    backup="$(mktemp -d)"; cp -a drizzle/. "$backup/"
+    restore() { rm -rf drizzle && mkdir drizzle && cp -a "$backup/." drizzle/ && rm -rf "$backup"; }
+    trap restore EXIT
+    trap 'exit 130' INT TERM
+    rc=0
+    before="$(find drizzle -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum)"
+    pnpm exec drizzle-kit generate --name check_drift </dev/null >/dev/null || rc=1
+    after="$(find drizzle -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum)"
+    if [ "$before" != "$after" ]; then
+      echo "    schema changed without a committed migration: run 'pnpm exec drizzle-kit generate' and commit drizzle/"
+      rc=1
+    fi
+    exit "$rc"
+  )
+}
+run "migrations in sync" migrations_in_sync
 if [ "${CHECK_NO_COVERAGE:-0}" = "1" ]; then
   run "vitest (no coverage threshold)" pnpm exec vitest run --passWithNoTests
 else

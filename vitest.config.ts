@@ -12,8 +12,13 @@ export default defineConfig({
     include: ["tests/unit/**/*.{test,spec}.{ts,tsx}"],
     coverage: {
       provider: "v8",
-      include: ["src/domain/**", "src/data/**", "src/hooks/**"],
-      exclude: ["src/data/seed/seed.json", "**/*.d.ts"],
+      include: ["src/domain/**", "src/data/**", "src/hooks/**", "src/server/**"],
+      exclude: [
+        "src/data/seed/seed.json",
+        "**/*.d.ts",
+        // Pure drizzle table/enum declarations; bytea.ts holds real conversion logic and stays in.
+        "src/server/db/schema/!(bytea).ts",
+      ],
       ...(noCoverage
         ? {}
         : { thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 } }),
