@@ -20,6 +20,6 @@ export interface FeedbackRepo {
   getVisitByToken(token: string): Promise<Result<FormContext>>;
   /** sets openedAt once */
   markOpened(token: string): Promise<Result<void>>;
-  /** VALIDATION, ALREADY_COMPLETED, NOT_FOUND */
+  /** VALIDATION, ALREADY_COMPLETED, NOT_FOUND, CONFLICT (link expired) */
   submitResponse(token: string, answers: AnswerMap): Promise<Result<{ callbackRequested: boolean }>>;
 }

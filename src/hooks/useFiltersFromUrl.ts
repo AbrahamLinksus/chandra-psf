@@ -14,8 +14,11 @@ function vehicleTypeOf(raw: string | null): JobCard["vehicleType"] | undefined {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-function dateOf(raw: string | null): string | null {
-  return raw !== null && ISO_DATE.test(raw) ? raw : null;
+/** Valid only if the calendar date round-trips (rejects 2026-13-45, 2026-02-30). */
+export function dateOf(raw: string | null): string | null {
+  if (raw === null || !ISO_DATE.test(raw)) return null;
+  const d = new Date(`${raw}T00:00:00Z`);
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== raw ? null : raw;
 }
 
 /**

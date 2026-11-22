@@ -35,4 +35,12 @@ describe("token", () => {
       expect(decodeToken(bad)).toBeNull();
     },
   );
+
+  it.each(["2026-03-10", "March 10 2026", "2026-03-10 06:30", "10/03/2026", ""])(
+    "decode rejects non-ISO timestamp %j",
+    (stamp) => {
+      const body = btoa(JSON.stringify({ v: "v", j: "j", c: stamp, e: visit.expiresAt, p: null }));
+      expect(decodeToken(`${body.replaceAll("=", "")}.abcdefgh`)).toBeNull();
+    },
+  );
 });

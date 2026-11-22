@@ -239,3 +239,28 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] README states the data-safety choice: no backup, data lives only in this browser until "Reset demo data", other devices don't see it (G-03)
   - [ ] `docs/DEMO-GUIDE.md` covers demo logins (from `.env.example`), fresh job cards to use, the two-tab demo, the cross-device limitation, "Simulate failed save" and the public link
 - Result: approved 2026-11-22 (batch) · 3/3 goals · docs only · ≈$1.12 · docs 100%
+
+### T-12s · Shared change: handover minors in frozen files
+- Owner: backend-coder, frontend-coder
+- Depends on: T-11
+- Files: src/config/env.ts, src/data/access/repos/feedback.ts, src/data/local/repos/token.ts, src/hooks/useFiltersFromUrl.ts, tests/unit/foundation/token.test.ts, tests/unit/foundation/filters.test.ts, tests/unit/foundation/config.test.ts, tests/unit/hooks/**, src/hooks/useSession.ts
+- Context: STATE.md Known minors (T-01 token/dateOf, M1 feedback comment, T-12 env fallback); frozen files need a T-xx claim
+- Why separate: frozen shared code
+- Status: Done
+- Acceptance criteria:
+  - [ ] token.ts strict ISO-8601; dateOf rejects impossible dates; feedback.ts comment documents CONFLICT; env.ts dev fallback (production strict)
+  - [ ] tests for each; scripts/check.sh passes
+- Result: approved 2026-11-22 · 2/2 goals · review 0 major · ≈$0.35 · implement-backend 31% · review 23% · implement-frontend 22% · session-key 13% · review-minors 11%
+
+### handover · Handover: known minors, CI, as-built docs, owner guide
+- Owner: devops, backend-coder, frontend-coder, tester, architect, docs
+- Depends on: T-11
+- Files: .github/workflows/ci.yml, src/config/env.ts, src/data/access/repos/feedback.ts, src/data/local/repos/token.ts, src/data/local/repos/auth.ts, src/data/local/repos/alerts.ts, src/data/local/repos/analytics.ts, src/data/local/repos/users.ts, src/data/local/repos/responses.ts, src/features/**, src/hooks/**, src/domain/**, tests/**, docs/**, README.md, OWNER.md
+- Context: stage 8 handover · STATE.md Known minors · .results/handover/batched-review-reviewer.md
+- Why separate: final handover task
+- Status: In progress
+- Acceptance criteria:
+  - [ ] Every known minor of ≈5 min or less fixed; larger ones on the handover card
+  - [ ] CI, as-built LLD/ARCHITECTURE/WALKTHROUGH, README, OWNER.md, PRODUCTION gate; handover lint clean
+- Result: —
+

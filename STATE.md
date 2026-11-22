@@ -52,33 +52,13 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 ## Known minors
 | Task | Where | Fix | Size |
 |---|---|---|---|
-| T-02 | src/features/auth hooks | ['session'] query key hard-coded (use shared key) | ≈3 min |
-| T-02 | auth redirect | admin with mustSetPassword goes to /support after set-password | ≈3 min |
-| T-02 | src/data/local/repos/auth.ts | branch coverage 78.6% | ≈10 min |
 | T-01 | docs/LLD.md (store.ts `read`) | LLD doc drift | ≈2 min |
 | T-01 | scripts/check.sh, playwright.config.ts | review minor #9 (gate files) | ≈3 min |
-| T-01 | src/hooks/useFiltersFromUrl.ts dateOf | regex accepts impossible dates (2026-13-45) | ≈2 min |
-| T-01 | src/data/local/repos/token.ts isPayload | Date.parse accepts loose formats | ≈2 min |
-| T-04 | src/features/feedback-form TextField | Intl.Segmenter built at module load, no fallback (old browsers) | ≈5 min |
 | T-04 | feedback-form Reveal | focus lost when follow-up collapses; stays mounted 300 ms under reduced motion | ≈10 min |
-| T-03 | src/features/support NewLinkScreen | list item may widen at 360 px | ≈2 min |
-| T-03 | src/features/support copy flash | timeout not cleared on unmount | ≈3 min |
-| T-03 | support link card | "sent by another team member" wording not from SPEC (owner approved as-is) | ≈1 min |
-| T-03 | src/features/support | NEEDS_MOBILE constant in a component file | ≈2 min |
 | T-03 | tests/unit/support | no test for job-card re-lookup after Cancel | ≈5 min |
 | T-05 | Vercel env | NEXT_PUBLIC_DEALER_PHONE is a placeholder (+91 44 0000 0000); set the real number + redeploy | ≈2 min (owner) |
-| M1 | src/data/access/repos/feedback.ts (frozen) | interface comment omits CONFLICT (expired) outcome the UI relies on | ≈2 min |
 | M1 | docs/LLD.md | 432 lines vs 400 cap | ≈10 min |
-| T-12 | src/config/env.ts | `pnpm dev` fails without .env (README says cp .env.example .env); add dev fallback like check.sh | ≈5 min |
-| T-06 | src/features/admin-overview advisor table | last column cut off at 360 px (owner saw it) | ≈5 min |
-| T-06 | admin-overview category scores | "74 / 100" label wraps at 360 px | ≈3 min |
-| T-10 | src/features/admin-users/UsersScreen.tsx:29 | Retry after failed reactivate only clears error; should re-apply | ≈5 min |
-| T-10 | src/data/local/repos/users.ts:71 | denied() re-reads session; pass `me` | ≈2 min |
 | T-10 | docs/LLD.md §14 | AddUserDialog → inline AddUserForm (M2 sync) | ≈1 min |
-| T-08 | src/features/admin-responses useDeleted | unreachable empty-restore guard message | ≈1 min |
-| T-06 | tests/unit/admin-overview/overviewUi.test.tsx | unused eslint-disable warning | ≈1 min |
-| T-06r | analytics.ts / alerts.ts | "live alert" rule duplicated; share one helper | ≈5 min |
-| T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions
 | Role | Also read | Why (from gap report) |

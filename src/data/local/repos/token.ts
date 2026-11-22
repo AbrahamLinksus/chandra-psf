@@ -47,12 +47,17 @@ interface RawPayload {
   p: string | null;
 }
 
+const ISO_8601 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
+function isIsoTime(x: unknown): boolean {
+  return typeof x === "string" && ISO_8601.test(x) && !Number.isNaN(Date.parse(x));
+}
+
 function isPayload(x: unknown): x is RawPayload {
   if (typeof x !== "object" || x === null) return false;
   const o = x as Record<string, unknown>;
-  const strings = [o["v"], o["j"], o["c"], o["e"]].every((s) => typeof s === "string");
-  const dates = [o["c"], o["e"]].every((s) => !Number.isNaN(Date.parse(s as string)));
-  return strings && dates && (o["p"] === null || typeof o["p"] === "string");
+  const strings = [o["v"], o["j"]].every((s) => typeof s === "string");
+  return strings && isIsoTime(o["c"]) && isIsoTime(o["e"]) && (o["p"] === null || typeof o["p"] === "string");
 }
 
 /** Returns null for anything that is not a token produced by `encodeToken`. */
