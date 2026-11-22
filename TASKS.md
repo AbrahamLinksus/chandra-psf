@@ -314,10 +314,10 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-15 · Database foundation: schema, init migration, db client, migrate script
 - Owner: backend-coder
 - Depends on: T-14
-- Files: src/server/db/**, src/server/env.ts, src/server/log.ts, drizzle/**, drizzle.config.ts, scripts/migrate.ts, scripts/check.sh (migrations-in-sync step), tests/support/pglite.ts, tests/unit/server/db/**
+- Files: src/server/db/**, src/server/env.ts, src/server/log.ts, drizzle/**, drizzle.config.ts, scripts/migrate.ts, scripts/check.sh (migrations-in-sync step), tests/support/pglite.ts, tests/unit/server/db/**, tests/unit/foundation/config.test.ts
 - Context: LLD-phase2 §15.2, §15.5, §16, §16.1, §16.2 · CONVENTIONS §5 (P2 database and logging) · files: .env.example, src/config/env.ts
 - Why separate: the schema is the data every slice reads and locks the data model (M3 checkpoint); migrations are serial.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] `pnpm db:migrate` on a fresh PGlite creates all 14 LLD §16.1 tables, enums and indexes from `drizzle/0000_init.sql`; check.sh's migrations-in-sync step passes (`drizzle-kit generate` adds nothing)
   - [ ] Tests on PGlite prove these are rejected: duplicate `lower(email)`; duplicate job card key in one branch (the same number in two branches is allowed); two live tokens for one visit; a main admin with a branch
@@ -331,13 +331,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/domain/roles.ts, src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/passwordPolicy.ts, src/domain/retention.ts, src/domain/erasure.ts, src/domain/constants.ts, tests/unit/domain/phase2/**, src/domain/commonPasswords.ts
 - Context: SPEC F-2 field table, §5 F-2 and F-10 rows, US-28, US-31 · LLD-phase2 §17.2 (§1.1 Role row), §18.1, §22, §24, §25 · files: src/domain/types.ts, src/domain/constants.ts, src/domain/phone.ts, src/domain/jobCard.ts
 - Why separate: pure functions shared by job cards, users, cron and erasure; runs beside T-14 and T-15.
-- Status: Needs you (batch)
+- Status: Done
 - Acceptance criteria:
   - [ ] `jobCardInputSchema(now)` with the SPEC §5 rows: `tn09bx4521` → "TN 09 BX 4521"; `98400 12345` → +91 98400 12345; 25 Nov 2026 entered on 22 Nov → "Service date can't be in the future"; 61 days ago rejected; model "Other" needs a name and a vehicle type
   - [ ] `passwordProblem`: under 8 characters → too_short, a top-1000 password (any case) → too_common; `isAdmin` / `isMainAdmin` correct for the three roles
   - [ ] Retention cut-offs (IST dates): served 14 Nov 2026 unanswered → due 12 Feb 2027; answered → 14 Nov 2029; `stripFreeText` drops Q14, Q2a, Q13a and every `.text` and keeps ratings and chips
   - [ ] Idle, lockout, rate-limit and retention numbers are named constants (CONVENTIONS §5)
-- Result: —
+- Result: approved 2026-11-22 (batch) · 4/4 goals · 333 unit · ≈$0.62 · backend-coder 100%
 
 ### T-17 · Server core: request context, sessions, scope, audit writer
 - Owner: backend-coder
