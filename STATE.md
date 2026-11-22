@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 10:44 +05:30 |
+| Last updated | 2026-11-22 13:47 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -72,6 +72,9 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-12 | src/config/env.ts | `pnpm dev` fails without .env (README says cp .env.example .env); add dev fallback like check.sh | ≈5 min |
 | T-06 | src/features/admin-overview advisor table | last column cut off at 360 px (owner saw it) | ≈5 min |
 | T-06 | admin-overview category scores | "74 / 100" label wraps at 360 px | ≈3 min |
+| T-10 | src/features/admin-users/UsersScreen.tsx:29 | Retry after failed reactivate only clears error; should re-apply | ≈5 min |
+| T-10 | src/data/local/repos/users.ts:71 | denied() re-reads session; pass `me` | ≈2 min |
+| T-10 | docs/LLD.md §14 | AddUserDialog → inline AddUserForm (M2 sync) | ≈1 min |
 | T-01 | spec F-4 | reconcileAlert on resolved alert w/o reasons now returns "none" — confirm in T-07 | ≈0 min (decision) |
 
 ## Context additions

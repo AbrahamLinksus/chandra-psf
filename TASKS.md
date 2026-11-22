@@ -180,26 +180,26 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/data/local/repos/audit.ts (read side; listAudit only), src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/admin-audit/**, tests/e2e/admin-audit/**
 - Context: SPEC US-19, F-6 step 5 · LLD §1.1 (AuditEntry), §2, §5, §6 (EmptyState), §13 · files: src/data/local/repos/{audit,auditWriter}.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own route and read-only repo method; small but independent of every other admin slice.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] `/admin/audit` lists time (IST), actor, action, entity and old → new, newest first, with seeded entries after a reset
   - [ ] Filter by action narrows the list; long old/new values are truncated with "Show more"
   - [ ] There are no edit or delete controls and `AuditRepo` exposes no write method; a support session gets `FORBIDDEN` (G-W2)
-- Result: —
+- Result: approved 2026-11-22 · 3/3 goals · 134 e2e · ≈$0.35 · frontend-coder 68% · backend-coder 32%
 
 ### T-10 · Manage support users
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02
-- Files: src/data/local/repos/users.ts, src/features/admin-users/**, src/app/admin/users/**, tests/unit/admin-users/**, tests/e2e/admin-users/**
+- Files: src/data/local/repos/users.ts, src/features/admin-users/**, src/app/admin/users/**, tests/unit/admin-users/**, tests/e2e/admin-users/**, tests/unit/foundation/repos.test.ts, tests/e2e/foundation/shell.spec.ts
 - Context: SPEC US-20, F-7, F-1 step 3 · LLD §2, §5, §6 (SaveState), §7 (SessionReader behaviour), §14 · files: src/data/local/repos/auth.ts, src/components/shared/*, /AGENTS.md
 - Why separate: own route and repo; depends on T-02 for the set-password screen used in S-15.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] Add "Deepa R." (`deepa@chandrahonda.demo`, `Welcome@1`) → listed; signing in as her opens "Set your password", then `/support` (S-15); `user.create` audited
   - [ ] Adding `SUPPORT1@chandrahonda.demo` → "Email already in use" (G-01); empty name, invalid email or a temp password under 8 characters is rejected (G-05)
   - [ ] Deactivating Support 2 drops his open session and his next sign-in shows "Account disabled, contact admin"; reactivate restores access; the admin cannot deactivate themself; each change audited (S-15)
   - [ ] A failed save keeps the form contents and shows "Couldn't save, try again" (S-13); a support session gets `FORBIDDEN` (G-W2)
-- Result: —
+- Result: approved 2026-11-22 · 4/4 goals · cov 97.9% · ≈$1.16 · tester 49% · frontend-coder 26% · backend-coder 13% · reviewer 13%
 
 ### T-11 · Wire-up: Definition-of-done walkthrough across all screens
 - Owner: frontend-coder

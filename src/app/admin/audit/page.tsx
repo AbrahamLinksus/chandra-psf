@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { AuditScreen } from "@/features/admin-audit/AuditScreen";
 
 export default function AdminAuditPage() {
-  return <PlaceholderScreen title="Audit log" />;
+  return <AuditScreen />;
 }
