@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { UsersScreen } from "@/features/admin-users/UsersScreen";
 
 export default function AdminUsersPage() {
-  return <PlaceholderScreen title="Support users" />;
+  return <UsersScreen />;
 }

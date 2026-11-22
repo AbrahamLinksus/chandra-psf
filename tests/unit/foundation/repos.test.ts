@@ -13,24 +13,7 @@ function make(search = ""): { da: DataAccess; storage: MemoryStorage } {
   return { da, storage };
 }
 
-const stubCalls: [string, (da: DataAccess) => Promise<unknown>][] = [
-  ["users.listUsers", (d) => d.users.listUsers()],
-  [
-    "users.createSupportUser",
-    (d) => d.users.createSupportUser({ name: "n", email: "e@x.y", tempPassword: "12345678" }),
-  ],
-  ["users.setUserActive", (d) => d.users.setUserActive("u", false)],
-];
-
 describe("LLD 2.2 repo methods (foundation stubs)", () => {
-  it.each(stubCalls)("%s returns UNAVAILABLE 'Not built yet'", async (_name, call) => {
-    const { da } = make();
-    expect(await call(da)).toEqual({
-      ok: false,
-      error: { code: "UNAVAILABLE", message: "Not built yet" },
-    });
-  });
-
   it("every repo of the DataAccess exists, plus subscribe", () => {
     const { da } = make();
     for (const k of [
