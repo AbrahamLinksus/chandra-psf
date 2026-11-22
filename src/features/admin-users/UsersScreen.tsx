@@ -23,13 +23,7 @@ export function UsersScreen() {
         </p>
       )}
       {l.pending === null && l.mutation.status === "error" && (
-        <SaveState
-          status="error"
-          error={l.mutation.error}
-          onRetry={() => {
-            l.mutation.reset();
-          }}
-        />
+        <SaveState status="error" error={l.mutation.error} onRetry={l.retry} />
       )}
       {l.users?.length === 0 && <EmptyState icon={UsersIcon} title="No users yet" />}
       <ul className="grid gap-2">

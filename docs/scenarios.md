@@ -37,8 +37,8 @@
 **Result: GAP (G-3, high).** F-6 says edits follow the form's follow-up rules and are audited, but not whether alerts are re-evaluated. Selvam's alert keeps saying "Q12 rated 1" (a wrong result in the queue and the Open-alerts KPI), and Farida's callback request creates no alert, so nobody calls her.
 
 ## S-09 · Deleting a test response, then restoring it
-**Meena** deletes CUST-031 (a staff test entry) and checks Overview: Responses received drops 33 → 32. Response rate still reads 75%. She then restores it.
-**Result: partly handled.** Delete → Recently deleted → Restore with its alert is handled (US-21, F-6 steps 3–4, §5 example). **GAP (G-7, medium):** the deleted response's visit stays Completed (F-6 assumption), and response rate = completed visits ÷ visits created, so the rate still counts a response that has "disappeared from analytics"; the two tiles disagree.
+**Meena** deletes CUST-031 (a staff test entry) and checks Overview: Responses received drops 33 → 32. The response rate updates too (D-17): a deleted response no longer counts as completed. She then restores it.
+**Result: handled.** Delete → Recently deleted → Restore with its alert is handled (US-21, F-6 steps 3–4, §5 example). **G-7 (medium) resolved by D-17:** response rate counts a visit as completed only while it has a live response, so the rate and Responses received agree again. The visit itself stays Completed (F-6 assumption).
 
 ## S-10 · A filter that matches nothing
 **Meena** filters Overview: advisor "Karthik", model "Unicorn", last 7 days → 0 responses; the previous 7 days also have 0.

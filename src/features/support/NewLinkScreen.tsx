@@ -25,7 +25,7 @@ export function NewLinkScreen() {
     else s.setLink(v);
   };
   return (
-    <main className="mx-auto grid max-w-2xl gap-4 p-4 sm:p-6">
+    <main className="mx-auto grid max-w-2xl grid-cols-1 gap-4 p-4 sm:p-6">
       <Button asChild variant="ghost" className="h-12 w-fit">
         <Link href="/support">
           <ArrowLeftIcon aria-hidden /> My links
@@ -81,7 +81,7 @@ export function NewLinkScreen() {
               />
             </div>
           ) : (
-            <ul>
+            <ul className="grid min-w-0">
               <LinkCard visit={shown} sendLabel="Send on WhatsApp" onUpdated={updated} />
             </ul>
           )}

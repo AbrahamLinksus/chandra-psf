@@ -27,6 +27,15 @@ async function setup(): Promise<{
 }
 
 describe("sign in (G-01, G-W1)", () => {
+  it("signInAsDemo reports NOT_FOUND when the demo user is missing", async () => {
+    const { auth, tab } = await setup();
+    await tab.store.mutate(["users"], (d) => {
+      d.users.length = 0;
+    });
+    const r = await auth.signInAsDemo("admin");
+    expect(!r.ok && r.error.code).toBe("NOT_FOUND");
+  });
+
   it("'Sign in as Support 1' and 'Sign in as Admin' start the right session", async () => {
     const { auth } = await setup();
     const s = await auth.signInAsDemo("support1");
@@ -187,6 +196,22 @@ describe("demo reset and simulated failure (US-22, S-06, S-13)", () => {
     expect(!first.ok && first.error.message).toBe("Couldn't save, try again");
     const second = await auth.setOwnPassword("another-pass1");
     expect(second.ok).toBe(true);
+  });
+
+  it("savePassword reports NOT_FOUND when the signed-in user vanished", async () => {
+    const { tab } = await setup();
+    const ghost = {
+      id: "u-ghost",
+      name: "G",
+      email: "g@x",
+      role: "support",
+      active: true,
+      mustSetPassword: false,
+    };
+    const session = { current: () => ghost } as unknown as StoreSessionReader;
+    const auth = new LocalAuthRepo({ store: tab.store, clock: fixedClock(), session });
+    const r = await auth.setOwnPassword("another-pass1");
+    expect(!r.ok && r.error.code).toBe("NOT_FOUND");
   });
 
   it("a storage failure during sign out is reported as a failed save", async () => {

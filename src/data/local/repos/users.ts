@@ -31,7 +31,7 @@ export class LocalUserRepo implements UserRepo {
   readonly listUsers: UserRepo["listUsers"] = () =>
     guardRead(async () => {
       await this.deps.store.whenReady();
-      const denied = this.denied();
+      const denied = this.denied(this.deps.session.current());
       if (denied !== null) return denied;
       return ok(this.deps.store.read("users").map(toPublicUser));
     });
@@ -40,7 +40,7 @@ export class LocalUserRepo implements UserRepo {
     guardWrite(async () => {
       await this.deps.store.whenReady();
       const me = this.deps.session.current();
-      const denied = this.denied();
+      const denied = this.denied(me);
       if (me === null || denied !== null) return denied ?? err("UNAUTHENTICATED", "Sign in first");
       const fields = invalidFields(input);
       if (fields.length > 0) return err("VALIDATION", "Check the highlighted fields", fields);
@@ -55,7 +55,7 @@ export class LocalUserRepo implements UserRepo {
     guardWrite(async () => {
       await this.deps.store.whenReady();
       const me = this.deps.session.current();
-      const denied = this.denied();
+      const denied = this.denied(me);
       if (me === null || denied !== null) return denied ?? err("UNAUTHENTICATED", "Sign in first");
       if (me.id === id) return err("FORBIDDEN", "You can't deactivate your own account");
       const now = this.deps.clock.now();
@@ -63,8 +63,7 @@ export class LocalUserRepo implements UserRepo {
     });
 
   /** null when the caller is a signed-in admin, otherwise the error to return. */
-  private denied(): Result<never> | null {
-    const me = this.deps.session.current();
+  private denied(me: User | null): Result<never> | null {
     if (me === null) return err("UNAUTHENTICATED", "Sign in first");
     return me.role === "admin" ? null : err("FORBIDDEN", ADMIN_ONLY);
   }

@@ -13,7 +13,7 @@ function make(search = ""): { da: DataAccess; storage: MemoryStorage } {
   return { da, storage };
 }
 
-describe("LLD 2.2 repo methods (foundation stubs)", () => {
+describe("LLD 2.2 DataAccess shape", () => {
   it("every repo of the DataAccess exists, plus subscribe", () => {
     const { da } = make();
     for (const k of [

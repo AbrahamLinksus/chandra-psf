@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toWhatsAppNumber } from "@/domain/phone";
 import { formatISTDate } from "@/domain/time";
-import { NEEDS_MOBILE } from "./LinkActions";
+import { NEEDS_MOBILE } from "./messages";
 import type { FoundCard } from "./useNewLink";
 
 interface Props {

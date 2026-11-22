@@ -28,6 +28,14 @@ async function pick(page: Page, label: string, option: string): Promise<void> {
   await page.getByRole("option", { name: option, exact: true }).click();
 }
 
+/** Text of two blocks besides the tile, so a filter must change more than "Responses". */
+const blockText = (page: Page): Promise<string[]> =>
+  Promise.all(
+    ["Category scores", "Recent comments"].map((h) =>
+      page.locator("section").filter({ hasText: h }).first().innerText(),
+    ),
+  );
+
 const responses = (page: Page) =>
   page.getByTestId("kpi-tile").filter({ hasText: "Responses received" });
 
@@ -69,7 +77,11 @@ test.describe("T-06 admin overview", () => {
   test("S-11 / every filter changes the blocks and is kept in the URL", async ({ page }) => {
     await openOverview(page);
     await expect(responses(page)).toContainText("11");
+    const base = await blockText(page);
     await pick(page, "Advisor", "Anand");
+    await expect
+      .poll(() => blockText(page).then(([c, r]) => [c !== base[0], r !== base[1]]))
+      .toEqual([true, true]);
     await expect(page).toHaveURL(/advisorId=/);
     await expect(page.getByTestId("advisor-row")).toHaveCount(1);
     await expect(responses(page)).toContainText("3");
@@ -81,6 +93,7 @@ test.describe("T-06 admin overview", () => {
     await pick(page, "Vehicle type", "scooter");
     await expect(page).toHaveURL(/vehicleType=scooter/);
     await expect(responses(page)).not.toContainText("11");
+    await expect.poll(async () => (await blockText(page))[0] !== base[0]).toBe(true);
 
     await openOverview(page);
     await pick(page, "Model", "Activa 6G");
@@ -91,6 +104,7 @@ test.describe("T-06 admin overview", () => {
     await page.getByLabel("From").fill("2026-11-15");
     await expect(page).toHaveURL(/from=2026-11-15/);
     await expect(responses(page)).not.toContainText("11");
+    await expect.poll(async () => (await blockText(page)).join() !== base.join()).toBe(true);
   });
 
   test("S-10 / a filter matching nothing shows dashes, no arrows, never 0 %, NaN or infinity", async ({
@@ -99,6 +113,9 @@ test.describe("T-06 admin overview", () => {
     await openOverview(page, "?from=2020-01-01&to=2020-01-31");
     await expect(page.getByText("No responses for these filters")).toBeVisible();
     await expect(responses(page)).toContainText("—");
+    for (const b of BLOCKS) await expect(page.getByRole("heading", { name: b })).toHaveCount(0);
+    await expect(page.getByTestId("advisor-row")).toHaveCount(0);
+    await expect(page.getByTestId("comment")).toHaveCount(0);
     await expect(page.getByTestId("delta")).toHaveCount(0);
     const text = await page.locator("main").innerText();
     expect(text).not.toMatch(/NaN|∞|Infinity|\b0%/);

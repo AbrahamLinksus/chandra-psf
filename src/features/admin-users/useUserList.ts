@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { User } from "@/domain/types";
 import { useRepoMutation } from "@/hooks/useRepoMutation";
 import { useRepoQuery } from "@/hooks/useRepoQuery";
@@ -20,7 +20,10 @@ export function useUserList() {
     da.users.setUserActive(c.user.id, c.active),
   );
 
+  const last = useRef<ActiveChange | null>(null);
+
   const apply = async (change: ActiveChange) => {
+    last.current = change;
     const result = await mutation.run(change);
     if (result.ok) setPending(null);
   };
@@ -44,6 +47,10 @@ export function useUserList() {
     pending,
     mutation,
     request,
+    /** Re-applies the last attempted change (Retry after a failed save). */
+    retry: () => {
+      if (last.current !== null) void apply(last.current);
+    },
     confirm: () => {
       if (pending !== null) void apply(pending);
     },

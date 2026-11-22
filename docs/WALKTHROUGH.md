@@ -1,0 +1,64 @@
+# Codebase walkthrough — Chandra Honda PSF phase 1 demo
+
+> A guided tour for a new developer: understand, own and explain this code. Pairs with `docs/ARCHITECTURE.md` (what and why) and `docs/LLD.md` (numbered reference sections). Line numbers are as built at handover and may drift by a few lines.
+
+## 1. Read these first (in order)
+1. `docs/ARCHITECTURE.md`: the diagram and component table; five minutes to know where everything lives.
+2. `src/data/access/index.ts`: the `DataAccess` interface, the one seam between screens and data. Everything a screen can ask for is here.
+3. `src/data/access/result.ts`: `Result<T>`, `ErrorCode`, `StepUp`. Repo methods never throw; they return these.
+4. `src/domain/types.ts` and `src/domain/questionnaire.ts`: the data shapes and the whole questionnaire as data.
+5. `src/domain/visibility.ts` and `src/domain/alertRules.ts`: the business rules (which follow-ups show, when an alert exists), pure and unit-tested.
+6. `src/data/local/store.ts`: how localStorage is read and written safely across tabs (`mutate`).
+7. `src/data/local/createLocalDataAccess.ts` and `src/app/providers.tsx`: where everything is wired together.
+8. `src/data/local/repos/feedback.ts`: a complete repo, short enough to read in one sitting.
+9. `src/features/admin-users/` (`src/features/admin-users/UsersScreen.tsx`, `src/features/admin-users/useUserList.ts`, `src/features/admin-users/AddUserForm.tsx`): the smallest complete feature, the pattern to copy.
+10. `docs/SPEC.md` for the product rules and `docs/CONVENTIONS.md` for the coding rules.
+
+## 2. Follow one request end to end
+**Trace: a customer submits feedback with a low rating, and the admin's Alerts badge changes.**
+
+1. **Wiring (once per page load).** `src/app/providers.tsx` `createClientDataAccess` (line 16) calls `createLocalDataAccess` (`src/data/local/createLocalDataAccess.ts`, line 30). It builds the `ChangeBus`, `FaultSwitch`, `LocalStore` and every `Local*Repo`, and returns one `DataAccess`. `DataAccessProvider` (`src/data/access/provider.tsx`) hands it to React, after mount.
+2. **Open the link.** `src/app/f/[token]/page.tsx` renders `FeedbackFormScreen`. `useFormContext` (`src/features/feedback-form/useFormContext.ts`, line 22) calls `data.feedback.getVisitByToken(token)`. In `src/data/local/repos/feedback.ts` that runs `lookup` (line 37): `decodeToken` (`src/data/local/repos/token.ts`) parses the link; if this browser has never seen the visit it is rebuilt from the token (this is why a link works on the customer's own phone). `toContext` maps `visitStatus` to `ready`, `expired`, `completed` or `invalid`.
+3. **Fill the form.** `FeedbackFlowScreen` calls `useFeedbackFlow` (`src/features/feedback-form/useFeedbackFlow.ts`). On mount it calls `markOpened` (line 79). Each tap dispatches into `formReducer` (`src/features/feedback-form/formMachine.ts`) and the effect at line 82 saves a draft through `src/features/feedback-form/draft.ts`. `StepView` shows `visibleQuestions` from `src/domain/visibility.ts`, so a rating of 1 reveals its follow-up.
+4. **Submit.** `submit` (line 56) runs `useRepoMutation`'s `run`, which calls `submitFeedback` (`src/features/feedback-form/submitFlow.ts`, line 18). That calls `data.feedback.submitResponse` (line 24) and maps the `Result` to a `SubmitOutcome`.
+5. **Repo.** `LocalFeedbackRepo.submitResponse` (`src/data/local/repos/feedback.ts`, line 163) wraps everything in `guardWrite` and `store.mutate(["visits","jobCards","responses","alerts","audit"], …)`. Inside, `applySubmit` (line 119) checks the status (`submitBlock`, line 90), runs `validateSubmission` (line 124), pushes the `ResponseRecord` (line 136), marks the visit completed, and calls `raiseAlert` (line 98). `raiseAlert` uses `evaluateAlertReasons` and `reconcileAlert(null, …)` from `src/domain/alertRules.ts`, pushes the alert and writes an `alert.create` audit entry through `appendAudit` (`src/data/local/repos/auditWriter.ts`).
+6. **Store.** `LocalStore.mutate` (`src/data/local/store.ts`, line 119) takes the `psf-db` Web Lock, then `apply` (line 124) consumes the simulated-failure switch, re-reads the five collections fresh, runs the function above, and `writeChanged` (line 138) writes only collections whose JSON changed, rolling back on a storage error. Then it emits the affected topics on the `ChangeBus` (`src/data/local/bus.ts`).
+7. **Refresh.** `useLiveInvalidation` (`src/hooks/useLiveInvalidation.ts`, line 13) is subscribed to the bus and invalidates every query. In a second tab the browser `storage` event reaches `LocalStore.onStorage`, which emits the same topics.
+8. **The admin sees it.** `useOpenAlertCount` (`src/hooks/useOpenAlertCount.ts`) re-runs `da.alerts.countOpen()`, i.e. `LocalAlertRepo.countOpen` (`src/data/local/repos/alerts.ts`, line 77) → `countOpenLiveAlerts` (line 35). `AdminShell` (`src/components/shared/AdminShell.tsx`, line 16) renders the badge. Overview's open-alerts tile uses the same function via `src/data/local/repos/analytics.ts`, so the numbers can never disagree.
+
+## 3. How the layers fit
+| Layer | Folder | May import | Never imports |
+|---|---|---|---|
+| Routes | `src/app/` | features, shared components | `src/data/local/` (except `src/app/providers.tsx`) |
+| Features | `src/features/<name>/` | `src/components/shared/`, `src/hooks/`, `src/data/access/`, `src/domain/` | other features, `src/data/local/` |
+| Shared UI and hooks | `src/components/shared/`, `src/hooks/` | `src/data/access/`, `src/domain/` | features, app |
+| Contract | `src/data/access/` | `src/domain/` | local, features, components |
+| Implementation | `src/data/local/` | `src/data/access/`, `src/domain/` | features, components |
+| Domain | `src/domain/` | zod only | everything else |
+
+The direction is inward: screens → hooks → the `DataAccess` interface → domain. `src/app/providers.tsx` is the composition root and the only importer of `src/data/local/`, so phase 2 swaps one import. These rules are enforced by `.dependency-cruiser.cjs` (run by `scripts/check.sh`); you cannot merge a violation. Roles are enforced inside the repos (`FORBIDDEN`), while `RoleGuard` (`src/components/shared/RoleGuard.tsx`) only redirects for a good user experience.
+
+## 4. How to extend it
+| I want to… | Touch these files | Pattern to copy |
+|---|---|---|
+| add an admin screen | new `src/features/admin-<name>/`, new `src/app/admin/<name>/page.tsx`, one entry in `ADMIN_NAV` (`src/components/shared/adminNav.ts`) | `src/features/admin-users/` and `src/app/admin/users/page.tsx` |
+| add a repo method | interface in `src/data/access/repos/<name>.ts`, class in `src/data/local/repos/<name>.ts` (use `guardRead`/`guardWrite`, `store.mutate`, `appendAudit`) | `LocalUserRepo.setUserActive` in `src/data/local/repos/users.ts` |
+| add a question | `src/domain/questionnaire.ts` (data only; bump `version` if answers change), seed rules in `scripts/seed/answers.ts` | existing `Q1` / `Q1a` entries |
+| add a question type | new field component in `src/features/feedback-form/`, one entry in `FIELD_REGISTRY` (`src/features/feedback-form/fieldRegistry.tsx`), type in `src/domain/questionnaire.ts` | `src/features/feedback-form/RatingField.tsx` |
+| add an audit action | `AuditAction` in `src/domain/types.ts` and its schema in `src/domain/schemas.ts`, label in `ACTION_LABELS` (`src/features/admin-audit/auditFormat.ts`) | `user.create` |
+| add a KPI or block | `src/domain/metrics/overview.ts` (+ type `OverviewData`), a block component in `src/features/admin-overview/` | `src/features/admin-overview/KpiTiles.tsx` |
+| swap in a real backend | write `createRemoteDataAccess` implementing `DataAccess` (calls route handlers that reuse `src/domain`), change the one import in `src/app/providers.tsx` | `src/data/local/createLocalDataAccess.ts` |
+| change the demo data | edit `scripts/seed/*.ts`, run `pnpm seed`, commit `src/data/seed/seed.json` | existing seed helpers |
+
+## 5. Tests
+- **Unit (Vitest, jsdom):** `tests/unit/<area>/`. Repos are tested against the real `LocalStore` over fakes from `tests/support/index.ts`: `MemoryStorage`, `FakeLocks`, `fixedClock`, and `Browser.openTab()` (several tabs over one shared storage). Pattern: `tests/unit/admin-users/usersRepo.test.ts` (`setup`, `signInAs`, call the repo, assert on `tab.store.read(...)`). Domain rules: `tests/unit/foundation/domain.test.ts`; metrics (SPEC §5 examples): `tests/unit/admin-overview/metrics.test.ts`; multi-tab and rollback: `tests/unit/foundation/store.test.ts`.
+- **End to end (Playwright):** `tests/e2e/<feature>/`, one spec per feature, tagged with the scenario ids (S-xx). Helpers in `tests/support/e2e.ts` (`signInAs` sets the session before load, `resetDemo`, `openSecondTab`). Two projects in `playwright.config.ts`: `mobile-360` and `desktop-1440`; it serves a production build (`next start`).
+- **Run one test:** `pnpm exec vitest run tests/unit/admin-users/usersRepo.test.ts` · `pnpm exec playwright test tests/e2e/admin-users` (needs `pnpm build` first). **Everything:** `pnpm check` (`scripts/check.sh`).
+- Coverage: an 80% threshold on `src/domain`, `src/data`, `src/hooks` (`vitest.config.ts`).
+
+## 6. Talking points
+- **Interface-first data layer.** Screens only know `DataAccess` and `Result`. The localStorage implementation is one folder; a server is a second implementation. Trade-off: some ceremony (an interface plus a class per repo) for a swap that costs one import.
+- **No-overwrite multi-tab writes.** Instead of trusting in-memory state, `LocalStore.mutate` re-reads inside a Web Lock and writes only what changed, with rollback on quota errors. Trade-off: synchronous localStorage and a lock rather than IndexedDB, fine at about 1 MB.
+- **One rule in one place.** Alert rules, response rate and "live alert" each live in exactly one function (`reconcileAlert`, `responseRate` in `src/domain/metrics/overview.ts`, `countOpenLiveAlerts`), after the badge, queue and KPI disagreed once a response was deleted.
+- **A problem we hit.** A simulated failed save was being consumed by the housekeeping `markOpened` write, so the real submit succeeded. Fix: `writeOpened` in `src/data/local/repos/feedback.ts` re-arms the switch (`armNextWrite`) when the simulated failure hits the housekeeping write.
+- **With more time.** A real backend and opaque tokens (the demo token embeds visit details), real password hashing and sessions, formatted audit values for answers like Q6a (D-16), and a coverage threshold that includes the screens. See `docs/PRODUCTION.md`.

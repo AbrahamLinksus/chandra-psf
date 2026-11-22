@@ -23,8 +23,8 @@ function Notes({ alert }: { alert: AlertView }) {
   if (alert.notes.length === 0) return null;
   return (
     <ul className="grid gap-2" aria-label="Notes">
-      {alert.notes.map((n) => (
-        <li key={n.at} className="rounded-lg bg-secondary p-2 text-sm">
+      {alert.notes.map((n, i) => (
+        <li key={`${n.at}-${String(i)}`} className="rounded-lg bg-secondary p-2 text-sm">
           <p>{n.text}</p>
           <p className="text-xs text-muted-foreground">
             {n.by} · {formatIST(n.at)}

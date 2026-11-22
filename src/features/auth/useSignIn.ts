@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import { useDataAccess } from "@/data/access/provider";
 import type { Result } from "@/data/access";
 import type { User } from "@/domain/types";
+import { SESSION_KEY } from "@/hooks/useSession";
 import { landingPath } from "./routes";
 
 export type DemoWho = "admin" | "support1" | "support2";
@@ -28,7 +29,7 @@ export function useSignIn(): SignInState {
     async (result: Result<User>) => {
       if (result.ok) {
         // Refresh inactive cached sessions too, or RoleGuard sees a stale null.
-        await queryClient.invalidateQueries({ queryKey: ["session"], refetchType: "all" });
+        await queryClient.invalidateQueries({ queryKey: SESSION_KEY, refetchType: "all" });
         router.replace(landingPath(result.value));
       } else setError(result.error.message);
       setBusy(false);

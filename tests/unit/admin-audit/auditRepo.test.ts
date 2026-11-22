@@ -1,6 +1,6 @@
 /* eslint-disable max-lines-per-function -- describe blocks group many one-line tests */
 import { describe, expect, it } from "vitest";
-import { Browser, fixedClock, signInAs } from "../../support";
+import { Browser, fixedClock, resetDemo, signInAs } from "../../support";
 import { LocalAuditRepo } from "@/data/local/repos/audit";
 import { appendAudit } from "@/data/local/repos/auditWriter";
 import { StoreSessionReader } from "@/data/local/session";
@@ -52,6 +52,34 @@ describe("audit list (US-19)", () => {
       some.ok && some.value.length > 0 && some.value.every((e) => e.action === "user.create"),
     ).toBe(true);
     if (all.ok && some.ok) expect(some.value.length).toBeLessThanOrEqual(all.value.length);
+  });
+
+  it("after a reset the seeded entries are listed again and earlier entries are gone", async () => {
+    const { tab, repo } = await setup();
+    await tab.store.mutate(["audit"], (d) => {
+      appendAudit(
+        d,
+        {
+          actorId: "u-admin",
+          actorName: "Admin",
+          action: "user.create",
+          entityType: "user",
+          entityId: "before-reset",
+          oldValue: null,
+          newValue: null,
+        },
+        new Date("2099-01-01T00:00:00.000Z"),
+      );
+    });
+    const seeded = await repo.listAudit();
+    await resetDemo(tab);
+    signInAs(tab, "admin");
+    const r = await repo.listAudit();
+    expect(r.ok && r.value.length).toBeGreaterThan(0);
+    if (!r.ok || !seeded.ok) return;
+    expect(r.value.some((e) => e.entityId === "before-reset")).toBe(false);
+    expect(r.value.length).toBe(seeded.value.length - 1);
+    expect(r.value.map((e) => e.action)).toContain("alert.status");
   });
 
   it("exposes no write method", async () => {

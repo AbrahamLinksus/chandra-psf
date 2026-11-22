@@ -13,6 +13,8 @@ import {
 
 interface AuditRow {
   action: string;
+  entityType?: string;
+  entityId?: string;
   oldValue: unknown;
   newValue: unknown;
 }
@@ -28,6 +30,10 @@ interface ResponseRow {
 
 const tile = (page: Page, label: string) =>
   page.getByTestId("kpi-tile").filter({ hasText: label }).locator("p").nth(1);
+/** Phone tab bar: Alerts shows a dot (the count itself is desktop-only). */
+const mobileDot = (page: Page) =>
+  page.getByRole("navigation", { name: "Admin tabs" }).locator('a[href="/admin/alerts"] .bg-brand');
+
 const badge = (page: Page) => page.getByLabel(/\d+ open/).first();
 
 async function generateLink(page: Page): Promise<string> {
@@ -81,12 +87,15 @@ test.describe("T-11 definition-of-done walkthrough", () => {
     await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
     const before = isDesktop(page) ? Number((await badge(page).innerText()).trim()) : 0;
     const listed = await page.locator("li > button[data-status]").count();
+    const storedBefore = (await stored<AlertRow>(tabB, "alerts")).length;
+    if (!isDesktop(page)) await expect(mobileDot(page)).toBeVisible();
 
     await submitForm(tabB, `/f/${makeToken("v-t11-b", 1, "JC-24-1043")}`, {
       q6: "5 Excellent",
       q15: "Yes",
     });
     if (isDesktop(page)) await expect(badge(page)).toHaveText(String(before + 1));
+    else await expect(mobileDot(page)).toBeVisible();
     await expect(page.locator("li > button[data-status]")).toHaveCount(listed + 1);
 
     await moveAlert(page, /Kavitha P/, "Contacted");
@@ -99,7 +108,7 @@ test.describe("T-11 definition-of-done walkthrough", () => {
     expect(theirs).toHaveLength(1);
     const alerts = await stored<AlertRow>(tabB, "alerts");
     expect(alerts.some((a) => a.responseId === theirs[0]?.id && a.status === "open")).toBe(true);
-    expect(alerts).toHaveLength(listed + 1);
+    expect(alerts).toHaveLength(storedBefore + 1);
   });
 
   test("AC-3 AC-7 AC-8 S-12 link -> Opened -> submit Q6=1 Q15=Yes -> alert Open -> Contacted -> Resolved, all audited", async ({
@@ -129,6 +138,7 @@ test.describe("T-11 definition-of-done walkthrough", () => {
     await expect(alert).toHaveAttribute("data-status", "contacted");
     await moveAlert(admin, /Ramesh Kumar/, "Resolved");
     await expect(alert).toHaveAttribute("data-status", "resolved");
+    const alert0 = await alert.getAttribute("data-alert-id");
 
     await admin.goto("/admin/audit");
     await expect(admin.getByTestId("audit-row").first()).toBeVisible();
@@ -140,6 +150,9 @@ test.describe("T-11 definition-of-done walkthrough", () => {
     ]);
     const shown = admin.getByTestId("audit-row").filter({ hasText: "Alert status changed" });
     expect(await shown.count()).toBeGreaterThanOrEqual(2);
+    const created = all.find((a) => a.action === "alert.create" && a.entityId === alert0);
+    expect(all.some((a) => a.action === "link.create")).toBe(true);
+    expect(created?.entityType).toBe("alert");
   });
 
   test("D-16 the Q6a audit value is the raw {options:[...]}", async ({ page, context }) => {

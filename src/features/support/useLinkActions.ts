@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { DataAccess, Result, VisitSummary } from "@/data/access";
 import { useSession } from "@/hooks/useSession";
 import { useRepoMutation, type MutationStatus } from "@/hooks/useRepoMutation";
@@ -28,10 +28,18 @@ export interface LinkActionsState {
 /** Copies `text`; `copied` is the label to flash (Copied or Couldn't copy). */
 function useCopy(text: string) {
   const [copied, setCopied] = useState<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current);
+    },
+    [],
+  );
   const copy = useCallback(() => {
     const flash = (label: string) => {
       setCopied(label);
-      setTimeout(() => {
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
         setCopied(null);
       }, COPIED_MS);
     };

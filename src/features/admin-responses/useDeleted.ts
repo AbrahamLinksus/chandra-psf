@@ -24,7 +24,7 @@ export function useDeleted() {
     },
     restore: (password: string) =>
       restoring === null
-        ? Promise.resolve(err("SAVE_FAILED", "Pick a response to restore"))
+        ? Promise.resolve(err("SAVE_FAILED", "Couldn't restore"))
         : mutation.run({ id: restoring, password }),
   };
 }

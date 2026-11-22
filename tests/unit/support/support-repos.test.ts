@@ -228,6 +228,17 @@ describe("regenerate and cancel (S-05, S-14)", () => {
     expect(!again.ok && again.error.code).toBe("CONFLICT");
   });
 
+  it("after Cancel the job card lookup has no current link and a new link can be made (T-03)", async () => {
+    const { visits, jobs } = await setup();
+    const c = await visits.createVisitLink({ jobCardNo: "JC-24-1042", phone: null });
+    if (!c.ok) throw new Error("create failed");
+    await visits.cancelLink(c.value.id);
+    const r = await jobs.getJobCard("JC-24-1042");
+    expect(r.ok && r.value.current).toBeNull();
+    const again = await visits.createVisitLink({ jobCardNo: "JC-24-1042", phone: null });
+    expect(again.ok && again.value.id).not.toBe(c.value.id);
+  });
+
   it("a Completed link cannot be regenerated; unknown id is NOT_FOUND; others' links are FORBIDDEN", async () => {
     const { visits, tab } = await setup("support1");
     const done = await visits.cancelLink("v-s001");

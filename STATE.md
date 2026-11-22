@@ -7,20 +7,20 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Active |
-| Stage | 7 Build |
+| Status | Complete |
+| Stage | 8 Handover (done) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | medium · signals: deployment (public Vercel) · 22 stories |
 | Milestone | M2 · Admin console (all tasks done) |
-| Next step | Stage 8 handover: batched review (T-06, T-07, T-09, T-11, T-12), then as-built docs |
+| Next step | Owner: set dealer phone on Vercel. Maintenance via /setup-project fix|add |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 15:02 +05:30 |
+| Last updated | 2026-11-22 17:28 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -52,9 +52,10 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 ## Known minors
 | Task | Where | Fix | Size |
 |---|---|---|---|
-| T-01 | scripts/check.sh, playwright.config.ts | review minor #9 (gate files) | ≈3 min |
-| T-04 | feedback-form Reveal | focus lost when follow-up collapses; stays mounted 300 ms under reduced motion | ≈10 min |
-| T-05 | Vercel env | NEXT_PUBLIC_DEALER_PHONE is a placeholder (+91 44 0000 0000); set the real number + redeploy | ≈2 min (owner) |
+
+## Owner actions (outside the repo)
+- Set the real dealer phone on Vercel (NEXT_PUBLIC_DEALER_PHONE, Production + Preview) and redeploy — see docs/DEPLOY.md.
+- Redeploy to Vercel to publish M2 (the live site is still the T-05 build).
 
 ## Context additions
 | Role | Also read | Why (from gap report) |

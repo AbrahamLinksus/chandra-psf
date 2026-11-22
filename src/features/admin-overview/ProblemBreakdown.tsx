@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -27,7 +26,6 @@ export function ProblemBreakdown({ problems }: { problems: OverviewData["problem
       title="Problem breakdown"
       action={
         <div className="flex items-center gap-2">
-          <Label className="sr-only">Follow-up question</Label>
           <Select
             value={code}
             onValueChange={(v) => {

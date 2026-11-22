@@ -9,7 +9,13 @@ export interface TextBoxProps {
   onChange: (text: string) => void;
 }
 
-const segmenter = new Intl.Segmenter();
+/** Grapheme segments; falls back to code points where `Intl.Segmenter` is missing. */
+function segments(text: string): string[] {
+  if (typeof Intl.Segmenter === "function") {
+    return Array.from(new Intl.Segmenter().segment(text), (s) => s.segment);
+  }
+  return Array.from(text);
+}
 
 /**
  * Cuts to at most `max` UTF-16 units (what the domain validation counts) without splitting an
@@ -18,7 +24,7 @@ const segmenter = new Intl.Segmenter();
 export function clampText(text: string, max: number): string {
   if (text.length <= max) return text;
   let out = "";
-  for (const { segment } of segmenter.segment(text)) {
+  for (const segment of segments(text)) {
     if (out.length + segment.length > max) break;
     out += segment;
   }

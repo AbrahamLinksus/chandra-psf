@@ -20,6 +20,8 @@
 | D-15 | 2026-11-22 | Support on /admin URLs | Role guard redirects to /not-allowed ("You don't have access to this page"), no data | — | Render "Not allowed" in place on each admin page (frozen guard change) | T-06 |
 | D-16 | 2026-11-22 | Q6a value in response.edit audit | Raw stored answer {options:[...]} | Less readable in audit log; format later | SPEC shorthand ["Rude"] | T-08 |
 | D-17 | 2026-11-22 | Response rate after a delete | Deleted responses stop counting; rate updates (as built) | SPEC S-09 wording to fix at handover | Rate stays the same | T-11 |
+| D-18 | 2026-11-22 | Production gate G-W1 (session expiry, argon2id) | Waived for the phase-1 demo | Sessions never expire; hashing runs in the browser; sample data only — must be built server-side before real customer data (phase 2) | Build session expiry now | handover |
+| D-19 | 2026-11-22 | Known minor "T-01 review #9 (gate files)" | Waived | Details unrecoverable; CI and fresh-clone runs pass | Devops re-review | handover |
 
 ## Tier 2 — decided by agents (overrule any time)
 | ID | Date | Decision | Chosen | Agent | Task |

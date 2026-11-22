@@ -64,9 +64,7 @@ test.describe("T-01 routing and shell", () => {
           .click();
       }
       await expect(page).toHaveURL(new RegExp(`${href}$`));
-      if (href === "/admin" || href === "/admin/alerts") {
-        await expect(page.getByRole("heading", { name: label })).toBeVisible();
-      }
+      await expect(page.getByRole("heading", { name: label }).first()).toBeVisible();
     }
   });
 

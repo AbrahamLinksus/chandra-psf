@@ -11,7 +11,9 @@ async function expectLabelled(page: Page, where: string): Promise<void> {
     const hasName = (el: HTMLElement): boolean =>
       ((el as HTMLInputElement).labels?.length ?? 0) > 0 ||
       (el.getAttribute("aria-label") ?? "").trim() !== "" ||
-      el.hasAttribute("aria-labelledby");
+      (el.getAttribute("aria-labelledby") ?? "")
+        .split(/\s+/)
+        .some((id) => (document.getElementById(id)?.textContent ?? "").trim() !== "");
     const shown = (el: HTMLElement): boolean =>
       el.offsetParent !== null || getComputedStyle(el).position === "fixed";
     for (const el of Array.from(document.querySelectorAll<HTMLElement>(sel))) {

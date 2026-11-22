@@ -6,10 +6,10 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { SaveState } from "@/components/shared/SaveState";
 import { Button } from "@/components/ui/button";
 import type { VisitSummary } from "@/data/access";
+import { NEEDS_MOBILE } from "./messages";
 import { useLinkActions } from "./useLinkActions";
 import { WhatsAppIcon } from "./WhatsAppIcon";
 
-export const NEEDS_MOBILE = "Enter a mobile number to send on WhatsApp";
 export const NOT_MINE = "This link was sent by another team member";
 
 const WA_CLASS = "h-12 bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp/90";

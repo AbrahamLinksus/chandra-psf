@@ -31,6 +31,11 @@ function toView(alert: Alert, src: Source): AlertView | null {
   };
 }
 
+/** The one "live alert" rule: its response is not deleted and still joins to a visit and job card. */
+export function countOpenLiveAlerts(src: Source): number {
+  return src.alerts.filter((a) => a.status === "open" && isLive(a, src)).length;
+}
+
 function isLive(alert: Alert, src: Source): boolean {
   return toView(alert, src) !== null;
 }
@@ -75,7 +80,7 @@ export class LocalAlertRepo implements AlertRepo {
       const me = this.admin();
       if ("ok" in me) return me;
       const src = this.source();
-      return ok(src.alerts.filter((a) => a.status === "open" && isLive(a, src)).length);
+      return ok(countOpenLiveAlerts(src));
     });
 
   readonly updateAlert: AlertRepo["updateAlert"] = (id, patch) =>

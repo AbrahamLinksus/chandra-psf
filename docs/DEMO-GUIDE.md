@@ -15,11 +15,11 @@ Open it on your own phone for the customer part. Redeploy steps are in `docs/DEP
 |---|---|---|---|
 | Support 1 | `support1@chandrahonda.demo` | `/support` (links) | Built |
 | Support 2 | `support2@chandrahonda.demo` | `/support` (links) | Built |
-| Admin | `admin@chandrahonda.demo` | `/admin` | Admin screens coming in M2 (placeholder today) |
+| Admin | `admin@chandrahonda.demo` | `/admin` (overview, alerts, responses, audit, users) | Built |
 
 - Password: the value of `NEXT_PUBLIC_DEMO_PASSWORD` in `.env.example`. It is also printed under the sign-in form.
 - Quick buttons on the sign-in screen: **Sign in as Admin**, **Sign in as Support 1**, **Sign in as Support 2**. Email and password also work.
-- **Sign out** is in the support top bar.
+- **Sign out** is in the support top bar (and in the admin navigation).
 
 ## Fresh job cards to use
 
@@ -60,6 +60,17 @@ These job cards have no link yet, so **Generate link** is always available for t
 3. Switch back to tab A. The list shows **Completed** without a reload.
 4. In tab A, create another link. Tab B's submitted response is still there. A save in one tab never removes what another tab saved.
 
+## Admin walk-through (about 5 minutes)
+
+Sign in as **Admin**. Every admin page is live; all data is the sample data after a reset.
+
+1. **Overview:** five KPI tiles (Responses received, Response rate, Avg Q12, Recommend rate, Open alerts) and seven analytics blocks. Change the date range or a filter (model, advisor, vehicle type) and see every block move. The filters stay in the address bar.
+2. **Alerts:** the badge on the Alerts tab shows the open count. Filter to **Open**, open an alert, set it to **Contacted** and add a note, then set it to **Resolved**. Each change is written to the audit log.
+3. **Responses:** open the list and pick a response. Change one answer and save. The save asks for the admin password, which is the demo password above. If the answer was a rating of 1, the related alert is updated or resolved to match.
+4. **Delete and restore:** delete a response (confirm, then the admin password). It moves to **Recently deleted**, and Overview's Responses received and Response rate both drop (D-17). Restore it from **Recently deleted** with the admin password; the numbers come back.
+5. **Audit:** the log is newest first and shows the actions you just made (for example `response.delete`, `response.restore`, `alert.status`). Filter by action; long values have **Show more**.
+6. **Users:** add a support user (name, email, temporary password). Deactivate and reactivate a user from the list. A new user is asked to set their own password at first sign-in.
+
 ## Cross-device limitation (say this out loud)
 
 Each browser and device has its own copy of the data.
@@ -82,18 +93,10 @@ Then:
 2. The screen shows **Couldn't save, try again** and keeps the job card number and mobile number you entered.
 3. Press **Retry**. The link is created.
 
-Admin pages are placeholders until M2, so the first save after the button is the support one.
+If you armed it from the admin side, the first save after the button is the one that fails. Do the support steps before any admin edit, or expect the admin save to fail first.
 
 ## Public link and the phone
 
 - Customers only ever see `/f/<token>`. The address of the page they open is used in the WhatsApp message, so the link works on phones.
 - The site asks search engines not to index it. Every name and number is made up.
 - The dealership phone on the link-state pages is a placeholder (`+91 44 0000 0000`). Say so if asked. The real number is set in the hosting settings (see `docs/DEPLOY.md`).
-
-## Coming in M2 (do not demo yet)
-
-- Admin overview with KPI tiles and the seven analytics blocks
-- Alerts queue (Open, Contacted, Resolved, notes)
-- Responses list, response detail, edit, delete (Recently deleted), restore, all with a password prompt
-- Audit log
-- Users: add a support user, deactivate and reactivate, and the first-sign-in password change

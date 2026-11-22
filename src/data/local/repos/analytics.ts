@@ -4,6 +4,7 @@ import { computeOverview } from "@/domain/metrics/overview";
 import type { AnalyticsInput, Filters, JobCard, OverviewData } from "@/domain/types";
 import type { RepoDeps } from "../repoDeps";
 import { guardRead } from "../results";
+import { countOpenLiveAlerts } from "./alerts";
 
 const SIGN_IN = "Sign in first";
 const NOT_ALLOWED = "Not allowed";
@@ -32,9 +33,12 @@ export class LocalAnalyticsRepo implements AnalyticsRepo {
       const v = response.deletedAt === null ? byId.get(response.visitId) : undefined;
       return v === undefined ? [] : [{ response, ...v }];
     });
-    // Same rule as the alerts queue: an alert is live only if its response is live and joined.
-    const liveIds = new Set(responses.map((r) => r.response.id));
-    const openAlerts = store.read("alerts").filter((a) => a.status === "open" && liveIds.has(a.responseId)).length;
+    const openAlerts = countOpenLiveAlerts({
+      alerts: store.read("alerts"),
+      responses: store.read("responses"),
+      visits: store.read("visits"),
+      jobCards: store.read("jobCards"),
+    });
     return { visits, responses, openAlerts, now: clock.now() };
   }
 

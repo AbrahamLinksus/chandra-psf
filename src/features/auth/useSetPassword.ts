@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MIN_PASSWORD_LENGTH } from "@/domain/constants";
 import { useRepoMutation } from "@/hooks/useRepoMutation";
-import { useSession } from "@/hooks/useSession";
+import { SESSION_KEY, useSession } from "@/hooks/useSession";
 import type { DataAccess } from "@/data/access";
+import { landingPath } from "./routes";
 
 const save = (da: DataAccess, password: string) => da.auth.setOwnPassword(password);
 
@@ -30,7 +31,7 @@ export function useSetPassword() {
     if (isLoading) return;
     if (user === null) router.replace("/sign-in");
     else if (!user.mustSetPassword && mutation.status !== "done") {
-      router.replace(user.role === "admin" ? "/admin" : "/support");
+      router.replace(landingPath(user));
     }
   }, [user, isLoading, router, mutation.status]);
 
@@ -40,8 +41,8 @@ export function useSetPassword() {
     if (found !== null) return;
     const result = await mutation.run(password);
     if (!result.ok) return;
-    await queryClient.invalidateQueries({ queryKey: ["session"], refetchType: "all" });
-    router.replace("/support");
+    await queryClient.invalidateQueries({ queryKey: SESSION_KEY, refetchType: "all" });
+    if (user !== null) router.replace(landingPath({ ...user, mustSetPassword: false }));
   };
 
   const ready = !isLoading && user !== null && user.mustSetPassword;

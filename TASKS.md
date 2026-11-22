@@ -270,9 +270,9 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: .github/workflows/ci.yml, src/config/env.ts, src/data/access/repos/feedback.ts, src/data/local/repos/token.ts, src/data/local/repos/auth.ts, src/data/local/repos/alerts.ts, src/data/local/repos/analytics.ts, src/data/local/repos/users.ts, src/data/local/repos/responses.ts, src/features/**, src/hooks/**, src/domain/**, tests/**, docs/**, README.md, OWNER.md
 - Context: stage 8 handover · STATE.md Known minors · .results/handover/batched-review-reviewer.md
 - Why separate: final handover task
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] Every known minor of ≈5 min or less fixed; larger ones on the handover card
   - [ ] CI, as-built LLD/ARCHITECTURE/WALKTHROUGH, README, OWNER.md, PRODUCTION gate; handover lint clean
-- Result: —
+- Result: approved 2026-11-22 · CI, ~30 minors fixed, as-built docs, OWNER.md, PRODUCTION gate 0 open, fresh clone 11/11 · ≈$6.74
 

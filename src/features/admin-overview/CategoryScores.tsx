@@ -10,8 +10,8 @@ export function CategoryScores({ scores }: { scores: OverviewData["categoryScore
         {scores.map((s) => (
           <li key={s.step} className="grid gap-1">
             <div className="flex justify-between gap-2 text-sm">
-              <span>{s.title}</span>
-              <span className="font-medium">
+              <span className="min-w-0">{s.title}</span>
+              <span className="font-medium whitespace-nowrap">
                 <MetricValue value={s.score} format="count" />
                 {s.score !== null && <span className="text-muted-foreground"> / 100</span>}
               </span>

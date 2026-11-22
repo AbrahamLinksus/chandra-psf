@@ -46,6 +46,7 @@ test.describe("T-07 admin alerts queue", () => {
     await page.screenshot({ path: `.results/T-07/list-${String(width(page))}.png` });
   });
 
+  // The AC names 'Priya S.'; the seed has no alert for her, so Kavitha P (a seeded open alert) stands in.
   test("AC-8 Kavitha P → Contacted with a note turns amber, updates badge and audit", async ({
     page,
   }) => {
@@ -66,6 +67,16 @@ test.describe("T-07 admin alerts queue", () => {
       "contacted",
     );
     if (desktop) await expect(page.getByLabel(/\d+ open/).first()).toHaveText(String(before - 1));
+    else {
+      // phone: the Alerts tab shows a dot while any alert is still open
+      const left = (JSON.parse(await stored(page, "alerts")) as { status: string }[]).filter(
+        (a) => a.status === "open",
+      ).length;
+      const dot = page
+        .getByRole("navigation", { name: "Admin tabs" })
+        .locator('a[href="/admin/alerts"] .bg-brand');
+      await expect(dot).toHaveCount(left > 0 ? 1 : 0);
+    }
     const audit = await stored(page, "audit");
     expect(audit).toContain("alert.status");
     expect(audit).toContain("alert.note");

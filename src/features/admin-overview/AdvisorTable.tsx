@@ -34,7 +34,10 @@ function SortHead(props: {
   const active = sort.key === col.key;
   const Icon = sort.dir === "asc" ? ArrowUpIcon : ArrowDownIcon;
   return (
-    <TableHead aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}>
+    <TableHead
+      className="px-2"
+      aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
+    >
       <button
         type="button"
         className="flex min-h-12 items-center gap-1 font-medium whitespace-nowrap"
@@ -48,6 +51,8 @@ function SortHead(props: {
     </TableHead>
   );
 }
+
+const numberOrNull = (v: unknown): number | null => (typeof v === "number" ? v : null);
 
 export function AdvisorTable({ advisors }: { advisors: OverviewData["advisors"] }) {
   const [sort, setSort] = useState<{ key: AdvisorSortKey; dir: SortDir }>({
@@ -75,11 +80,11 @@ export function AdvisorTable({ advisors }: { advisors: OverviewData["advisors"] 
             {rows.map((r) => (
               <TableRow key={r.advisorId} data-testid="advisor-row">
                 {COLUMNS.map((c) => (
-                  <TableCell key={c.key}>
+                  <TableCell key={c.key} className="px-2">
                     {c.format === undefined ? (
                       r.name
                     ) : (
-                      <MetricValue value={r[c.key] as number | null} format={c.format} />
+                      <MetricValue value={numberOrNull(r[c.key])} format={c.format} />
                     )}
                   </TableCell>
                 ))}

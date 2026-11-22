@@ -20,14 +20,14 @@ export function AuditActionFilter({
 }) {
   return (
     <div className="grid max-w-xs gap-1.5">
-      <Label>Action</Label>
+      <Label htmlFor="audit-action">Action</Label>
       <Select
         value={value}
         onValueChange={(v) => {
           onChange(ACTIONS.find((a) => a === v) ?? "all");
         }}
       >
-        <SelectTrigger className="h-12 w-full" aria-label="Action">
+        <SelectTrigger id="audit-action" className="h-12 w-full" aria-label="Action">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -16,6 +16,14 @@ interface QuestionBlockProps {
   onAnswer: StepViewProps["onAnswer"];
 }
 
+/** The first focusable control of the parent question, where focus lands when a follow-up collapses. */
+function focusableOf(code: QuestionCode): HTMLElement | null {
+  const block = document.querySelector(`[data-question="${code}"]`);
+  return (
+    block?.querySelector<HTMLElement>("input:checked, input, button, textarea, select") ?? null
+  );
+}
+
 function QuestionBlock({ question: q, value, onAnswer }: QuestionBlockProps) {
   const Field = FIELD_REGISTRY[q.type];
   return (
@@ -45,7 +53,12 @@ export function StepView({ step, answers, onAnswer }: StepViewProps) {
             <QuestionBlock question={q} value={answers[q.code]} onAnswer={onAnswer} />
           </div>
         ) : (
-          <Reveal key={q.code} open={isVisible(q, answers)} value={answers[q.code]}>
+          <Reveal
+            key={q.code}
+            open={isVisible(q, answers)}
+            value={answers[q.code]}
+            returnFocusTo={() => (q.parent === undefined ? null : focusableOf(q.parent))}
+          >
             {(value) => (
               <div className="pt-5">
                 <div className="border-l-2 border-primary/40 pl-3">
