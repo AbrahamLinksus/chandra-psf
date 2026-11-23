@@ -387,12 +387,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: scripts/admin.ts, tests/unit/server/admin/**, playwright.config.ts, tests/support/e2e.ts, tests/e2e/global-setup.ts
 - Context: SPEC US-23, F-9 step 1, §5 F-9 rows · LLD-phase2 §26 (`scripts/admin.ts`) · CONVENTIONS §5 (P2 tests) · files: src/server/db/**, src/server/audit.ts, src/domain/questionnaire.ts
 - Why separate: setup is a maintainer tool outside the app (a back door if wrong); the e2e harness every later slice uses needs it.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `admin init --name --email` on an empty database installs questionnaire v1 and one main admin with a printed 16-character one-time password, `must_set_password`, expiry 72 h, audited actor "system"; a second run prints "Users already exist; nothing changed" and changes nothing (S-16, G-14)
-  - [ ] `reissue --email` works only for users still `must_set_password`; `recover --email --no-admin-can-sign-in` works only for an existing main admin and refuses without the flag; both audited actor "system", passwords never in the audit
-  - [ ] Playwright globalSetup creates a fresh PGlite data dir, migrates and runs `init` before `next dev` starts; `tests/support/e2e.ts` gives specs the admin's one-time password and helpers that create branches and users through RPC (no seed file)
-- Result: —
+  - [x] `admin init --name --email` on an empty database installs questionnaire v1 and one main admin with a printed 16-character one-time password, `must_set_password`, expiry 72 h, audited actor "system"; a second run prints "Users already exist; nothing changed" and changes nothing (S-16, G-14)
+  - [x] `reissue --email` works only for users still `must_set_password`; `recover --email --no-admin-can-sign-in` works only for an existing main admin and refuses without the flag; both audited actor "system", passwords never in the audit
+  - [x] Playwright globalSetup creates a fresh PGlite data dir, migrates and runs `init` before `next dev` starts; `tests/support/e2e.ts` gives specs the admin's one-time password and helpers that create branches and users through RPC (no seed file)
+- Result: 3/3 goals · coverage 90.54% · review 1 major (e2e lockout, fixed) + 8 minor; m1-m3, m7 fixed on owner request · ≈$2.12 · tester 44% · reviewer 18% · backend-coder 13% · debugger 9% · rework-tests 9% · harness-config 4% · rework-backend 3%
 
 ### T-02b · Staff sign-in, set password and sign-out on the server
 - Owner: backend-coder, frontend-coder

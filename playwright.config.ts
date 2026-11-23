@@ -13,9 +13,13 @@ function exampleEnv(): Record<string, string> {
 }
 
 const port = process.env["PORT"] ?? "8000";
+// One PGlite dir per port, shared by globalSetup (fresh + migrate + init) and the webServer.
+process.env["DATABASE_URL"] = `pglite:./.pglite-e2e-${port}`;
+process.env["DATABASE_URL_UNPOOLED"] = "";
 
 export default defineConfig({
   testDir: "tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   outputDir: "test-results",
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
