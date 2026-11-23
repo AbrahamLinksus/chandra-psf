@@ -345,13 +345,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/ctx.ts, src/server/scope.ts, src/server/audit.ts, src/server/auth/session.ts, src/server/auth/cookies.ts, tests/support/serverCtx.ts, tests/unit/server/core/**
 - Context: LLD-phase2 §17.1, §18.2, §19 · CONVENTIONS §2 (P2), §3 · files: src/server/db/**, src/domain/roles.ts, src/domain/constants.ts
 - Why separate: every server repo builds on `RequestCtx`, `Scope` and sessions; kept under ~400 changed lines apart from the transport (T-18).
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
-  - [ ] The session token is 32 random bytes and only its SHA-256 is stored; cookie `__Host-psf_session` (production) is httpOnly, Secure, SameSite=Lax, 7 days; a test proves the raw token is never in the database or the log
-  - [ ] `readSession` rejects: inactive user, inactive branch, support idle > 2 h, admin idle > 12 h, > 7 days since sign-in (S-27); touch moves `last_active_at` at most once per 60 s
-  - [ ] `scopeOf`, `requireStaff` / `requireAdmin` / `requireMainAdmin`, `branchFilter` (a branch user's `wanted` branch is ignored) and `inScope` are covered by the LLD §19 table
-  - [ ] `guard(fn)` maps thrown errors to `SAVE_FAILED` / `UNAVAILABLE` and logs the error class only; the audit writer stamps actor, branch and time
-- Result: —
+  - [x] The session token is 32 random bytes and only its SHA-256 is stored; cookie `__Host-psf_session` (production) is httpOnly, Secure, SameSite=Lax, 7 days; a test proves the raw token is never in the database or the log
+  - [x] `readSession` rejects: inactive user, inactive branch, support idle > 2 h, admin idle > 12 h, > 7 days since sign-in (S-27); touch moves `last_active_at` at most once per 60 s
+  - [x] `scopeOf`, `requireStaff` / `requireAdmin` / `requireMainAdmin`, `branchFilter` (a branch user's `wanted` branch is ignored) and `inScope` are covered by the LLD §19 table
+  - [x] `guard(fn)` maps thrown errors to `SAVE_FAILED` / `UNAVAILABLE` and logs the error class only; the audit writer stamps actor, branch and time
+- Result: 4/4 goals · 42 tests · coverage 98.27% · review 0 major, 1 minor · ≈$1.14 · tester 42% · backend-coder 42% · reviewer 15%
 
 ### T-18 · RPC transport, remote client and server stubs
 - Owner: backend-coder

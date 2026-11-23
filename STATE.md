@@ -7,20 +7,20 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Paused (owner: continue tomorrow) |
+| Status | Active |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (4/13) |
-| Next step | Resume T-17 at implement (backend-coder was stopped mid-step; check partial files in the worktree), then test+review, sync |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (5/13) |
+| Next step | Run T-18 (RPC transport) and whatever --ready prints next |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-22 21:08 +05:30 |
+| Last updated | 2026-11-23 07:31 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -57,6 +57,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-15 | next.config.ts (frozen) | add @electric-sql/pglite to serverExternalPackages (review m-6) — do in T-01b, which first runs PGlite inside Next | ≈2 min |
 | T-15 | T-24/T-25 erasure | must use SET LOCAL for psf.redact on pooled connections (review m-2) | ≈2 min |
 | T-15 | docs/LLD-phase2.md §16 | getDb returns Promise<Db>, LLD says Db (review m-4) | ≈2 min |
+| T-17 | src/server/{ctx,scope,audit}.ts, auth/{session,cookies}.ts | add `import "server-only"` (CONVENTIONS §2) or an exemption comment like log.ts | ≈2 min |
 | T-16 | docs/LLD-phase2.md §25 | retention cut-off says `<`; code + SPEC use inclusive `<=` (12 Feb 2027 example) | ≈1 min |
 | T-16 | src/domain/commonPasswords.ts | ~900 hand-built entries, not a real top-1000 list | ≈5 min |
 | T-16 | src/domain/types.ts Role | switch phase-1 Role to StaffRole (T-01b/T-17) | ≈5 min |
