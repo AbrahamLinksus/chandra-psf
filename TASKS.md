@@ -359,13 +359,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/rpc/**, src/server/repos/** (UNAVAILABLE stubs), src/server/createServerDataAccess.ts, src/server/rateLimit.ts, src/app/api/rpc/**, src/data/remote/createRemoteDataAccess.ts, src/data/remote/rpcClient.ts, next.config.ts (security headers), .dependency-cruiser.cjs, eslint.config.mjs, tests/unit/server/rpc/**, tests/unit/remote/**
 - Context: LLD-phase2 §15.3, §17.1, §17.3, §18.5 (headers) · CONVENTIONS §2 (P2) · files: src/data/access/**, src/server/ctx.ts, src/server/scope.ts
 - Why separate: the 31st task (cap 30): the server core and the transport together exceed the ~400-line limit of one session; it is the only data door (CSRF) and needs its own review.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] `POST /api/rpc/<repo>/<method>`: wrong Origin → 403; unknown method → 404; bad args → `VALIDATION`; staff method without a session → `UNAUTHENTICATED`; stub method → `UNAVAILABLE`; every reply has `Cache-Control: no-store` (G-W1, G-W2)
-  - [ ] The per-IP flood limit of 300/h on public methods returns `RATE_LIMITED`; the IP is stored only as an HMAC with `IP_HASH_PEPPER`
-  - [ ] Remote client: a network failure → `SAVE_FAILED` or `UNAVAILABLE` by method kind; it sends `x-psf-active`; `UNAUTHENTICATED` invalidates the session query
-  - [ ] The LLD §15.3 layer rules (server-hidden, server-no-ui, remote-hidden, repos-via-root) and the ESLint import bans fail the check on a planted violation; the LLD §18.5 security headers are present
-- Result: —
+  - [x] `POST /api/rpc/<repo>/<method>`: wrong Origin → 403; unknown method → 404; bad args → `VALIDATION`; staff method without a session → `UNAUTHENTICATED`; stub method → `UNAVAILABLE`; every reply has `Cache-Control: no-store` (G-W1, G-W2)
+  - [x] The per-IP flood limit of 300/h on public methods returns `RATE_LIMITED`; the IP is stored only as an HMAC with `IP_HASH_PEPPER`
+  - [x] Remote client: a network failure → `SAVE_FAILED` or `UNAVAILABLE` by method kind; it sends `x-psf-active`; `UNAUTHENTICATED` invalidates the session query
+  - [x] The LLD §15.3 layer rules (server-hidden, server-no-ui, remote-hidden, repos-via-root) and the ESLint import bans fail the check on a planted violation; the LLD §18.5 security headers are present
+- Result: 4/4 goals · coverage 95.27% · e2e 182 · review 0 major, 8 minor · gate files by env-setup · ≈$1.95 · backend-coder 38% · tester 37% · reviewer 16% · gate-config 9%
 
 ### T-01b · Switch the app to the server and remove the demo code
 - Owner: backend-coder, frontend-coder, env-setup

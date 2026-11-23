@@ -29,7 +29,7 @@ module.exports = {
       name: "access-pure",
       severity: "error",
       from: { path: "^src/data/access" },
-      to: { path: "^src/(data/local|features|components|app)" },
+      to: { path: "^src/(data/local|data/remote|server|features|components|app)" },
     },
     {
       name: "local-hidden",
@@ -48,6 +48,34 @@ module.exports = {
       severity: "error",
       from: { path: "^src/(components|hooks)" },
       to: { path: "^src/(features|app)" },
+    },
+    {
+      name: "server-hidden",
+      severity: "error",
+      comment: "LLD-phase2 15.3: only src/app/api and src/server reach src/server.",
+      from: { path: "^src/(features|components|hooks|data)|^src/app/(?!api/)" },
+      to: { path: "^src/server" },
+    },
+    {
+      name: "server-no-ui",
+      severity: "error",
+      comment: "LLD-phase2 15.3: src/server may not import UI layers or react.",
+      from: { path: "^src/server" },
+      to: { path: "^src/(features|components|hooks|app)|node_modules/(react|react-dom)/" },
+    },
+    {
+      name: "remote-hidden",
+      severity: "error",
+      comment: "LLD-phase2 15.3: only src/app/providers.tsx imports src/data/remote.",
+      from: { path: "^src/(features|components|hooks)|^src/app/(?!providers)" },
+      to: { path: "^src/data/remote" },
+    },
+    {
+      name: "repos-via-root",
+      severity: "error",
+      comment: "LLD-phase2 15.3: only createServerDataAccess.ts imports src/server/repos.",
+      from: { path: "^src/(?!server/createServerDataAccess|server/repos/)" },
+      to: { path: "^src/server/repos" },
     },
     {
       name: "no-circular",

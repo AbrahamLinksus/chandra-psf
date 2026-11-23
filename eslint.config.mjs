@@ -7,6 +7,20 @@ const storageRestriction = [
   { name: "sessionStorage", message: "Use the data/local store (LLD 0.3)." },
 ];
 
+const serverOnlyImports = {
+  paths: [
+    { name: "next/headers", message: "Server-only: import in src/server/** (LLD-phase2 15.3)." },
+    { name: "@neondatabase/serverless", message: "Server-only: src/server/** or scripts/**." },
+    { name: "@node-rs/argon2", message: "Server-only: src/server/** or scripts/**." },
+  ],
+  patterns: [
+    {
+      group: ["drizzle-orm", "drizzle-orm/*", "drizzle-orm*"],
+      message: "Server-only: src/server/** or scripts/**.",
+    },
+  ],
+};
+
 const eslintConfig = [
   {
     ignores: [
@@ -51,6 +65,15 @@ const eslintConfig = [
   {
     files: ["src/data/local/**", "src/features/feedback-form/draft.ts"],
     rules: { "no-restricted-globals": "off" },
+  },
+  {
+    files: ["**/*.{ts,tsx,mts}"],
+    ignores: ["src/server/**", "scripts/**", "tests/**"],
+    rules: { "no-restricted-imports": ["error", serverOnlyImports] },
+  },
+  {
+    files: ["**/*.{ts,tsx,mts,jsx}"],
+    rules: { "react/no-danger": "error" },
   },
   {
     files: ["scripts/**", "*.config.{ts,mjs}", "tests/**"],
