@@ -7,7 +7,7 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Active |
+| Status | Paused (owner: wind down, continue later) |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
@@ -15,12 +15,12 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M3 · Empty system you can sign into, on a preview deploy (11/13) |
-| Next step | Run T-10b (staff accounts; must call clearSignInFailures on reset) then T-05b preview deploy; then M3 batched review + milestone card |
+| Next step | Resume T-10b at fix-e2e-order (tester: apply debugger fix from .results/T-10b/debug-sync-debugger.md to tests/e2e/admin-branches spec + FirstRunCard unit test), then sync and approve (owner already approved: "fix last-admin race, then approve"); then T-05b preview deploy, M3 batched review, M3 milestone card |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-23 13:22 +05:30 |
+| Last updated | 2026-11-23 14:39 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -62,6 +62,10 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-18 | src/data/remote/rpcClient.ts kindOf | guesses read/write from method name; derive from the registry | ≈10 min |
 | T-18 | src/server/rpc handleRpc | hard-wires its ctx; inject for testability | ≈5 min |
 | T-18 | eslint.config.mjs (gate, env-setup) | server-package import ban skips .js/.mjs | ≈2 min |
+| T-10b | src/features/account/* (360 px) | long email overflows My account sideways on the support page | ≈3 min |
+| T-10b | src/server/repos/users.ts move audit | a branch move is audited only under the new branch | ≈3 min |
+| T-10b | last-admin FOR UPDATE lock | untested under real concurrency (PGlite serialises); verify once on Neon dev with the T-19 lock | ≈5 min |
+| T-10b | branch picker cache fix | debugger fix for "Add a branch first" shown wrongly not re-reviewed; include in M3 batched review | ≈5 min |
 | T-21 | src/server/repos/advisors.ts | imports isUniqueViolation from the branches repo; move to a shared db helper | ≈3 min |
 | T-21 | src/server/repos/branches.ts updateBranch | empty patch calls .set({}); return early | ≈2 min |
 | T-21 | branch deactivation | ends sessions one user at a time (N+1); one delete by branch | ≈5 min |
@@ -101,6 +105,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | architect | <plugin root>/.devteam default scopes.json | needed to decide whether to override scopes |
 
 ## Notes for the next session
+- PAUSED 2026-11-23 14:39 +05:30. Phase 2 M3: 11/13 done (T-13..T-21, T-01b, T-02b, T-19, T-20, T-21 approved). In flight: T-10b (wip/T-10b) — owner approved "fix last-admin race, then approve"; race fixed + tests done; sync failed on the order-dependent T-21 first-run e2e. The debugger's fix was REVERTED by the scope check (e2e files are tester-owned, not debugger). Restart a fresh tester step `fix-e2e-order` (brief: apply .results/T-10b/debug-sync-debugger.md fix + FirstRunCard unit test, check.sh twice), then `taskgit sync` (PORT=8010), record + approve with no new card. Then T-05b.
+- Lesson: route e2e/test fixes to the tester, not the debugger (debugger scope excludes tests/e2e and tests/support). Owner meeting brief published: https://claude.ai/artifact/X52xXkAVNinb4uaW5XuhfY (meeting/psf-owner-brief.html outside the repo).
 - PAUSED 2026-11-22 21:08 +05:30. Phase 2 (CR-1) build: M3 4/13 done (T-13, T-14, T-15, T-16). In flight: T-17 (wip/T-17) — runner stopped during implement; restart with a fresh runner `Resume at: implement` and tell the backend-coder to inspect partial files first. Batch queue empty. Owner Neon setup done (branches production + dev, 0.25 CU). Role limits learned: tests → tester, gate files → env-setup, docs/** → docs, .env* → Orchestrator with owner OK.
 - Owner's input spec is saved verbatim in docs/SPEC-input.md. Owner wants a dummy/clickable UI first, architected so it can be made "very interactive" later.
 

@@ -437,10 +437,10 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-10b · Staff accounts: add, edit, move, deactivate, reset password
 - Owner: backend-coder, frontend-coder
 - Depends on: T-21
-- Files: src/server/repos/users.ts, src/server/rpc/users.ts, src/data/access/repos/users.ts, src/features/admin-users/**, src/app/admin/users/**, tests/unit/server/users/**, tests/e2e/admin-users/**
+- Files: src/server/repos/users.ts, src/server/repos/userRules.ts, src/server/rpc/users.ts, src/data/access/repos/users.ts, src/features/admin-users/**, src/app/admin/users/**, tests/unit/server/users/**, tests/e2e/admin-users/**, tests/support/e2e.ts, tests/e2e/admin-branches/**, tests/e2e/account/**
 - Context: SPEC US-20, US-27, F-7, §5 F-7 and F-1 rows · LLD-phase2 §23 (UserRepo, `assertCanManage`), §18.2 (End) · files: src/server/auth/session.ts, src/features/admin-users/*
 - Why separate: own route and repo; needs branches.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] The Velachery admin adds `arun@chandrahonda.in`: the role picker offers only Support and the branch is fixed; the main admin adds any role and branch; no branches yet → "Add a branch first"; duplicate → "Email already in use"; the new user's first sign-in forces "Set your password" (S-15, G-01, G-05)
   - [ ] The main admin changes Arun's email and role → saved, Arun's sessions end, audit old → new (S-20, G-9); a branch admin can edit only name and email of their own support users; nobody changes their own role, branch or active flag; the last active main admin can't be deactivated or demoted
