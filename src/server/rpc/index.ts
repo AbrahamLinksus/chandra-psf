@@ -1,8 +1,11 @@
 import "server-only";
+import { advisorsRpc } from "./advisors";
 import { alertsRpc } from "./alerts";
 import { analyticsRpc } from "./analytics";
 import { auditRpc } from "./audit";
 import { authRpc } from "./auth";
+import { branchesRpc } from "./branches";
+import { customersRpc } from "./customers";
 import { feedbackRpc } from "./feedback";
 import { jobCardsRpc } from "./jobCards";
 import { responsesRpc } from "./responses";
@@ -21,6 +24,9 @@ export const rpcTables: Readonly<Record<string, Readonly<Record<string, RpcEntry
   responses: responsesRpc,
   audit: auditRpc,
   users: usersRpc,
+  branches: branchesRpc,
+  advisors: advisorsRpc,
+  customers: customersRpc,
 };
 
 export function findRpcEntry(repo: string, method: string): RpcEntry | undefined {

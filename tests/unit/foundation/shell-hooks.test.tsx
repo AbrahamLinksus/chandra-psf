@@ -69,7 +69,6 @@ describe("useShellActions", () => {
     return (
       <>
         <button onClick={() => void a.signOut()}>out</button>
-        <button onClick={() => void a.simulateFailedSave()}>sim</button>
       </>
     );
   }
@@ -85,22 +84,6 @@ describe("useShellActions", () => {
       expect(nav.replace).toHaveBeenCalledWith("/sign-in");
     });
     fireEvent.click(screen.getByText("out"));
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("Not built yet");
-    });
-  });
-
-  it("simulateFailedSave success confirms; failure shows a toast", async () => {
-    const armFailedSave = vi
-      .fn()
-      .mockResolvedValueOnce(ok(undefined))
-      .mockResolvedValueOnce(err("UNAVAILABLE", "Not built yet"));
-    render(<Buttons />, { wrapper: wrapper({ demo: { armFailedSave } }) });
-    fireEvent.click(screen.getByText("sim"));
-    await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith("The next save will fail");
-    });
-    fireEvent.click(screen.getByText("sim"));
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith("Not built yet");
     });

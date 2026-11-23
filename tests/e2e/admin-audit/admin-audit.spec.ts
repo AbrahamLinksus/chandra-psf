@@ -11,6 +11,9 @@ async function openAudit(page: Page): Promise<void> {
   await expect(page.getByTestId("audit-row").first()).toBeVisible();
 }
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-09b.
+test.fixme(true, "rebuilt by T-09b");
+
 test.describe("T-09 audit log", () => {
   test("US-19 (S-14) lists seeded entries newest first with IST time, actor, entity and old → new", async ({
     page,

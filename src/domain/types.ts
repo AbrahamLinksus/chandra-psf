@@ -1,4 +1,6 @@
-export type Role = "admin" | "support";
+import type { StaffRole } from "./roles";
+
+export type Role = StaffRole;
 export type ISODate = string; // YYYY-MM-DD, IST
 export type ISOTime = string; // UTC ISO
 
@@ -9,11 +11,23 @@ export interface User {
   role: Role;
   active: boolean;
   mustSetPassword: boolean;
+  branchId: string | null;
+  branchName: string | null;
+  lastSignInAt: ISOTime | null;
+  createdAt: ISOTime;
+}
+export interface Branch {
+  id: string;
+  name: string;
+  city: string;
+  active: boolean;
   createdAt: ISOTime;
 }
 export interface Advisor {
   id: string;
   name: string;
+  branchId: string;
+  active: boolean;
 }
 export interface JobCard {
   jobCardNo: string;
@@ -84,7 +98,29 @@ export type AuditAction =
   | "user.create"
   | "user.deactivate"
   | "user.reactivate"
-  | "user.set_password";
+  | "user.set_password"
+  | "auth.sign_in"
+  | "auth.lockout"
+  | "user.update"
+  | "user.reset_password"
+  | "user.change_password"
+  | "user.otp_reissue"
+  | "user.recover"
+  | "jobcard.create"
+  | "jobcard.update"
+  | "link.resend"
+  | "branch.create"
+  | "branch.update"
+  | "branch.deactivate"
+  | "branch.reactivate"
+  | "advisor.create"
+  | "advisor.update"
+  | "advisor.deactivate"
+  | "advisor.reactivate"
+  | "customer.export"
+  | "customer.erase"
+  | "response.purge"
+  | "system.cleanup";
 export interface AuditEntry {
   id: string;
   at: ISOTime;

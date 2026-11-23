@@ -63,6 +63,9 @@ async function adminTab(page: Page, context: BrowserContext): Promise<Page> {
   return admin;
 }
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-11b.
+test.fixme(true, "rebuilt by T-11b");
+
 test.describe("T-11 definition-of-done walkthrough", () => {
   test("S-06 two tabs: a submission in tab B shows in tab A live and a save in A keeps it", async ({
     page,

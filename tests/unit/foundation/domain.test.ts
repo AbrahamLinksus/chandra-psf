@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { AUTO_RESOLVE_NOTE } from "@/domain/constants";
 import { evaluateAlertReasons, formatReasons, reconcileAlert } from "@/domain/alertRules";
 import { findQuestion, QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
-import { SeedSchema } from "@/domain/schemas";
 import type { Alert, AnswerMap, QuestionCode } from "@/domain/types";
 import {
   isStepComplete,
@@ -12,7 +11,6 @@ import {
   validateSubmission,
   visibleQuestions,
 } from "@/domain/visibility";
-import seedJson from "@/data/seed/seed.json";
 
 function visible(code: QuestionCode, answers: AnswerMap): boolean {
   const q = findQuestion(code);
@@ -163,15 +161,5 @@ describe("reconcileAlert", () => {
     const changed = reconcileAlert(open, [{ kind: "low_rating", code: "Q1" }], now);
     expect(changed.change).toBe("reasons_updated");
     expect(reconcileAlert(open, [{ kind: "callback" }], now).change).toBe("none");
-  });
-});
-
-describe("seed fixture", () => {
-  it("minimal seed passes SeedSchema with 1 admin, 2 support, 4 advisors and JC-24-1042", () => {
-    const seed = SeedSchema.parse(seedJson);
-    expect(seed.users.filter((u) => u.role === "admin")).toHaveLength(1);
-    expect(seed.users.filter((u) => u.role === "support")).toHaveLength(2);
-    expect(seed.advisors).toHaveLength(4);
-    expect(seed.jobCards.map((j) => j.jobCardNo)).toContain("JC-24-1042");
   });
 });

@@ -42,7 +42,8 @@ function wrap(da: unknown) {
 
 describe("set-password redirect follows the role (minor 2)", () => {
   it.each([
-    ["admin", "/admin"],
+    ["main_admin", "/admin"],
+    ["branch_admin", "/admin"],
     ["support", "/support"],
   ])("a %s lands on %s", async (role, path) => {
     session.user = { id: "u", role: role as User["role"], mustSetPassword: true };
@@ -86,7 +87,7 @@ describe("copy flash timer (minor 5)", () => {
 
 describe("Retry after a failed reactivate re-applies it (minor 9)", () => {
   it("calls setUserActive again with the same change", async () => {
-    session.user = { id: "u-admin", role: "admin" };
+    session.user = { id: "u-admin", role: "main_admin" };
     const target = { id: "u-2", name: "Deepa" } as User;
     const setUserActive = vi
       .fn()

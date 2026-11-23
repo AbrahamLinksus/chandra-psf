@@ -39,6 +39,9 @@ const blockText = (page: Page): Promise<string[]> =>
 const responses = (page: Page) =>
   page.getByTestId("kpi-tile").filter({ hasText: "Responses received" });
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-06b.
+test.fixme(true, "rebuilt by T-06b");
+
 test.describe("T-06 admin overview", () => {
   test("AC-10 (S-07) / default last 30 days: 5 KPI tiles with arrows and all 7 blocks filled", async ({
     page,

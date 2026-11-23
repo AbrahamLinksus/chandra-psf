@@ -4,7 +4,6 @@ import { useState, type SubmitEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { env } from "@/config/env";
 
 interface Props {
   busy: boolean;
@@ -59,9 +58,6 @@ export function CredentialsForm({ busy, error, onSubmit }: Props) {
       <Button type="submit" className="h-12" disabled={busy}>
         Sign in
       </Button>
-      <p className="text-sm text-muted-foreground">
-        Demo password for the sample accounts: <code>{env.NEXT_PUBLIC_DEMO_PASSWORD}</code>
-      </p>
     </form>
   );
 }

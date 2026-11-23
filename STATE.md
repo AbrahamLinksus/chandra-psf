@@ -14,8 +14,8 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (6/13) |
-| Next step | Run T-01b (switch app to the server; also wire onUnauthenticated + ErrorCode gaps) and whatever --ready prints |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (7/13) |
+| Next step | Run T-19 (first admin setup script + e2e harness) and whatever --ready prints |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
@@ -54,21 +54,21 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 |---|---|---|---|
 | T-15 | src/server/env.ts | drop runtime DATABASE_URL_UNPOOLED requirement (review m-8; src + test change) | ≈5 min |
 | T-15 | review minors m-3, m-11, m-13, m-17 | optional/larger items in .results T-15 review (copied below at merge) | ≈10 min |
-| T-15 | next.config.ts (frozen) | add @electric-sql/pglite to serverExternalPackages (review m-6) — do in T-01b, which first runs PGlite inside Next | ≈2 min |
 | T-15 | T-24/T-25 erasure | must use SET LOCAL for psf.redact on pooled connections (review m-2) | ≈2 min |
 | T-15 | docs/LLD-phase2.md §16 | getDb returns Promise<Db>, LLD says Db (review m-4) | ≈2 min |
-| T-18 | src/app/providers.tsx (T-01b) | wire rpcClient onUnauthenticated to invalidate the session query | ≈5 min |
 | T-18 | src/server/rpc clientIp | trusts first X-Forwarded-For entry; confirm Vercel overwrites XFF or use x-real-ip / request.ip | ≈5 min |
 | T-18 | src/server/rpc auth.ts | signOut / signInAsDemo marked public vs LLD | ≈2 min |
 | T-18 | src/server/rateLimit.ts | move flood constant (300/h) to src/domain/constants.ts | ≈2 min |
 | T-18 | src/data/remote/rpcClient.ts kindOf | guesses read/write from method name; derive from the registry | ≈10 min |
 | T-18 | src/server/rpc handleRpc | hard-wires its ctx; inject for testability | ≈5 min |
 | T-18 | eslint.config.mjs (gate, env-setup) | server-package import ban skips .js/.mjs | ≈2 min |
-| T-18 | src/data/access/result.ts (T-01b) | add RATE_LIMITED, OTP_EXPIRED, NAME_IN_USE to ErrorCode and switch the T-18 plain-JSON replies to them (§17.2) | ≈5 min |
+| T-01b | src/app/admin/{branches,customers,advisors}/ placeholders | add RoleGuard (typed URL shows empty page to any role; server enforces) — T-21/T-24 rebuild them | ≈2 min |
+| T-01b | SupportShell import order, UserRow roleLabel wrapper | tidy | ≈1 min |
+| T-01b | src/data/access/repos/jobCards.ts, src/server/rpc/jobCards.ts (T-03b) | remove unused listFreshJobCards from repo interface + rpc | ≈3 min |
+| T-01b | src/server/env.ts APP_URL | kept on purpose (production https check); README/docs still mention DEMO_PASSWORD, NEXT_PUBLIC_APP_URL, exceljs → M3 docs pass | ≈5 min |
 | T-17 | src/server/{ctx,scope,audit}.ts, auth/{session,cookies}.ts | add `import "server-only"` (CONVENTIONS §2) or an exemption comment like log.ts | ≈2 min |
 | T-16 | docs/LLD-phase2.md §25 | retention cut-off says `<`; code + SPEC use inclusive `<=` (12 Feb 2027 example) | ≈1 min |
 | T-16 | src/domain/commonPasswords.ts | ~900 hand-built entries, not a real top-1000 list | ≈5 min |
-| T-16 | src/domain/types.ts Role | switch phase-1 Role to StaffRole (T-01b/T-17) | ≈5 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.

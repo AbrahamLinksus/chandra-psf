@@ -4,7 +4,6 @@ import { useState, type SubmitEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DemoLabel } from "@/components/shared/DemoLabel";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { SaveState } from "@/components/shared/SaveState";
 import { MIN_PASSWORD_LENGTH } from "@/domain/constants";
@@ -24,10 +23,7 @@ export function SetPasswordScreen() {
 
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-md content-center gap-6 p-4 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">Set your password</h1>
-        <DemoLabel />
-      </div>
+      <h1 className="text-2xl font-semibold">Set your password</h1>
       <form onSubmit={onSubmit} className="grid gap-4 rounded-2xl border bg-card p-4 shadow-sm">
         <p className="text-sm text-muted-foreground">
           Choose a new password of at least {MIN_PASSWORD_LENGTH} characters.

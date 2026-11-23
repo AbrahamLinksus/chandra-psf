@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryStorage } from "../../support";
+import { MemoryStorage } from "../../support/memoryStorage";
+import { err, ok } from "@/data/access";
 import { clearDraft, loadDraft, saveDraft } from "@/features/feedback-form/draft";
 import {
   canGoNext,
@@ -9,7 +10,8 @@ import {
   type FormState,
 } from "@/features/feedback-form/formMachine";
 import { submitFeedback } from "@/features/feedback-form/submitFlow";
-import { freshToken, happyAnswers, makeData } from "./helpers";
+import { fakeDataAccess } from "../../support/fakeDataAccess";
+import { happyAnswers } from "./helpers";
 
 let storage = new MemoryStorage();
 
@@ -80,29 +82,45 @@ describe("form machine", () => {
 });
 
 describe("submitFeedback", () => {
+  const fail = (code: "SAVE_FAILED" | "ALREADY_COMPLETED" | "NOT_FOUND" | "CONFLICT") => () =>
+    Promise.resolve(err<{ callbackRequested: boolean }>(code, "x"));
+
   it("success clears the draft and reports the callback", async () => {
-    const { da } = makeData();
-    saveDraft("v-test-1", { step: 6, answers: {} });
-    const out = await submitFeedback(da, freshToken(), "v-test-1", happyAnswers({ Q15: "Yes" }));
+    const da = fakeDataAccess({
+      feedback: { submitResponse: () => Promise.resolve(ok({ callbackRequested: true })) },
+    });
+    saveDraft("v-1", { step: 6, answers: {} });
+    const out = await submitFeedback(da, "tok", "v-1", happyAnswers({ Q15: "Yes" }));
     expect(out).toEqual({ kind: "done", callbackRequested: true });
-    expect(loadDraft("v-test-1")).toBeNull();
+    expect(loadDraft("v-1")).toBeNull();
   });
 
   it("a failed save keeps the draft and Retry succeeds (S-13)", async () => {
-    const { da } = makeData("?demoFail=1");
-    const token = freshToken();
-    saveDraft("v-test-1", { step: 6, answers: happyAnswers() });
-    const out = await submitFeedback(da, token, "v-test-1", happyAnswers());
+    let first = true;
+    const da = fakeDataAccess({
+      feedback: {
+        submitResponse: () => {
+          if (first) {
+            first = false;
+            return fail("SAVE_FAILED")();
+          }
+          return Promise.resolve(ok({ callbackRequested: false }));
+        },
+      },
+    });
+    saveDraft("v-1", { step: 6, answers: happyAnswers() });
+    const out = await submitFeedback(da, "tok", "v-1", happyAnswers());
     expect(out).toEqual({ kind: "failed", message: "Couldn't save, try again" });
-    expect(loadDraft("v-test-1")).not.toBeNull();
-    expect((await submitFeedback(da, token, "v-test-1", happyAnswers())).kind).toBe("done");
+    expect(loadDraft("v-1")).not.toBeNull();
+    expect((await submitFeedback(da, "tok", "v-1", happyAnswers())).kind).toBe("done");
   });
 
-  it("maps already-submitted and invalid links", async () => {
-    const { da } = makeData();
-    const token = freshToken();
-    await submitFeedback(da, token, "v-test-1", happyAnswers());
-    expect((await submitFeedback(da, token, "v-test-1", happyAnswers())).kind).toBe("already");
-    expect((await submitFeedback(da, "bogus", "v", happyAnswers())).kind).toBe("invalid");
+  it.each([
+    ["ALREADY_COMPLETED", "already"],
+    ["NOT_FOUND", "invalid"],
+    ["CONFLICT", "expired"],
+  ] as const)("maps %s to %s", async (code, kind) => {
+    const da = fakeDataAccess({ feedback: { submitResponse: fail(code) } });
+    expect((await submitFeedback(da, "tok", "v-1", happyAnswers())).kind).toBe(kind);
   });
 });

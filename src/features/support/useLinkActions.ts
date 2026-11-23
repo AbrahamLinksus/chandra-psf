@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DataAccess, Result, VisitSummary } from "@/data/access";
+import { isAdmin } from "@/domain/roles";
 import { useSession } from "@/hooks/useSession";
 import { useRepoMutation, type MutationStatus } from "@/hooks/useRepoMutation";
 import type { RepoError } from "@/data/access";
@@ -85,7 +86,7 @@ export function useLinkActions(
     cancelM.reset();
   }, [regen, cancelM]);
 
-  const canManage = visit.isMine || user?.role === "admin";
+  const canManage = visit.isMine || (user !== null && isAdmin(user.role));
 
   return {
     copied,

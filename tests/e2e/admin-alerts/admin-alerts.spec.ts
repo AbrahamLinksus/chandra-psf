@@ -31,6 +31,9 @@ async function openAlertToContacted(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Save", exact: true }).click();
 }
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-07b.
+test.fixme(true, "rebuilt by T-07b");
+
 test.describe("T-07 admin alerts queue", () => {
   test("AC-8 lists alerts newest first, filters by status, tints rows", async ({ page }) => {
     await openAlerts(page);

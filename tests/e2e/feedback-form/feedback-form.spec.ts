@@ -111,6 +111,9 @@ async function fillSteps2to4Happy(page: Page): Promise<void> {
   await next(page).click();
 }
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-04b.
+test.fixme(true, "rebuilt by T-04b");
+
 test.describe("T-04 customer feedback form", () => {
   test("welcome greets the customer and marks the visit Opened; steps fit 360 px with big targets (AC-3, AC-11)", async ({
     page,

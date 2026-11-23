@@ -26,7 +26,6 @@ export function createRemoteDataAccess(deps: RemoteDeps): DataAccess {
     repoProxy(name, rpcDeps) as DataAccess[K];
   return {
     auth: repo("auth"),
-    demo: repo("demo"),
     jobCards: repo("jobCards"),
     visits: repo("visits"),
     feedback: repo("feedback"),
@@ -35,6 +34,9 @@ export function createRemoteDataAccess(deps: RemoteDeps): DataAccess {
     responses: repo("responses"),
     audit: repo("audit"),
     users: repo("users"),
+    branches: repo("branches"),
+    advisors: repo("advisors"),
+    customers: repo("customers"),
     subscribe: (listener) => deps.poller.subscribe(listener),
   };
 }

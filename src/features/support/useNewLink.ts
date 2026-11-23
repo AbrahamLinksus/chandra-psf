@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import type { DataAccess, Result, VisitSummary } from "@/data/access";
 import type { JobCard } from "@/domain/types";
 import { useRepoMutation } from "@/hooks/useRepoMutation";
-import { useRepoQuery } from "@/hooks/useRepoQuery";
 
 export interface FoundCard {
   jobCard: JobCard & { advisorName: string };
@@ -26,7 +25,6 @@ export function useNewLink() {
   const [link, setLink] = useState<VisitSummary | null>(null);
   const lookupM = useRepoMutation(lookupFn);
   const createM = useRepoMutation(createFn);
-  const fresh = useRepoQuery(["visits", "fresh"], (da) => da.jobCards.listFreshJobCards());
 
   const lookup = useCallback(
     async (no: string) => {
@@ -57,6 +55,5 @@ export function useNewLink() {
     lookup,
     generate,
     createM,
-    fresh: fresh.data ?? [],
   };
 }

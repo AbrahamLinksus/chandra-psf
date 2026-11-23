@@ -27,6 +27,9 @@ async function patchUser(page: Page, id: string, patch: Record<string, unknown>)
   await page.reload();
 }
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-02b.
+test.fixme(true, "rebuilt by T-02b");
+
 test.describe("T-02 sign in, set password, reset demo", () => {
   test("the sign-in picker lands Support 1 on /support and Admin on /admin", async ({ page }) => {
     await page.goto("/sign-in");

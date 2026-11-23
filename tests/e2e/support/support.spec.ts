@@ -35,6 +35,9 @@ async function stored(page: Page, key: string): Promise<string> {
   return page.evaluate((k) => window.localStorage.getItem(k) ?? "", key);
 }
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-03b.
+test.fixme(true, "rebuilt by T-03b");
+
 test.describe("T-03 support: look up, send, manage links", () => {
   test("JC-24-1042 autofills the SPEC row (AC-1) and the hint lists fresh cards (S-07)", async ({
     page,

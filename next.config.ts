@@ -9,6 +9,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["@electric-sql/pglite"],
   headers() {
     return Promise.resolve([{ source: "/:path*", headers: securityHeaders }]);
   },

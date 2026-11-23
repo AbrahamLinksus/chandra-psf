@@ -6,6 +6,7 @@ import type {
   AnswerMap,
   AnswerValue,
   AuditEntry,
+  Branch,
   JobCard,
   ResponseRecord,
   User,
@@ -33,13 +34,27 @@ export const UserSchema: z.ZodType<User> = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string(),
-  role: z.enum(["admin", "support"]),
+  role: z.enum(["support", "branch_admin", "main_admin"]),
   active: z.boolean(),
   mustSetPassword: z.boolean(),
+  branchId: z.string().nullable(),
+  branchName: z.string().nullable(),
+  lastSignInAt: isoOrNull,
   createdAt: iso,
 });
-export const StoredUserSchema = UserSchema.and(z.object({ passwordHash: z.string() }));
-export const AdvisorSchema: z.ZodType<Advisor> = z.object({ id: z.string(), name: z.string() });
+export const BranchSchema: z.ZodType<Branch> = z.object({
+  id: z.string(),
+  name: z.string(),
+  city: z.string(),
+  active: z.boolean(),
+  createdAt: iso,
+});
+export const AdvisorSchema: z.ZodType<Advisor> = z.object({
+  id: z.string(),
+  name: z.string(),
+  branchId: z.string(),
+  active: z.boolean(),
+});
 
 export const JobCardSchema: z.ZodType<JobCard> = z.object({
   jobCardNo: z.string(),
@@ -105,6 +120,28 @@ const AuditActionSchema = z.enum([
   "user.deactivate",
   "user.reactivate",
   "user.set_password",
+  "auth.sign_in",
+  "auth.lockout",
+  "user.update",
+  "user.reset_password",
+  "user.change_password",
+  "user.otp_reissue",
+  "user.recover",
+  "jobcard.create",
+  "jobcard.update",
+  "link.resend",
+  "branch.create",
+  "branch.update",
+  "branch.deactivate",
+  "branch.reactivate",
+  "advisor.create",
+  "advisor.update",
+  "advisor.deactivate",
+  "advisor.reactivate",
+  "customer.export",
+  "customer.erase",
+  "response.purge",
+  "system.cleanup",
 ]);
 
 export const AuditEntrySchema: z.ZodType<AuditEntry> = z.object({
@@ -119,106 +156,3 @@ export const AuditEntrySchema: z.ZodType<AuditEntry> = z.object({
   newValue: z.unknown(),
   note: z.string().exactOptional(),
 });
-
-export const MetaSchema = z.object({ schemaVersion: z.literal(1), seededAt: iso });
-
-/** Storage schema of every Db collection (LLD 3.1); `read(k)` validates with `DbSchemas[k]`. */
-export const DbSchemas = {
-  meta: MetaSchema,
-  users: z.array(StoredUserSchema),
-  advisors: z.array(AdvisorSchema),
-  jobCards: z.array(JobCardSchema),
-  visits: z.array(VisitSchema),
-  responses: z.array(ResponseRecordSchema),
-  alerts: z.array(AlertSchema),
-  audit: z.array(AuditEntrySchema),
-} as const;
-
-export const SessionSchema = z.object({ userId: z.string() });
-
-// ---- Seed fixture (LLD 4): same as Db, timestamps are day offsets from the load day (IST) ----
-export const SeedTimeSchema = z.object({
-  dayOffset: z.number().int(),
-  minute: z.number().int().min(0).max(1439),
-});
-export type SeedTime = z.infer<typeof SeedTimeSchema>;
-const seedTime = SeedTimeSchema;
-const seedTimeOrNull = SeedTimeSchema.nullable();
-
-export const SeedSchema = z.object({
-  users: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      email: z.string(),
-      role: z.enum(["admin", "support"]),
-      active: z.boolean(),
-      mustSetPassword: z.boolean(),
-      createdAt: seedTime,
-    }),
-  ),
-  advisors: z.array(AdvisorSchema),
-  jobCards: z.array(
-    z.object({
-      jobCardNo: z.string(),
-      customerName: z.string(),
-      phone: z.string().nullable(),
-      regNo: z.string(),
-      model: z.string(),
-      vehicleType: z.enum(["scooter", "motorcycle"]),
-      serviceType: z.string(),
-      serviceDate: seedTime,
-      advisorId: z.string(),
-    }),
-  ),
-  visits: z.array(
-    z.object({
-      id: z.string(),
-      jobCardNo: z.string(),
-      phone: z.string().nullable(),
-      createdBy: z.string(),
-      createdAt: seedTime,
-      expiresAt: seedTime,
-      openedAt: seedTimeOrNull,
-      completedAt: seedTimeOrNull,
-      cancelledAt: seedTimeOrNull,
-      replacedBy: z.string().nullable(),
-    }),
-  ),
-  responses: z.array(
-    z.object({
-      id: z.string(),
-      visitId: z.string(),
-      questionsVersion: z.number().int(),
-      submittedAt: seedTime,
-      answers: AnswerMapSchema,
-      deletedAt: seedTimeOrNull,
-    }),
-  ),
-  alerts: z.array(
-    z.object({
-      id: z.string(),
-      responseId: z.string(),
-      reasons: z.array(AlertReasonSchema),
-      status: z.enum(["open", "contacted", "resolved"]),
-      notes: z.array(z.object({ at: seedTime, by: z.string(), text: z.string() })),
-      createdAt: seedTime,
-      updatedAt: seedTime,
-    }),
-  ),
-  audit: z.array(
-    z.object({
-      id: z.string(),
-      at: seedTime,
-      actorId: z.string(),
-      actorName: z.string(),
-      action: AuditActionSchema,
-      entityType: z.enum(["visit", "response", "alert", "user"]),
-      entityId: z.string(),
-      oldValue: z.unknown(),
-      newValue: z.unknown(),
-      note: z.string().exactOptional(),
-    }),
-  ),
-});
-export type Seed = z.infer<typeof SeedSchema>;

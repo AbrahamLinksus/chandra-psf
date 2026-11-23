@@ -53,9 +53,6 @@ export function NewLinkScreen() {
             {s.lookupError}
           </p>
         )}
-        {s.fresh.length > 0 && (
-          <p className="text-sm text-muted-foreground">Try: {s.fresh.join(", ")}</p>
-        )}
       </form>
       {s.found !== null && (
         <>

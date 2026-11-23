@@ -13,6 +13,9 @@ const NAV: [string, string][] = [
 
 const isDesktop = (page: Page): boolean => (page.viewportSize()?.width ?? 0) >= 768;
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-02b.
+test.fixme(true, "rebuilt by T-02b");
+
 test.describe("T-01 routing and shell", () => {
   test("AC-1 / redirects to /sign-in, a placeholder with the Demo label", async ({ page }) => {
     await page.goto("/");

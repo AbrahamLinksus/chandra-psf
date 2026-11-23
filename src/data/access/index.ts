@@ -1,8 +1,10 @@
 import type { AlertRepo } from "./repos/alerts";
 import type { AnalyticsRepo } from "./repos/analytics";
 import type { AuditRepo } from "./repos/audit";
+import type { AdvisorRepo } from "./repos/advisors";
 import type { AuthRepo } from "./repos/auth";
-import type { DemoRepo } from "./repos/demo";
+import type { BranchRepo } from "./repos/branches";
+import type { CustomerRepo } from "./repos/customers";
 import type { FeedbackRepo } from "./repos/feedback";
 import type { JobCardRepo } from "./repos/jobCards";
 import type { ResponseRepo } from "./repos/responses";
@@ -12,7 +14,6 @@ import type { Topic } from "./result";
 
 export interface DataAccess {
   auth: AuthRepo;
-  demo: DemoRepo;
   jobCards: JobCardRepo;
   visits: VisitRepo;
   feedback: FeedbackRepo;
@@ -21,6 +22,9 @@ export interface DataAccess {
   responses: ResponseRepo;
   audit: AuditRepo;
   users: UserRepo;
+  branches: BranchRepo;
+  advisors: AdvisorRepo;
+  customers: CustomerRepo;
   subscribe(listener: (topics: Topic[]) => void): () => void;
 }
 
@@ -28,8 +32,10 @@ export * from "./result";
 export type { AlertRepo, AlertView } from "./repos/alerts";
 export type { AnalyticsRepo, FilterOptions } from "./repos/analytics";
 export type { AuditRepo } from "./repos/audit";
+export type { AdvisorRepo } from "./repos/advisors";
 export type { AuthRepo } from "./repos/auth";
-export type { DemoRepo } from "./repos/demo";
+export type { BranchRepo } from "./repos/branches";
+export type { CustomerRepo } from "./repos/customers";
 export type { FeedbackRepo, FormContext } from "./repos/feedback";
 export type { JobCardRepo } from "./repos/jobCards";
 export type { DeletedRow, ResponseDetail, ResponseListRow, ResponseRepo } from "./repos/responses";

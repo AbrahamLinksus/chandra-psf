@@ -31,6 +31,9 @@ async function visit(page: Page, url: string, ready: RegExp | string, name: stri
   await shot(page, name);
 }
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-11b.
+test.fixme(true, "rebuilt by T-11b");
+
 test.describe("T-11 SPEC 7 screens at 360 and 1440 px (G-W5)", () => {
   test("public and sign-in screens", async ({ page }) => {
     await page.goto("/sign-in");

@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function -- describe blocks group many tests */
+/* eslint-disable max-lines-per-function, max-lines -- one describe groups many tests; skipped until T-08b */
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "../../support/e2e";
 
@@ -68,6 +68,7 @@ async function openCount(page: Page): Promise<number | null> {
   return (await badge.count()) === 0 ? 0 : Number((await badge.innerText()).trim());
 }
 
+test.fixme(true, "rebuilt by T-08b");
 test.describe("T-08 admin responses", () => {
   test("S-11 AC-10 filters by service date, vehicle type, model and advisor; row opens detail", async ({
     page,

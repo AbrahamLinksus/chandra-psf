@@ -9,13 +9,10 @@ import type { User } from "@/domain/types";
 import { SESSION_KEY } from "@/hooks/useSession";
 import { landingPath } from "./routes";
 
-export type DemoWho = "admin" | "support1" | "support2";
-
 export interface SignInState {
   busy: boolean;
   error: string | null;
   signInWithPassword: (email: string, password: string) => Promise<void>;
-  signInAsDemo: (who: DemoWho) => Promise<void>;
 }
 
 export function useSignIn(): SignInState {
@@ -46,14 +43,5 @@ export function useSignIn(): SignInState {
     [da, finish],
   );
 
-  const signInAsDemo = useCallback(
-    async (who: DemoWho) => {
-      setBusy(true);
-      setError(null);
-      await finish(await da.auth.signInAsDemo(who));
-    },
-    [da, finish],
-  );
-
-  return { busy, error, signInWithPassword, signInAsDemo };
+  return { busy, error, signInWithPassword };
 }

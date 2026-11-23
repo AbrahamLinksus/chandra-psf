@@ -2,6 +2,13 @@ import { Button } from "@/components/ui/button";
 import type { User } from "@/domain/types";
 import { formatIST } from "@/domain/time";
 
+const ROLE_LABELS: Record<User["role"], string> = {
+  support: "Support",
+  branch_admin: "Branch admin",
+  main_admin: "Main admin",
+};
+const roleLabel = (role: User["role"]): string => ROLE_LABELS[role];
+
 export interface UserRowProps {
   user: User;
   isSelf: boolean;
@@ -20,7 +27,7 @@ export function UserRow({ user, isSelf, busy, onToggle }: UserRowProps) {
         <span className="font-medium">{user.name}</span>
         <span className="text-sm text-muted-foreground">{user.email}</span>
         <span className="text-xs text-muted-foreground">
-          {user.role === "admin" ? "Admin" : "Support"} · Added {formatIST(user.createdAt)}
+          {roleLabel(user.role)} · Added {formatIST(user.createdAt)}
         </span>
       </span>
       <span className="flex items-center gap-3">

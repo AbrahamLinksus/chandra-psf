@@ -65,11 +65,6 @@ if [ "${CHECK_NO_COVERAGE:-0}" = "1" ]; then
 else
   run "vitest + coverage" pnpm exec vitest run --coverage --passWithNoTests
 fi
-if [ -f scripts/build-seed.ts ]; then
-  run "seed fixture" pnpm exec tsx scripts/build-seed.ts --check
-else
-  echo "==> seed fixture: SKIPPED (scripts/build-seed.ts does not exist yet)"
-fi
 run "next build" pnpm exec next build
 if find tests/e2e -type f \( -name '*.spec.ts' -o -name '*.spec.tsx' \) 2>/dev/null | grep -q .; then
   run "playwright" pnpm exec playwright test

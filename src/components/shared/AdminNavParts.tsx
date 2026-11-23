@@ -2,21 +2,20 @@ import { MoreHorizontalIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AdminNavLink } from "./AdminNavLink";
-import { ADMIN_NAV } from "./adminNav";
-import { DemoLabel } from "./DemoLabel";
+import type { AdminNavItem } from "./adminNav";
 
 interface NavProps {
+  nav: AdminNavItem[];
   active: string | null;
   count: number;
 }
 
-export function AdminSidebar({ active, count, actions }: NavProps & { actions: ReactNode }) {
+export function AdminSidebar({ nav, active, count, actions }: NavProps & { actions: ReactNode }) {
   return (
     <aside className="hidden w-64 shrink-0 flex-col gap-4 border-r bg-card p-4 md:flex">
       <span className="font-semibold">Chandra Honda PSF</span>
-      <DemoLabel />
       <nav aria-label="Admin" className="grid gap-1">
-        {ADMIN_NAV.map((item) => (
+        {nav.map((item) => (
           <AdminNavLink
             key={item.href}
             item={item}
@@ -31,21 +30,23 @@ export function AdminSidebar({ active, count, actions }: NavProps & { actions: R
   );
 }
 
-export function AdminTabBar({ active, count, onMore }: NavProps & { onMore: () => void }) {
+export function AdminTabBar({ nav, active, count, onMore }: NavProps & { onMore: () => void }) {
   return (
     <nav
       aria-label="Admin tabs"
       className="fixed inset-x-0 bottom-0 z-40 flex border-t bg-card md:hidden"
     >
-      {ADMIN_NAV.filter((i) => i.tab).map((item) => (
-        <AdminNavLink
-          key={item.href}
-          item={item}
-          active={item.href === active}
-          count={count}
-          layout="tab"
-        />
-      ))}
+      {nav
+        .filter((i) => i.tab)
+        .map((item) => (
+          <AdminNavLink
+            key={item.href}
+            item={item}
+            active={item.href === active}
+            count={count}
+            layout="tab"
+          />
+        ))}
       <button
         type="button"
         onClick={onMore}
@@ -64,25 +65,27 @@ interface MoreProps extends NavProps {
   actions: ReactNode;
 }
 
-export function AdminMoreSheet({ open, onOpenChange, active, count, actions }: MoreProps) {
+export function AdminMoreSheet({ open, onOpenChange, nav, active, count, actions }: MoreProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="gap-2 p-4">
         <SheetHeader className="p-0">
           <SheetTitle>More</SheetTitle>
         </SheetHeader>
-        {ADMIN_NAV.filter((i) => !i.tab).map((item) => (
-          <AdminNavLink
-            key={item.href}
-            item={item}
-            active={item.href === active}
-            count={count}
-            layout="row"
-            onNavigate={() => {
-              onOpenChange(false);
-            }}
-          />
-        ))}
+        {nav
+          .filter((i) => !i.tab)
+          .map((item) => (
+            <AdminNavLink
+              key={item.href}
+              item={item}
+              active={item.href === active}
+              count={count}
+              layout="row"
+              onNavigate={() => {
+                onOpenChange(false);
+              }}
+            />
+          ))}
         <div className="border-t pt-2">{actions}</div>
       </SheetContent>
     </Sheet>

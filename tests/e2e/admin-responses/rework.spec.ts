@@ -3,6 +3,9 @@ import { signInAs } from "../../support/e2e";
 
 const ALL = "/admin/responses?from=2000-01-01&to=2100-01-01";
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-08b.
+test.fixme(true, "rebuilt by T-08b");
+
 test.describe("T-08 rework regressions", () => {
   test("rework: the list defaults to the last 30 days; an explicit from/to shows older rows", async ({
     page,

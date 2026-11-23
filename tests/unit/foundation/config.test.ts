@@ -28,11 +28,7 @@ function keysInCell(cell: string): string[] {
 }
 
 describe("config (G-04, LLD 0.5)", () => {
-  const phase1Keys = [
-    "NEXT_PUBLIC_APP_URL",
-    "NEXT_PUBLIC_DEALER_PHONE",
-    "NEXT_PUBLIC_DEMO_PASSWORD",
-  ];
+  const phase1Keys = ["NEXT_PUBLIC_DEALER_PHONE"];
 
   const envExample = () =>
     Object.fromEntries(
@@ -57,6 +53,14 @@ describe("config (G-04, LLD 0.5)", () => {
     for (const v of Object.values(vars)) expect(v).not.toMatch(/postgres(ql)?:\/\/[^/]*@/);
   });
 
+  it("the removed demo keys are gone from .env.example and the client config (T-01b)", () => {
+    const keys = Object.keys(envExample());
+    expect(keys).not.toContain("NEXT_PUBLIC_DEMO_PASSWORD");
+    expect(keys).not.toContain("NEXT_PUBLIC_APP_URL");
+    const clientEnv = readFileSync(join("src", "config", "env.ts"), "utf8");
+    expect(clientEnv).not.toMatch(/DEMO_PASSWORD|NEXT_PUBLIC_APP_URL/);
+  });
+
   it("only src/config/env.ts and src/server/env.ts read process.env", () => {
     const readers = sources("src").filter((f) => readFileSync(f, "utf8").includes("process.env"));
     expect(readers.sort()).toEqual([
@@ -67,11 +71,7 @@ describe("config (G-04, LLD 0.5)", () => {
 });
 
 describe("env fallback", () => {
-  const keys = [
-    "NEXT_PUBLIC_DEMO_PASSWORD",
-    "NEXT_PUBLIC_APP_URL",
-    "NEXT_PUBLIC_DEALER_PHONE",
-  ] as const;
+  const keys = ["NEXT_PUBLIC_DEALER_PHONE"] as const;
 
   async function load(nodeEnv: string) {
     vi.resetModules();
@@ -84,8 +84,6 @@ describe("env fallback", () => {
 
   it("falls back to the .env.example sample values outside production", async () => {
     const { env } = await load("development");
-    expect(env.NEXT_PUBLIC_DEMO_PASSWORD).toBe("Demo@2026");
-    expect(env.NEXT_PUBLIC_APP_URL).toBe("");
     expect(env.NEXT_PUBLIC_DEALER_PHONE).toBe("+91 44 0000 0000");
   });
 

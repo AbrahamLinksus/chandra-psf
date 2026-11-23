@@ -10,6 +10,9 @@ const user = (over: Partial<User>): User => ({
   role: "support",
   active: true,
   mustSetPassword: false,
+  branchId: null,
+  branchName: null,
+  lastSignInAt: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   ...over,
 });
@@ -29,9 +32,10 @@ describe("set-password client rules (G-05)", () => {
 });
 
 describe("landing path (F-1)", () => {
-  it("support goes to /support, admin to /admin, mustSetPassword to /set-password", () => {
+  it("support goes to /support, both admin roles to /admin, mustSetPassword to /set-password", () => {
     expect(landingPath(user({}))).toBe("/support");
-    expect(landingPath(user({ role: "admin" }))).toBe("/admin");
+    expect(landingPath(user({ role: "branch_admin" }))).toBe("/admin");
+    expect(landingPath(user({ role: "main_admin" }))).toBe("/admin");
     expect(landingPath(user({ mustSetPassword: true }))).toBe("/set-password");
   });
 });

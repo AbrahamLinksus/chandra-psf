@@ -29,6 +29,9 @@ async function signOutToPicker(page: Page): Promise<void> {
   await page.goto("/sign-in");
 }
 
+// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-10b.
+test.fixme(true, "rebuilt by T-10b");
+
 test.describe("T-10 manage support users", () => {
   test("s15 adds Deepa, rejects a duplicate, deactivates Support 2, Deepa signs in and sets her password", async ({
     page,

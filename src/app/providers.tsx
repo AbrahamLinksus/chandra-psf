@@ -4,30 +4,37 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { DataAccessProvider } from "@/data/access/provider";
-import { createLocalDataAccess } from "@/data/local/createLocalDataAccess";
+import { createRemoteDataAccess } from "@/data/remote/createRemoteDataAccess";
 import { useLiveInvalidation } from "@/hooks/useLiveInvalidation";
+import { SESSION_KEY } from "@/hooks/useSession";
 
 function LiveInvalidation() {
   useLiveInvalidation();
   return null;
 }
 
-/** Storage only exists in the browser, so the data layer is not created during prerender. */
-function createClientDataAccess() {
+/** Browser-only wiring: a session that ended on the server refreshes the session query. */
+function createClientDataAccess(queryClient: QueryClient) {
   if (typeof window === "undefined") return null;
-  return createLocalDataAccess({
-    storage: window.localStorage,
-    locks: "locks" in navigator ? navigator.locks : null,
-    clock: { now: () => new Date() },
-    win: window,
+  return createRemoteDataAccess({
+    fetch: (input, init) => window.fetch(input, init),
+    // Placeholders until T-22 (live refresh) supplies the real activity tracker and poller.
+    activity: { isActive: () => true },
+    poller: { subscribe: () => () => {} },
+    onUnauthenticated: () => {
+      void queryClient.invalidateQueries({ queryKey: SESSION_KEY, refetchType: "all" });
+    },
   });
 }
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+      }),
   );
-  const [dataAccess] = useState(createClientDataAccess);
+  const [dataAccess] = useState(() => createClientDataAccess(queryClient));
   return (
     <QueryClientProvider client={queryClient}>
       <DataAccessProvider value={dataAccess}>

@@ -10,6 +10,9 @@ export type ErrorCode =
   | "BAD_PASSWORD"
   | "EMAIL_IN_USE"
   | "SAVE_FAILED"
+  | "RATE_LIMITED"
+  | "OTP_EXPIRED"
+  | "NAME_IN_USE"
   | "UNAVAILABLE";
 
 export interface RepoError {
@@ -24,7 +27,7 @@ export interface StepUp {
   password: string;
 }
 
-export type Topic = "session" | "visits" | "responses" | "alerts" | "audit" | "users";
+export type Topic = "session" | "visits" | "responses" | "alerts" | "audit" | "users" | "branches" | "advisors";
 
 export function ok<T>(value: T): Result<T> {
   return { ok: true, value };

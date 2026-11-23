@@ -2,13 +2,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Browser, fixedClock } from "../../support";
+import { fakeDataAccess, makeUser } from "../../support/fakeDataAccess";
 import { guardRedirect } from "@/components/shared/RoleGuard";
 import { SaveState } from "@/components/shared/SaveState";
-import { activeNavHref } from "@/components/shared/adminNav";
-import { err, ok, type DataAccess } from "@/data/access";
+import { activeNavHref, navFor } from "@/components/shared/adminNav";
+import { err, ok, type DataAccess, type Topic } from "@/data/access";
 import { DataAccessProvider, useDataAccess } from "@/data/access/provider";
-import { createLocalDataAccess } from "@/data/local/createLocalDataAccess";
+import type { StaffRole } from "@/domain/roles";
 import type { User } from "@/domain/types";
 import { useLiveInvalidation } from "@/hooks/useLiveInvalidation";
 import { useOpenAlertCount } from "@/hooks/useOpenAlertCount";
@@ -18,15 +18,8 @@ import { useSession } from "@/hooks/useSession";
 
 afterEach(cleanup);
 
-const user = (role: "admin" | "support", mustSetPassword = false): User => ({
-  id: "u",
-  name: "Asha",
-  email: "e@x.y",
-  role,
-  active: true,
-  mustSetPassword,
-  createdAt: "2026-01-01T00:00:00.000Z",
-});
+const user = (role: StaffRole, mustSetPassword = false): User =>
+  makeUser(role, { mustSetPassword });
 
 function wrap(da: Partial<DataAccess>) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -171,7 +164,7 @@ describe("data hooks", () => {
       return <span>{`${s.user?.name ?? "none"}:${String(n)}`}</span>;
     }
     const da = {
-      auth: { currentUser: () => Promise.resolve(ok<User | null>(user("admin"))) },
+      auth: { currentUser: () => Promise.resolve(ok<User | null>(user("main_admin"))) },
       alerts: { countOpen: () => Promise.resolve(err<number>("UNAVAILABLE", "Not built yet")) },
     } as unknown as Partial<DataAccess>;
     render(<P />, { wrapper: wrap(da) });
@@ -203,13 +196,13 @@ describe("data hooks", () => {
     spy.mockRestore();
   });
 
-  it("useLiveInvalidation: a write in another tab refreshes the query (S-06)", async () => {
-    window.history.replaceState({}, "", "/");
-    const da = createLocalDataAccess({
-      storage: new Browser().storage,
-      locks: null,
-      clock: fixedClock(),
-      win: window,
+  it("useLiveInvalidation: a change signalled by the data layer refreshes the query (S-06)", async () => {
+    let notify: (topics: Topic[]) => void = () => undefined;
+    const da = fakeDataAccess({
+      subscribe: (listener) => {
+        notify = listener;
+        return () => undefined;
+      },
     });
     let reads = 0;
     function P() {
@@ -225,7 +218,7 @@ describe("data hooks", () => {
       expect(reads).toBe(1);
     });
     act(() => {
-      window.dispatchEvent(Object.assign(new Event("storage"), { key: "psf:v1:audit" }));
+      notify(["audit"]);
     });
     await waitFor(() => {
       expect(reads).toBeGreaterThan(1);
@@ -235,10 +228,26 @@ describe("data hooks", () => {
 
 describe("shell logic", () => {
   it("guardRedirect: no session, wrong role, must-set-password, allowed", () => {
-    expect(guardRedirect(null, "admin")).toBe("/sign-in");
-    expect(guardRedirect(user("support"), "admin")).toBe("/not-allowed");
-    expect(guardRedirect(user("admin", true), "admin")).toBe("/set-password");
-    expect(guardRedirect(user("admin"), "admin")).toBeNull();
+    const admins = ["branch_admin", "main_admin"] as const;
+    expect(guardRedirect(null, admins)).toBe("/sign-in");
+    expect(guardRedirect(user("support"), admins)).toBe("/not-allowed");
+    expect(guardRedirect(user("main_admin", true), admins)).toBe("/set-password");
+    expect(guardRedirect(user("branch_admin"), admins)).toBeNull();
+    expect(guardRedirect(user("main_admin"), admins)).toBeNull();
+    expect(guardRedirect(user("support"), ["support"])).toBeNull();
+  });
+
+  it("nav per role: Branches and Customers for main admins only, Advisors for branch admins only, My account for all", () => {
+    const labels = (r: StaffRole) => navFor(r).map((i) => i.label);
+    expect(labels("main_admin")).toEqual(
+      expect.arrayContaining(["Branches", "Customers", "My account"]),
+    );
+    expect(labels("main_admin")).not.toContain("Advisors");
+    expect(labels("branch_admin")).toContain("Advisors");
+    expect(labels("branch_admin")).toContain("My account");
+    expect(labels("branch_admin")).not.toContain("Branches");
+    expect(labels("branch_admin")).not.toContain("Customers");
+    expect(navFor("main_admin").find((i) => i.label === "Simulate failed save")).toBeUndefined();
   });
 
   it("activeNavHref picks the longest matching nav item", () => {

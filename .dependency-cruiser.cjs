@@ -29,13 +29,7 @@ module.exports = {
       name: "access-pure",
       severity: "error",
       from: { path: "^src/data/access" },
-      to: { path: "^src/(data/local|data/remote|server|features|components|app)" },
-    },
-    {
-      name: "local-hidden",
-      severity: "error",
-      from: { path: "^src/(features|components|hooks)|^src/app/(?!providers)" },
-      to: { path: "^src/data/local" },
+      to: { path: "^src/(data/remote|server|features|components|app)" },
     },
     {
       name: "no-cross-feature",
