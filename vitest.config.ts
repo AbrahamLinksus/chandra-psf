@@ -9,6 +9,9 @@ export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   test: {
     environment: "jsdom",
+    // PGlite boot + migrations and source-tree scans exceed the 5 s default under parallel coverage load.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     include: ["tests/unit/**/*.{test,spec}.{ts,tsx}"],
     coverage: {
       provider: "v8",

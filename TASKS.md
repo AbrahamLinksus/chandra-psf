@@ -424,15 +424,15 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-21 · Branches and advisors
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02b
-- Files: src/features/admin-overview/AdminOverviewScreen.tsx, tests/support/e2e.ts, src/server/repos/branches.ts, src/server/repos/advisors.ts, src/server/rpc/branches.ts, src/server/rpc/advisors.ts, src/data/access/repos/branches.ts, src/data/access/repos/advisors.ts, src/features/admin-branches/**, src/app/admin/branches/**, src/app/admin/advisors/**, src/features/admin-overview/FirstRun*.tsx, tests/unit/server/branches/**, tests/e2e/admin-branches/**
+- Files: vitest.config.ts, tests/unit/server/db/client.test.ts, tests/unit/server/rpc/phase2Stubs.test.ts, src/features/admin-overview/AdminOverviewScreen.tsx, tests/support/e2e.ts, src/server/repos/branches.ts, src/server/repos/advisors.ts, src/server/rpc/branches.ts, src/server/rpc/advisors.ts, src/data/access/repos/branches.ts, src/data/access/repos/advisors.ts, src/features/admin-branches/**, src/app/admin/branches/**, src/app/admin/advisors/**, src/features/admin-overview/FirstRun*.tsx, tests/unit/server/branches/**, tests/e2e/admin-branches/**
 - Context: SPEC US-23 (empty states), US-24, US-25, F-9 steps 2–3, §5 F-9 rows · LLD-phase2 §19, §23 (BranchRepo, AdvisorRepo) · files: src/server/scope.ts, src/server/audit.ts, src/components/shared/*
 - Why separate: own routes and repos; the branch is the scope key and users and job cards need branches and advisors.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
-  - [ ] Fresh system: `/admin` shows "Add your first branch" → `/admin/branches` → add "Velachery" and "Chennai"; a duplicate name → "A branch with this name already exists"; rename; deactivate / reactivate, never delete; each audited (US-23, US-24)
-  - [ ] Branch page: add advisor "Suresh", rename, deactivate / reactivate; branch admins manage only their branch at `/admin/advisors`; support can list only their branch's active advisors (US-25)
-  - [ ] Deactivating a branch ends its staff's sessions and blocks their sign-in ("Account disabled, contact admin"); branch screens are main-admin only (others see "Not allowed")
-- Result: —
+  - [x] Fresh system: `/admin` shows "Add your first branch" → `/admin/branches` → add "Velachery" and "Chennai"; a duplicate name → "A branch with this name already exists"; rename; deactivate / reactivate, never delete; each audited (US-23, US-24)
+  - [x] Branch page: add advisor "Suresh", rename, deactivate / reactivate; branch admins manage only their branch at `/admin/advisors`; support can list only their branch's active advisors (US-25)
+  - [x] Deactivating a branch ends its staff's sessions and blocks their sign-in ("Account disabled, contact admin"); branch screens are main-admin only (others see "Not allowed")
+- Result: 2/3 ✅ + 1 ⚠️ (branch-admin/support views unit-tested until T-10b) · unit 366, e2e 45, coverage 92.9% · review 0 major, 4 minor · global vitest timeout 30 s · ≈$2.36 · frontend-coder 50% · tester 22% · backend-coder 17% · reviewer 6% · fix-flaky-db-test 2% · test-timeout-config 2%
 
 ### T-10b · Staff accounts: add, edit, move, deactivate, reset password
 - Owner: backend-coder, frontend-coder

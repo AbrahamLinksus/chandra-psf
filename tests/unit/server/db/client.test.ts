@@ -35,7 +35,9 @@ describe("getDb", () => {
     expect(await getDb()).toBe(db);
     const rows = await withTx(db, (tx) => tx.select().from(branches));
     expect(rows).toEqual([]);
-  });
+    // PGlite boot + full migration is ~2.6 s alone but exceeded the 5 s default
+    // (8.5 s) under parallel coverage load; 30 s keeps the assertions intact.
+  }, 30_000);
 });
 
 describe("getDb failure and Neon paths", () => {
@@ -47,7 +49,8 @@ describe("getDb failure and Neon paths", () => {
     await expect(getDb()).rejects.toThrow("boom");
     await expect(getDb()).resolves.toBeDefined();
     expect(calls.n).toBe(2);
-  });
+    // Boots PGlite twice (failed migrate, then a full one): same load as above.
+  }, 30_000);
 
   it("uses a Neon pool for a postgres URL and closes it after the request", async () => {
     vi.stubEnv("DATABASE_URL", "postgres://u:p@h.example/db");

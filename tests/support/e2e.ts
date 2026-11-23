@@ -148,6 +148,19 @@ export function createBranch(
   return rpcCall(api, "branches", "createBranch", [input]);
 }
 
+/** Creates an advisor through RPC (advisors.createAdvisor). */
+export function createAdvisor(
+  api: AppApi,
+  input: { branchId: string; name: string },
+): Promise<{ id: string }> {
+  return rpcCall(api, "advisors", "createAdvisor", [input]);
+}
+
+/** Lists branches through RPC (branches.listBranches). */
+export function listBranches(api: AppApi): Promise<{ id: string; name: string }[]> {
+  return rpcCall(api, "branches", "listBranches", []);
+}
+
 /** Creates a support user through RPC (users.createSupportUser); the user must set a password at first sign-in. */
 export function createSupportUser(
   api: AppApi,

@@ -1,5 +1,10 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { RoleGuard } from "@/components/shared/RoleGuard";
+import { AdvisorsScreen } from "@/features/admin-branches/AdvisorsScreen";
 
 export default function AdminAdvisorsPage() {
-  return <PlaceholderScreen title="Advisors" />;
+  return (
+    <RoleGuard allowed={["branch_admin"]}>
+      <AdvisorsScreen />
+    </RoleGuard>
+  );
 }

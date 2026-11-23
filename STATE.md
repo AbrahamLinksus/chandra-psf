@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (10/13) |
-| Next step | Run T-20 (lockout, step-up, My account) and whatever --ready prints |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (11/13) |
+| Next step | Run T-10b (staff accounts; must call clearSignInFailures on reset) then T-05b preview deploy; then M3 batched review + milestone card |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-23 12:41 +05:30 |
+| Last updated | 2026-11-23 13:22 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -62,6 +62,11 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-18 | src/data/remote/rpcClient.ts kindOf | guesses read/write from method name; derive from the registry | ≈10 min |
 | T-18 | src/server/rpc handleRpc | hard-wires its ctx; inject for testability | ≈5 min |
 | T-18 | eslint.config.mjs (gate, env-setup) | server-package import ban skips .js/.mjs | ≈2 min |
+| T-21 | src/server/repos/advisors.ts | imports isUniqueViolation from the branches repo; move to a shared db helper | ≈3 min |
+| T-21 | src/server/repos/branches.ts updateBranch | empty patch calls .set({}); return early | ≈2 min |
+| T-21 | branch deactivation | ends sessions one user at a time (N+1); one delete by branch | ≈5 min |
+| T-21 | FirstRunCard | fetches branches for every role; only for main admins | ≈2 min |
+| T-21 | vitest.config.ts (gate) | 28-core machine runs ~28 PGlite workers at once; if timeouts return, cap maxWorkers 4–8 | ≈2 min |
 | T-20 | src/server/repos/users.ts (T-10b) | Reset password must call clearSignInFailures(tx, email) so an admin reset clears the lock (DoD) | ≈3 min |
 | T-20 | src/server/repos/auth.ts parallel-caps fix | debugger fix (slot reserved under advisory lock) not re-reviewed; include in M3 batched review | ≈5 min |
 | T-20 | src/features/account ChangePasswordForm | Retry button resends the wrong password; clear the field on WRONG_PASSWORD | ≈3 min |

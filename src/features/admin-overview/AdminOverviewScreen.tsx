@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
+import { FirstRunCard } from "./FirstRunCard";
 import { KpiTiles } from "./KpiTiles";
 import { OverviewBlocks } from "./OverviewBlocks";
 import { useOverview } from "./useOverview";
@@ -30,6 +31,7 @@ export function AdminOverviewScreen() {
   return (
     <main className="mx-auto grid max-w-screen-2xl grid-cols-1 gap-4 p-4 sm:p-6">
       <h1 className="text-2xl font-semibold">Overview</h1>
+      <FirstRunCard />
       <Suspense fallback={<PageSkeleton />}>
         <OverviewContent />
       </Suspense>
