@@ -414,20 +414,20 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/auth/stepUp.ts, src/server/repos/auth.ts, src/server/rpc/auth.ts, src/data/access/repos/auth.ts, src/features/account/**, src/app/account/**, tests/unit/server/auth-limits/**, tests/e2e/account/**
 - Context: SPEC US-01 (lockout), US-28, F-1 step 4, F-6 (5 wrong step-ups) · LLD-phase2 §18.3 (steps 1–2), §18.4, §17.2 (§7 AuthRepo row) · files: src/server/auth/*, src/server/repos/auth.ts
 - Why separate: lockout and step-up are shared by responses and erasure; kept apart from sign-in to stay one session.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] The 6th wrong password for one email within 15 min → "Too many attempts. Try again in 15 minutes.", `auth.lockout` audited once; 30 failures from one address in 15 min → limited; an admin reset clears the email's lock (S-27, G-13)
-  - [ ] `verifyStepUp`: wrong → "Password incorrect"; 5 wrong in 15 min end that user's sessions
-  - [ ] My account shows name, email, role and branch; Change password: wrong current → "Password incorrect", a weak new one is rejected, success ends my other sessions and is audited `user.change_password` (US-28)
-- Result: —
+  - [x] The 6th wrong password for one email within 15 min → "Too many attempts. Try again in 15 minutes.", `auth.lockout` audited once; 30 failures from one address in 15 min → limited; an admin reset clears the email's lock (S-27, G-13)
+  - [x] `verifyStepUp`: wrong → "Password incorrect"; 5 wrong in 15 min end that user's sessions
+  - [x] My account shows name, email, role and branch; Change password: wrong current → "Password incorrect", a weak new one is rejected, success ends my other sessions and is audited `user.change_password` (US-28)
+- Result: 3/3 in code (lock clear on admin reset → T-10b; step-up wired by T-08b/T-25) · unit 351, e2e 37, coverage 92.05% · review 1 major (parallel caps, fixed) + 4 minor · ≈$1.48 · tester 31% · debugger 22% · backend-coder 20% · reviewer 16% · frontend-coder 11%
 
 ### T-21 · Branches and advisors
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02b
-- Files: src/server/repos/branches.ts, src/server/repos/advisors.ts, src/server/rpc/branches.ts, src/server/rpc/advisors.ts, src/data/access/repos/branches.ts, src/data/access/repos/advisors.ts, src/features/admin-branches/**, src/app/admin/branches/**, src/app/admin/advisors/**, src/features/admin-overview/FirstRun*.tsx, tests/unit/server/branches/**, tests/e2e/admin-branches/**
+- Files: src/features/admin-overview/AdminOverviewScreen.tsx, tests/support/e2e.ts, src/server/repos/branches.ts, src/server/repos/advisors.ts, src/server/rpc/branches.ts, src/server/rpc/advisors.ts, src/data/access/repos/branches.ts, src/data/access/repos/advisors.ts, src/features/admin-branches/**, src/app/admin/branches/**, src/app/admin/advisors/**, src/features/admin-overview/FirstRun*.tsx, tests/unit/server/branches/**, tests/e2e/admin-branches/**
 - Context: SPEC US-23 (empty states), US-24, US-25, F-9 steps 2–3, §5 F-9 rows · LLD-phase2 §19, §23 (BranchRepo, AdvisorRepo) · files: src/server/scope.ts, src/server/audit.ts, src/components/shared/*
 - Why separate: own routes and repos; the branch is the scope key and users and job cards need branches and advisors.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Fresh system: `/admin` shows "Add your first branch" → `/admin/branches` → add "Velachery" and "Chennai"; a duplicate name → "A branch with this name already exists"; rename; deactivate / reactivate, never delete; each audited (US-23, US-24)
   - [ ] Branch page: add advisor "Suresh", rename, deactivate / reactivate; branch admins manage only their branch at `/admin/advisors`; support can list only their branch's active advisors (US-25)

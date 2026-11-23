@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { AccountScreen } from "@/features/account/AccountScreen";
 
 export default function AccountPage() {
-  return <PlaceholderScreen title="My account" />;
+  return <AccountScreen />;
 }

@@ -14,7 +14,7 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (9/13) |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (10/13) |
 | Next step | Run T-20 (lockout, step-up, My account) and whatever --ready prints |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
@@ -62,8 +62,12 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-18 | src/data/remote/rpcClient.ts kindOf | guesses read/write from method name; derive from the registry | ≈10 min |
 | T-18 | src/server/rpc handleRpc | hard-wires its ctx; inject for testability | ≈5 min |
 | T-18 | eslint.config.mjs (gate, env-setup) | server-package import ban skips .js/.mjs | ≈2 min |
-| T-02b | src/server/repos/auth.ts m2 (T-20) | lockout audit at n===5 can be skipped/doubled under concurrent failures; count+insert in one tx | ≈5 min |
-| T-02b | src/server/repos/auth.ts m5 | build "Use at least 8 characters" from MIN_PASSWORD_LENGTH | ≈1 min |
+| T-20 | src/server/repos/users.ts (T-10b) | Reset password must call clearSignInFailures(tx, email) so an admin reset clears the lock (DoD) | ≈3 min |
+| T-20 | src/server/repos/auth.ts parallel-caps fix | debugger fix (slot reserved under advisory lock) not re-reviewed; include in M3 batched review | ≈5 min |
+| T-20 | src/features/account ChangePasswordForm | Retry button resends the wrong password; clear the field on WRONG_PASSWORD | ≈3 min |
+| T-20 | src/server/auth/attempts.ts (new) | move clearSignInFailures out of repos | ≈5 min |
+| T-20 | email normalisation | normalised in 3 places; use one emailKey helper | ≈3 min |
+| T-20 | tests/e2e/account change-password success | test.fixme until T-10b can create a throwaway user | ≈5 min |
 | T-02b | src/components/shared/RoleGuard.tsx m6 | usePathname drops the query string, so next= loses it on mid-page session end; add useSearchParams | ≈3 min |
 | T-02b | src/server/auth/password.ts m7 | no import "server-only" (tsx scripts import it); record the exemption | ≈1 min |
 | T-19 | scripts/admin.ts m4 | validate --name / --email with zod (CONVENTIONS §1) | ≈3 min |
@@ -72,7 +76,6 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-19 | playwright.config.ts m8 (gate, env-setup) | reuseExistingServer: false + comment on real start order (webServer before globalSetup; safe only while DB opens lazily) | ≈2 min |
 | T-19 | scripts/admin.ts m1 lock | advisory lock untested under real concurrency (PGlite serialises); verify once on Neon dev | ≈5 min |
 | T-19 | tests/support/e2e.ts M1 fix | debugger fix for admin lockout (once-per-run OTP switch via marker/lock files) was not re-reviewed; include in M3 batched review | ≈5 min |
-| T-01b | src/app/admin/{branches,customers,advisors}/ placeholders | add RoleGuard (typed URL shows empty page to any role; server enforces) — T-21/T-24 rebuild them | ≈2 min |
 | T-01b | SupportShell import order, UserRow roleLabel wrapper | tidy | ≈1 min |
 | T-01b | src/data/access/repos/jobCards.ts, src/server/rpc/jobCards.ts (T-03b) | remove unused listFreshJobCards from repo interface + rpc | ≈3 min |
 | T-01b | src/server/env.ts APP_URL | kept on purpose (production https check); README/docs still mention DEMO_PASSWORD, NEXT_PUBLIC_APP_URL, exceljs → M3 docs pass | ≈5 min |
