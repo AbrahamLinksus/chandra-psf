@@ -3,9 +3,9 @@
 // Passwords are printed once by the CLI and never logged or audited.
 import { randomInt } from "node:crypto";
 import { parseArgs } from "node:util";
-import { hash } from "@node-rs/argon2";
 import { count, eq, sql } from "drizzle-orm";
 import { QUESTIONNAIRE_V1 } from "../src/domain/questionnaire";
+import { hashPassword } from "../src/server/auth/password";
 import { writeAudit } from "../src/server/audit";
 import type { Db, Tx } from "../src/server/db/client";
 import { loginAttempts, questionnaires, sessions, users } from "../src/server/db/schema";
@@ -19,8 +19,6 @@ const INIT_LOCK_KEY = 7_319_001;
 const PGLITE_PREFIX_LENGTH = "pglite:".length;
 // No look-alike characters (0/O, 1/l/I): the password is read off a terminal.
 const OTP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-// Same argon2id parameters as the server's password hashing (LLD §18.1); Algorithm.Argon2id = 2.
-const ARGON2 = { algorithm: 2, memoryCost: 19456, timeCost: 2, parallelism: 1 } as const;
 
 export class AdminError extends Error {}
 
@@ -57,7 +55,7 @@ async function issue(
 ): Promise<{ password: string; hash: string; expiresAt: Date }> {
   const password = generateOneTimePassword();
   const expiresAt = new Date(stamp(deps).clock.now().getTime() + OTP_TTL_HOURS * MS_PER_HOUR);
-  return { password, hash: await hash(password, ARGON2), expiresAt };
+  return { password, hash: await hashPassword(password), expiresAt };
 }
 
 async function findUser(tx: Tx, email: string): Promise<typeof users.$inferSelect | undefined> {

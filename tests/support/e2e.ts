@@ -155,3 +155,63 @@ export function createSupportUser(
 ): Promise<{ id: string }> {
   return rpcCall(api, "users", "createSupportUser", [input]);
 }
+
+/**
+ * Runs the first-admin one-time-password flow in the browser, once per run (the lock and marker are
+ * shared with adminApi). Returns false, without running `flow`, if the password was already replaced.
+ */
+export async function switchAdminPasswordOnce(flow: () => Promise<void>): Promise<boolean> {
+  const { marker, lock } = adminPasswordFiles();
+  const deadline = Date.now() + LOCK_WAIT_MS;
+  while (!existsSync(marker)) {
+    let handle;
+    try {
+      handle = await open(lock, "wx");
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+      if (Date.now() > deadline) throw new Error("timed out waiting for the admin password switch");
+      await new Promise((r) => setTimeout(r, LOCK_POLL_MS));
+      continue;
+    }
+    try {
+      if (existsSync(marker)) return false;
+      await flow();
+      await writeFile(marker, "done");
+      return true;
+    } finally {
+      await handle.close();
+      await rm(lock, { force: true });
+    }
+  }
+  return false;
+}
+
+/** Signs the admin in through the API and gives the browser page that session cookie (no UI). */
+export async function adminSessionInBrowser(
+  page: Page,
+  playwright: PlaywrightWorkerArgs["playwright"],
+  baseURL: string,
+): Promise<void> {
+  const api = await adminApi(playwright, baseURL);
+  const { cookies } = await api.request.storageState();
+  await page.context().addCookies(cookies);
+  await api.request.dispose();
+}
+
+/**
+ * Ends the page's session on the server (auth.signOut sent from a separate client holding a copy of
+ * the cookie), so the browser keeps its now-dead cookie, like a session that expired.
+ */
+export async function endSessionOnServer(
+  page: Page,
+  playwright: PlaywrightWorkerArgs["playwright"],
+  baseURL: string,
+): Promise<void> {
+  const state = await page.context().storageState();
+  const request = await playwright.request.newContext({ baseURL, storageState: state });
+  await request.post("/api/rpc/auth/signOut", {
+    headers: { origin: new URL(baseURL).origin },
+    data: { args: [] },
+  });
+  await request.dispose();
+}

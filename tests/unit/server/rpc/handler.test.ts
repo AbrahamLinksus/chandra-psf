@@ -72,6 +72,11 @@ function call(repo: string, method: string, o: CallOpts = {}): Promise<Response>
   });
 }
 
+/** A public method that is still a stub (feedback lands in a later task). */
+function publicStub(o: CallOpts = {}): Promise<Response> {
+  return call("feedback", "getVisitByToken", { ...o, args: ["tok"] });
+}
+
 async function signedIn(): Promise<void> {
   const branchId = await seedBranch(env.db, "Velachery");
   const uid = await seedUser(env.db, { role: "support", branchId });
@@ -135,9 +140,7 @@ describe("RPC door lookups and args", () => {
   });
 
   it("returns UNAVAILABLE for a stub method (public, and staff with a session)", async () => {
-    expect(await (await call("auth", "currentUser")).json()).toMatchObject({
-      error: { code: "UNAVAILABLE" },
-    });
+    expect(await (await publicStub()).json()).toMatchObject({ error: { code: "UNAVAILABLE" } });
     await signedIn();
     const res = await call("jobCards", "listFreshJobCards");
     expect(res.headers.get("Cache-Control")).toBe("no-store");
@@ -176,12 +179,12 @@ describe("per-IP flood limit and HMAC-only storage", () => {
     await env.db
       .insert(rateLimits)
       .values({ bucket: PUBLIC_FLOOD_BUCKET, key: hashIp(ip), windowStart, count: 299 });
-    const ok: unknown = await (await call("auth", "currentUser", { ip })).json();
+    const ok: unknown = await (await publicStub({ ip })).json();
     expect(ok).toMatchObject({ error: { code: "UNAVAILABLE" } });
-    const res = await call("auth", "currentUser", { ip });
+    const res = await publicStub({ ip });
     expect(res.headers.get("Cache-Control")).toBe("no-store");
     expect(await res.json()).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
-    const other = await call("auth", "currentUser", { ip: "198.51.100.10" });
+    const other = await publicStub({ ip: "198.51.100.10" });
     expect(await other.json()).toMatchObject({ error: { code: "UNAVAILABLE" } });
   });
 });

@@ -25,14 +25,30 @@ export function idleLimitMs(role: StaffRole): number {
 
 type SessionCtx = Pick<RequestCtx, "db" | "clock" | "cookies">;
 
+/** Inserts a session row (only the SHA-256 of a fresh token) without touching the cookie. Returns the raw token. */
+export async function insertSession(
+  tx: Db | Tx,
+  clock: RequestCtx["clock"],
+  userId: string,
+): Promise<string> {
+  const token = newToken();
+  const now = clock.now();
+  await tx
+    .insert(sessions)
+    .values({ idHash: hashToken(token), userId, createdAt: now, lastActiveAt: now });
+  return token;
+}
+
 /** Stores only the SHA-256 of a fresh token and sets the cookie. Returns the session id (hex of the hash). */
 export async function createSession(ctx: SessionCtx, userId: string): Promise<string> {
-  const token = newToken();
-  const idHash = hashToken(token);
-  const now = ctx.clock.now();
-  await ctx.db.insert(sessions).values({ idHash, userId, createdAt: now, lastActiveAt: now });
+  const token = await insertSession(ctx.db, ctx.clock, userId);
   ctx.cookies.set(token);
-  return idHash.toString("hex");
+  return hashToken(token).toString("hex");
+}
+
+/** Deletes the session row for a raw cookie token (no cookie change). */
+export async function deleteSessionByToken(tx: Db | Tx, token: string): Promise<void> {
+  await tx.delete(sessions).where(eq(sessions.idHash, hashToken(token)));
 }
 
 /** Null when there is no cookie, no row, or any validity rule fails (LLD §18.2). Never writes. */

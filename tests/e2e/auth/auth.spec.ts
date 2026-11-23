@@ -1,204 +1,155 @@
 /* eslint-disable max-lines-per-function -- describe blocks group many one-line tests */
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs } from "../../support/e2e";
+import {
+  E2E_ADMIN_NEW_PASSWORD,
+  adminApi,
+  adminCredentials,
+  adminSessionInBrowser,
+  endSessionOnServer,
+  rpcCall,
+  switchAdminPasswordOnce,
+} from "../../support/e2e";
 
-const DEMO_PASSWORD = "Demo@2026";
 const isDesktop = (page: Page): boolean => (page.viewportSize()?.width ?? 0) >= 768;
+const width = (page: Page): string => String(page.viewportSize()?.width);
+
+async function signInWith(page: Page, email: string, password: string): Promise<void> {
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+}
 
 /** Opens the admin "More" sheet on phones; on desktop the actions live in the sidebar. */
-async function adminAction(page: Page, name: string): Promise<void> {
+async function adminSignOut(page: Page): Promise<void> {
   if (!isDesktop(page)) await page.getByRole("button", { name: "More" }).click();
-  await page.getByRole("button", { name }).click();
+  await page.getByRole("button", { name: "Sign out" }).click();
 }
 
-/** Edits the stored users before sign-in (test support: no seeded user needs a new password). */
-async function patchUser(page: Page, id: string, patch: Record<string, unknown>): Promise<void> {
-  await page.goto("/sign-in");
-  await expect(page.getByRole("button", { name: "Sign in as Admin" })).toBeVisible();
-  await page.evaluate(
-    ([userId, changes]) => {
-      const key = "psf:v1:users";
-      const users = JSON.parse(window.localStorage.getItem(key) ?? "[]") as { id: string }[];
-      const next = users.map((u) => (u.id === userId ? { ...u, ...(changes as object) } : u));
-      window.localStorage.setItem(key, JSON.stringify(next));
-    },
-    [id, patch] as const,
-  );
-  await page.reload();
-}
-
-// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-02b.
-test.fixme(true, "rebuilt by T-02b");
-
-test.describe("T-02 sign in, set password, reset demo", () => {
-  test("the sign-in picker lands Support 1 on /support and Admin on /admin", async ({ page }) => {
-    await page.goto("/sign-in");
-    await page.getByRole("button", { name: "Sign in as Support 1" }).click();
-    await expect(page).toHaveURL(/\/support$/);
-    await page.screenshot({
-      path: `.results/T-02/support-${String(page.viewportSize()?.width)}.png`,
-    });
-    await page.evaluate(() => {
-      window.localStorage.removeItem("psf:v1:session");
-    });
-    await page.goto("/sign-in");
-    await page.getByRole("button", { name: "Sign in as Admin" }).click();
-    await expect(page).toHaveURL(/\/admin$/);
-  });
-
-  test("the demo password hint is shown and signs in support1 by email (G-01)", async ({
+test.describe("T-02b staff sign-in, set password, sign-out on the server", () => {
+  // The one-time password works once per run (both browser projects share one database), so
+  // whichever project gets here first plays the whole first-admin flow; the other one skips it.
+  test("test_s16_first_admin_one_time_password_then_set_password_then_admin (S-16, G-14)", async ({
     page,
   }) => {
-    await page.goto("/sign-in");
-    await expect(page.getByText(DEMO_PASSWORD)).toBeVisible();
-    await page.getByLabel("Email").fill("support1@chandrahonda.demo");
-    await page.getByLabel("Password").fill(DEMO_PASSWORD);
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page).toHaveURL(/\/support$/);
+    const { email, oneTimePassword } = adminCredentials();
+    const performed = await switchAdminPasswordOnce(async () => {
+      await page.goto("/sign-in");
+      await signInWith(page, email, oneTimePassword);
+      await expect(page).toHaveURL(/\/set-password$/);
+      await expect(page.getByRole("heading", { name: "Set your password" })).toBeVisible();
+      await page.screenshot({ path: `.results/T-02b/set-password-${width(page)}.png` });
+
+      const fill = async (pw: string, confirm: string) => {
+        await page.getByLabel("New password", { exact: true }).fill(pw);
+        await page.getByLabel("Confirm password").fill(confirm);
+        await page.getByRole("button", { name: "Save" }).click();
+      };
+      await fill("short", "short");
+      await expect(page.locator("main [role=alert]")).toHaveText("Use at least 8 characters");
+      await fill("password", "password");
+      await expect(page.locator("main [role=alert]")).toContainText("That password is too common");
+      await fill(E2E_ADMIN_NEW_PASSWORD, "something-else-entirely");
+      await expect(page.getByText("The two passwords don't match")).toBeVisible();
+      await expect(page).toHaveURL(/\/set-password$/);
+
+      await fill(E2E_ADMIN_NEW_PASSWORD, E2E_ADMIN_NEW_PASSWORD);
+      await expect(page).toHaveURL(/\/admin$/);
+      await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+    });
+    test.skip(!performed, "the one-time password was already replaced by the other project");
+
+    // The old one-time password no longer opens the account.
+    await adminSignOut(page);
+    await expect(page).toHaveURL(/\/sign-in$/);
+    await signInWith(page, email, oneTimePassword);
+    await expect(page.locator("main [role=alert]")).toHaveText("Email or password is incorrect");
   });
 
-  test("a wrong password shows 'Email or password is incorrect' and stays on sign-in", async ({
+  test("a wrong password and an unknown email show the same message and stay on sign-in (S-18, G-2)", async ({
     page,
+    playwright,
+    baseURL,
   }) => {
+    await adminApi(playwright, String(baseURL));
     await page.goto("/sign-in");
-    await page.getByLabel("Email").fill("support1@chandrahonda.demo");
-    await page.getByLabel("Password").fill("wrong-password");
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByText("Forgot your password? Ask your admin to reset it.")).toBeVisible();
+    await signInWith(page, adminCredentials().email, "wrong-password-1");
     await expect(page.locator("main [role=alert]")).toHaveText("Email or password is incorrect");
     await expect(page).toHaveURL(/\/sign-in$/);
-    await page.screenshot({
-      path: `.results/T-02/wrong-${String(page.viewportSize()?.width)}.png`,
-    });
-  });
+    await page.screenshot({ path: `.results/T-02b/wrong-password-${width(page)}.png` });
 
-  test("a deactivated user sees 'Account disabled, contact admin' (G-01)", async ({ page }) => {
-    await patchUser(page, "u-support2", { active: false });
-    await page.getByLabel("Email").fill("support2@chandrahonda.demo");
-    await page.getByLabel("Password").fill(DEMO_PASSWORD);
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page.locator("main [role=alert]")).toHaveText("Account disabled, contact admin");
+    await signInWith(page, "nobody.here@e2e.test", "wrong-password-1");
+    await expect(page.locator("main [role=alert]")).toHaveText("Email or password is incorrect");
     await expect(page).toHaveURL(/\/sign-in$/);
   });
 
-  test("Sign out ends the session (G-W1)", async ({ page }) => {
+  test("the admin signs in with the chosen password, lands on /admin, and Sign out ends the session on the server (G-W1)", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    await adminApi(playwright, String(baseURL));
     await page.goto("/sign-in");
-    await page.getByRole("button", { name: "Sign in as Support 1" }).click();
-    await expect(page).toHaveURL(/\/support$/);
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await signInWith(page, adminCredentials().email, E2E_ADMIN_NEW_PASSWORD);
+    await expect(page).toHaveURL(/\/admin$/);
+
+    const cookies = await page.context().cookies();
+    const cookie = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+    await adminSignOut(page);
     await expect(page).toHaveURL(/\/sign-in$/);
-    await page.goto("/support");
-    await expect(page).toHaveURL(/\/sign-in$/);
-  });
 
-  test("regression M1: signing in after a guarded page cached a signed-out session lands on /support", async ({
-    page,
-  }) => {
-    await page.goto("/support");
-    await expect(page).toHaveURL(/\/sign-in$/);
-    await page.getByRole("button", { name: "Sign in as Support 1" }).click();
-    await expect(page).toHaveURL(/\/support$/);
-    await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
-  });
-
-  test("regression M1: signing out then signing in again lands on /support", async ({ page }) => {
-    await page.goto("/sign-in");
-    await page.getByRole("button", { name: "Sign in as Support 1" }).click();
-    await expect(page).toHaveURL(/\/support$/);
-    await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page).toHaveURL(/\/sign-in$/);
-    await page.getByRole("button", { name: "Sign in as Support 1" }).click();
-    await expect(page).toHaveURL(/\/support$/);
-    await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
-  });
-
-  test("a user who must set a password is sent to 'Set your password' (G-05, S-15)", async ({
-    page,
-  }) => {
-    await patchUser(page, "u-support1", { mustSetPassword: true });
-    await page.getByRole("button", { name: "Sign in as Support 1" }).click();
-    await expect(page).toHaveURL(/\/set-password$/);
-    await expect(page.getByRole("heading", { name: "Set your password" })).toBeVisible();
-
-    await page.getByLabel("New password", { exact: true }).fill("short");
-    await page.getByLabel("Confirm password").fill("short");
-    await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.locator("main [role=alert]")).toHaveText("Use at least 8 characters");
-    await expect(page).toHaveURL(/\/set-password$/);
-
-    await page.getByLabel("New password", { exact: true }).fill("longenough1");
-    await page.getByLabel("Confirm password").fill("different-one");
-    await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.locator("main [role=alert]")).toHaveText("The two passwords don't match");
-    const stillFlagged = await page.evaluate(() => {
-      const users = JSON.parse(window.localStorage.getItem("psf:v1:users") ?? "[]") as {
-        id: string;
-        mustSetPassword: boolean;
-      }[];
-      return users.find((u) => u.id === "u-support1")?.mustSetPassword;
+    // Replaying the old cookie proves the server row is gone, not just the browser cookie.
+    const replay = await playwright.request.newContext({
+      baseURL: String(baseURL),
+      extraHTTPHeaders: { cookie, origin: new URL(String(baseURL)).origin },
     });
-    expect(stillFlagged).toBe(true);
-    await page.screenshot({
-      path: `.results/T-02/set-password-${String(page.viewportSize()?.width)}.png`,
-    });
+    const me = await replay.post("/api/rpc/auth/currentUser", { data: { args: [] } });
+    expect(await me.json()).toEqual({ ok: true, value: null });
+    await replay.dispose();
 
-    await page.getByLabel("Confirm password").fill("longenough1");
-    await page.getByRole("button", { name: "Save" }).click();
-    await expect(page).toHaveURL(/\/support$/);
-    const audit = await page.evaluate(() => window.localStorage.getItem("psf:v1:audit") ?? "");
-    expect(audit).toContain("user.set_password");
-    expect(audit).not.toContain("longenough1");
-  });
-
-  test("S-06 / US-22: Reset demo data warns, cancel keeps data, confirm restores and signs out every tab", async ({
-    page,
-    context,
-  }) => {
-    await signInAs(page, "admin");
     await page.goto("/admin");
-    const second = await context.newPage();
-    await second.goto("/admin");
-    await expect(second).toHaveURL(/\/admin$/);
-    await page.evaluate(() => {
-      window.localStorage.setItem("psf:v1:stray", "x");
-    });
-
-    await adminAction(page, "Reset demo data");
-    const dialog = page.getByRole("alertdialog");
-    await expect(dialog).toContainText(
-      "Reset all demo data? Every link, response, alert, user and audit entry made in this browser is lost.",
-    );
-    await page.screenshot({
-      path: `.results/T-02/reset-${String(page.viewportSize()?.width)}.png`,
-    });
-    await dialog.getByRole("button", { name: "Cancel" }).click();
-    expect(await page.evaluate(() => window.localStorage.getItem("psf:v1:stray"))).toBe("x");
-
-    await adminAction(page, "Reset demo data");
-    await page.getByRole("alertdialog").getByRole("button", { name: "Reset" }).click();
-    await expect(page).toHaveURL(/\/sign-in$/);
-    await expect(second).toHaveURL(/\/sign-in$/);
-    expect(await page.evaluate(() => window.localStorage.getItem("psf:v1:stray"))).toBeNull();
-    expect(await page.evaluate(() => window.localStorage.getItem("psf:v1:session"))).toBeNull();
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Fadmin$/);
   });
 
-  test("the sign-in screen has its own Reset demo data link with the same warning", async ({
+  test("without a cookie /admin, /support and /account go to /sign-in?next= (AC-6)", async ({
     page,
   }) => {
-    await page.goto("/sign-in");
-    await page.getByRole("button", { name: "Reset demo data" }).click();
-    await expect(page.getByRole("alertdialog")).toContainText(
-      "Every link, response, alert, user and audit entry",
-    );
-    await page.getByRole("alertdialog").getByRole("button", { name: "Reset" }).click();
-    await expect(page).toHaveURL(/\/sign-in$/);
+    for (const path of ["/admin/users", "/support/new", "/account", "/admin"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(new RegExp(`/sign-in\\?next=${encodeURIComponent(path)}$`));
+    }
   });
 
-  test("S-13: 'Simulate failed save' in More arms the next write to fail", async ({ page }) => {
-    await signInAs(page, "admin");
-    await page.goto("/admin");
-    await adminAction(page, "Simulate failed save");
-    await expect
-      .poll(() => page.evaluate(() => window.sessionStorage.getItem("psf:fault")))
-      .toBe("1");
+  test("after the session ends the next action says so and returns to the same page after sign-in (AC-6)", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    await adminSessionInBrowser(page, playwright, String(baseURL));
+    await page.goto("/admin/users");
+    await expect(page).toHaveURL(/\/admin\/users$/);
+
+    await endSessionOnServer(page, playwright, String(baseURL));
+    await page.reload();
+    await expect(page).toHaveURL(/\/sign-in\?ended=1&next=%2Fadmin%2Fusers$/);
+    await expect(page.getByText("Your session has ended. Sign in again.")).toBeVisible();
+    await page.screenshot({ path: `.results/T-02b/sign-in-ended-${width(page)}.png` });
+
+    await signInWith(page, adminCredentials().email, E2E_ADMIN_NEW_PASSWORD);
+    await expect(page).toHaveURL(/\/admin\/users$/);
+  });
+
+  test("RPC: after sign-out a staff call answers UNAUTHENTICATED with the session-ended message", async ({
+    playwright,
+    baseURL,
+  }) => {
+    const api = await adminApi(playwright, String(baseURL));
+    await api.request.post("/api/rpc/auth/signOut", {
+      headers: { origin: api.origin },
+      data: { args: [] },
+    });
+    await expect(rpcCall(api, "auth", "setOwnPassword", ["Another-Pass-42"])).rejects.toThrow(
+      /UNAUTHENTICATED Your session has ended. Sign in again./,
+    );
   });
 });

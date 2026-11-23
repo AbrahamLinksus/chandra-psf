@@ -7,7 +7,7 @@ import { MIN_PASSWORD_LENGTH } from "@/domain/constants";
 import { useRepoMutation } from "@/hooks/useRepoMutation";
 import { SESSION_KEY, useSession } from "@/hooks/useSession";
 import type { DataAccess } from "@/data/access";
-import { landingPath } from "./routes";
+import { landingPath, signInUrl } from "./routes";
 
 const save = (da: DataAccess, password: string) => da.auth.setOwnPassword(password);
 
@@ -29,7 +29,7 @@ export function useSetPassword() {
 
   useEffect(() => {
     if (isLoading) return;
-    if (user === null) router.replace("/sign-in");
+    if (user === null) router.replace(signInUrl(null, true));
     else if (!user.mustSetPassword && mutation.status !== "done") {
       router.replace(landingPath(user));
     }
@@ -38,7 +38,10 @@ export function useSetPassword() {
   const submit = async (password: string, confirm: string) => {
     const found = passwordProblem(password, confirm);
     setProblem(found);
-    if (found !== null) return;
+    if (found !== null) {
+      mutation.reset();
+      return;
+    }
     const result = await mutation.run(password);
     if (!result.ok) return;
     await queryClient.invalidateQueries({ queryKey: SESSION_KEY, refetchType: "all" });

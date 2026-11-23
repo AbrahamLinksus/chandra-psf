@@ -397,16 +397,16 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-02b · Staff sign-in, set password and sign-out on the server
 - Owner: backend-coder, frontend-coder
 - Depends on: T-19
-- Files: src/server/auth/password.ts, src/server/repos/auth.ts, src/server/rpc/auth.ts, src/data/access/repos/auth.ts, src/proxy.ts, src/features/auth/**, src/app/sign-in/**, src/app/set-password/**, tests/unit/server/auth/**, tests/e2e/auth/**
+- Files: src/server/auth/password.ts, src/server/auth/session.ts, scripts/admin.ts, src/server/repos/auth.ts, src/server/rpc/auth.ts, src/data/access/repos/auth.ts, src/proxy.ts, src/components/shared/RoleGuard.tsx, src/features/auth/**, src/app/sign-in/**, src/app/set-password/**, src/lib/signInUrl.ts, tests/support/e2e.ts, tests/unit/server/auth/**, tests/e2e/foundation/shell.spec.ts, tests/e2e/sign-in/sign-in.spec.ts, tests/unit/auth/routes.test.ts, tests/unit/server/rpc/handler.test.ts, tests/unit/switch/demoRemoved.test.tsx, tests/e2e/auth/**
 - Context: SPEC US-01, US-23 (first sign-in), F-1, §5 F-1 and F-9 rows · LLD-phase2 §18.1, §18.3 (steps 3–7), §18.5, §17.3 (UNAUTHENTICATED handling) · files: src/server/auth/session.ts, src/server/auth/cookies.ts, src/features/auth/*
 - Why separate: every later slice signs in through it.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] The first admin signs in with the one-time password → "Set your password" (≥ 8, not common, confirm) → `/admin`; support → `/support`; wrong password or unknown email → "Email or password is incorrect" (equal timing via `DUMMY_HASH`); deactivated user or branch → "Account disabled, contact admin"; a one-time password older than 72 h → "This one-time password has expired. Ask for a new one." (S-16, G-14, G-01)
-  - [ ] Passwords are stored only as argon2id hashes; "Sign out" in the support top bar and the admin menu deletes the session on the server; the sign-in screen shows "Forgot your password? Ask your admin to reset it." (S-18, G-2, G-13, G-W1)
-  - [ ] Without a cookie `/admin/*`, `/support/*` and `/account` redirect to `/sign-in?next=`; after the session ends the next action shows "Your session has ended. Sign in again." and returns to the same page after sign-in; a support session on `/admin` gets "Not allowed" (AC-6)
-  - [ ] Audit `auth.sign_in`; no password or token in the audit or the logs
-- Result: —
+  - [x] The first admin signs in with the one-time password → "Set your password" (≥ 8, not common, confirm) → `/admin`; support → `/support`; wrong password or unknown email → "Email or password is incorrect" (equal timing via `DUMMY_HASH`); deactivated user or branch → "Account disabled, contact admin"; a one-time password older than 72 h → "This one-time password has expired. Ask for a new one." (S-16, G-14, G-01)
+  - [x] Passwords are stored only as argon2id hashes; "Sign out" in the support top bar and the admin menu deletes the session on the server; the sign-in screen shows "Forgot your password? Ask your admin to reset it." (S-18, G-2, G-13, G-W1)
+  - [x] Without a cookie `/admin/*`, `/support/*` and `/account` redirect to `/sign-in?next=`; after the session ends the next action shows "Your session has ended. Sign in again." and returns to the same page after sign-in; a support session on `/admin` gets "You don't have access to this page" (AC-6; owner kept this wording 2026-11-23)
+  - [x] Audit `auth.sign_in`; no password or token in the audit or the logs
+- Result: 4/4 goals (support-user + deactivated-branch paths unit-tested only until T-21/T-10b) · unit 330, e2e 31, coverage 91.63% · review 0 major, 7 minor; 1, 3, 4 fixed on owner request · ≈$2.74 · tester 32% · backend-coder 20% · debugger 12% · frontend-coder 9% · implement-e2e-support 8% · reviewer 8% · rework-backend 6% · rework-tests 6%
 
 ### T-20 · Sign-in lockout, step-up password, My account
 - Owner: backend-coder, frontend-coder

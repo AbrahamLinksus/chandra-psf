@@ -8,7 +8,8 @@ test.describe("T-01b sign-in is email + password only", () => {
     await expect(page.getByLabel("Password")).toBeVisible();
     await expect(page.getByRole("combobox")).toHaveCount(0);
     await expect(page.getByText(/Demo/i)).toHaveCount(0);
-    await expect(page.getByText(/Reset/i)).toHaveCount(0);
+    await expect(page.getByText(/Reset demo/i)).toHaveCount(0);
+    await expect(page.getByText("Forgot your password? Ask your admin to reset it.")).toBeVisible();
     await page.screenshot({
       path: `.results/T-01b/sign-in-${String(page.viewportSize()?.width)}.png`,
     });
@@ -23,8 +24,8 @@ test.describe("T-01b sign-in is email + password only", () => {
     await expect(page).toHaveURL(/\/sign-in$/);
   });
 
-  test("/support/new without a session goes to /sign-in", async ({ page }) => {
+  test("/support/new without a session goes to /sign-in?next=", async ({ page }) => {
     await page.goto("/support/new");
-    await expect(page).toHaveURL(/\/sign-in$/);
+    await expect(page).toHaveURL(/\/sign-in\?next=%2Fsupport%2Fnew$/);
   });
 });

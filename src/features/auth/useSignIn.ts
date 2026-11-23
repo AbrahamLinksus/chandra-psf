@@ -1,13 +1,13 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDataAccess } from "@/data/access/provider";
 import type { Result } from "@/data/access";
 import type { User } from "@/domain/types";
 import { SESSION_KEY } from "@/hooks/useSession";
-import { landingPath } from "./routes";
+import { postSignInPath } from "./routes";
 
 export interface SignInState {
   busy: boolean;
@@ -18,6 +18,7 @@ export interface SignInState {
 export function useSignIn(): SignInState {
   const da = useDataAccess();
   const router = useRouter();
+  const next = useSearchParams().get("next");
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,11 +28,11 @@ export function useSignIn(): SignInState {
       if (result.ok) {
         // Refresh inactive cached sessions too, or RoleGuard sees a stale null.
         await queryClient.invalidateQueries({ queryKey: SESSION_KEY, refetchType: "all" });
-        router.replace(landingPath(result.value));
+        router.replace(postSignInPath(result.value, next));
       } else setError(result.error.message);
       setBusy(false);
     },
-    [router, queryClient],
+    [router, queryClient, next],
   );
 
   const signInWithPassword = useCallback(

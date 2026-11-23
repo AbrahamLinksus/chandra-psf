@@ -23,13 +23,15 @@ function files(dir: string): string[] {
 }
 
 describe("sign-in screen is email + password only (SPEC 0.1)", () => {
-  it("shows the two fields and no picker, hint, demo label or reset", () => {
+  it("shows the two fields, the forgot-password note and no picker, demo label or reset-demo control", () => {
     render(<SignInScreen />, { wrapper: dataWrapper() });
     expect(screen.getByLabelText("Email")).toBeTruthy();
     expect(screen.getByLabelText("Password")).toBeTruthy();
     expect(screen.queryByRole("combobox")).toBeNull();
     expect(screen.queryByText(/Demo/i)).toBeNull();
-    expect(screen.queryByText(/Reset/i)).toBeNull();
+    expect(screen.getByText("Forgot your password? Ask your admin to reset it.")).toBeTruthy();
+    expect(screen.queryByText(/Reset demo/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Reset/i })).toBeNull();
   });
 
   it("a wrong password shows the server's message and stays on the screen", async () => {
