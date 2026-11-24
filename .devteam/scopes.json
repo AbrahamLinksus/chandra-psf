@@ -1,5 +1,5 @@
 {
-  "_comment": "Root-level Next.js app (src/, scripts/, tests/). Adds the Playwright config to the gate files code-writing roles may not change. CR-1 phase 2: server code lives in src/server/**, src/app/api/**, src/proxy.ts, drizzle/** and the maintainer scripts; the default backend_dirs glob (server/**) does not match src/server, so the frontend coder is denied them explicitly (LLD-phase2 §15.2).",
+  "_comment": "Root-level Next.js app (src/, scripts/, tests/). Adds the Playwright config to the gate files code-writing roles may not change. CR-1 phase 2: server code lives in src/server/**, src/app/api/**, src/proxy.ts, drizzle/** and the maintainer scripts; the default backend_dirs glob (server/**) does not match src/server, so the frontend coder is denied them explicitly (LLD-phase2 \u00a715.2). M3 (owner-approved 2026-11-24): architect may also write docs/LLD-phase2.md, the phase-2 design doc.",
   "agents": {
     "frontend-coder": {
       "deny": [
@@ -14,7 +14,14 @@
         "scripts/golive-check.ts"
       ]
     },
-    "backend-coder": { "deny": ["playwright.config.*"] },
-    "debugger": { "deny": ["playwright.config.*"] }
+    "backend-coder": {
+      "deny": ["playwright.config.*"]
+    },
+    "debugger": {
+      "deny": ["playwright.config.*"]
+    },
+    "architect": {
+      "write_add": ["docs/LLD-phase2.md"]
+    }
   }
 }

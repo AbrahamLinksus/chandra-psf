@@ -9,13 +9,15 @@ The site is hidden from search engines: every page has a `noindex` tag, and `/ro
 
 ## Environment variables
 
-Set these in the Vercel project (Settings > Environment Variables) for both **Production** and **Preview**. Never write the values into a tracked file, a commit or the chat. The keys are listed in `.env.example`.
+This table is for the frozen phase 1 demo (Vercel project `chandra-psf`). The phase 2 preview keys are in the preview checklist below.
+
+Set these in the Vercel project (Settings > Environment Variables) for both **Production** and **Preview**. Never write the values into a tracked file, a commit or the chat. The phase 2 keys are listed in `.env.example`; `NEXT_PUBLIC_DEMO_PASSWORD` is phase 1 only and is not in `.env.example`.
 
 | Name | What it is | Notes |
 |---|---|---|
-| `NEXT_PUBLIC_DEMO_PASSWORD` | The demo sign-in password | Shown on the sign-in screen by design, so it is stored as a plain (non-secret) variable. |
+| `NEXT_PUBLIC_DEMO_PASSWORD` | The demo sign-in password | Phase 1 only. Shown on the sign-in screen by design, so it is stored as a plain (non-secret) variable. |
 | `NEXT_PUBLIC_DEALER_PHONE` | Dealer phone number shown to customers | Currently a placeholder (`+91 44 0000 0000`). Replace it with the real number before sharing. |
-| `NEXT_PUBLIC_APP_URL` | Public address of the app | **Optional, not set.** If it is missing, the app uses the address the browser is currently on, so links also work on preview deployments. Set it only to pin a fixed address (for example, a custom domain). |
+| `APP_URL` | Public address of the app | **Optional, not set on the demo project** (on purpose). If it is missing, the app uses the address the browser is currently on, so links also work on preview deployments. Set it only to pin a fixed address (for example, a custom domain). The key is `APP_URL` (no `NEXT_PUBLIC_` prefix); it is read on the server. |
 
 These values are built into the app at build time. **After changing any of them, redeploy.**
 
@@ -75,6 +77,7 @@ This puts a preview of the phase-2 app on its own Vercel project. It does not to
    - `APP_URL`: the preview's `https://` address. Leave it empty until step 5. It must start with `https://`.
    - `NEXT_PUBLIC_DEALER_PHONE`, `NEXT_PUBLIC_COMPANY_NAME`, `NEXT_PUBLIC_PRIVACY_PHONE`, `NEXT_PUBLIC_PRIVACY_EMAIL`: placeholder text is fine for a preview.
    - `NEXT_PUBLIC_POLL_SECONDS`: `30`.
+   - `AUTH_HASH_TIMING` (optional): `1` only while checking sign-in timing (sign in about 20 times, read the log), then unset it. Not a secret; it is not in `.env.example`.
    - How the app checks these values:
      - The strict server rules in `src/server/env.ts` (pglite not allowed, `DATABASE_URL_UNPOOLED`, `CRON_SECRET` and `IP_HASH_PEPPER` required, `APP_URL` required and `https://`) run only when `VERCEL_ENV=production`. A wrong Preview value for those will **not** fail the build, so read each value back after saving and check it.
      - Always enforced, Preview included: `DATABASE_URL` is required, and `APP_URL`, if set, must be a valid URL.
