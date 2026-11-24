@@ -23,6 +23,7 @@ import {
   sessions,
   users,
 } from "../../../../src/server/db/schema";
+import { TSX_CLI } from "../../../support/nodeCli";
 import { createTestDb } from "../../../support/pglite";
 
 const NOW = new Date("2026-12-01T09:00:00.000Z");
@@ -253,13 +254,13 @@ describe("test_s16_first_admin_from_nothing (CLI, as Vikram would run it)", () =
   });
   const env = { ...process.env, DATABASE_URL: `pglite:${dir}`, DATABASE_URL_UNPOOLED: "" };
   const cli = (...args: string[]) =>
-    execFileSync("pnpm", ["exec", "tsx", "scripts/admin.ts", ...args], {
+    execFileSync(process.execPath, [TSX_CLI, "scripts/admin.ts", ...args], {
       env,
       encoding: "utf8",
     });
 
   it("creates owner@chandrahonda.in once; a second run changes nothing; reissue and recover are guarded", () => {
-    execFileSync("pnpm", ["exec", "tsx", "scripts/migrate.ts"], { env, encoding: "utf8" });
+    execFileSync(process.execPath, [TSX_CLI, "scripts/migrate.ts"], { env, encoding: "utf8" });
     const first = cli("init", "--name", "Owner", "--email", "owner@chandrahonda.in");
     expect(first).toMatch(/One-time password: [A-Za-z0-9]{16}\n/);
     expect(first).toContain("(72 h)");

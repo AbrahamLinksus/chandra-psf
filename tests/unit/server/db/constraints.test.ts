@@ -2,6 +2,7 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { execFileSync } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { TSX_CLI } from "../../../support/nodeCli";
 import { createTestDb } from "../../../support/pglite";
 
 const A = "00000000-0000-0000-0000-00000000000a";
@@ -80,7 +81,7 @@ describe("migration objects", () => {
   });
 
   it("scripts/migrate.ts applies the migrations to pglite:memory", () => {
-    const out = execFileSync("pnpm", ["exec", "tsx", "scripts/migrate.ts"], {
+    const out = execFileSync(process.execPath, [TSX_CLI, "scripts/migrate.ts"], {
       env: { ...process.env, DATABASE_URL: "pglite:memory", VERCEL_ENV: "" },
       encoding: "utf8",
     });

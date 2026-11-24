@@ -4,10 +4,10 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { DEPCRUISE_CLI } from "../../../support/nodeCli";
 
 const ROOT = resolve(__dirname, "../../../..");
 const CONFIG = join(ROOT, ".dependency-cruiser.cjs");
-const DEPCRUISE = join(ROOT, "node_modules/.bin/depcruise");
 
 /** Plants `files` in a scratch src/ and runs the project's depcruise rules there. Returns violated rule names. */
 function violations(files: Record<string, string>): string[] {
@@ -20,11 +20,15 @@ function violations(files: Record<string, string>): string[] {
     }
     let stdout: string;
     try {
-      stdout = execFileSync(DEPCRUISE, ["src", "--config", CONFIG, "--output-type", "json"], {
-        cwd: dir,
-        stdio: ["ignore", "pipe", "pipe"],
-        maxBuffer: 10_000_000,
-      }).toString();
+      stdout = execFileSync(
+        process.execPath,
+        [DEPCRUISE_CLI, "src", "--config", CONFIG, "--output-type", "json"],
+        {
+          cwd: dir,
+          stdio: ["ignore", "pipe", "pipe"],
+          maxBuffer: 10_000_000,
+        },
+      ).toString();
     } catch (e) {
       stdout = String((e as { stdout: Buffer }).stdout);
     }

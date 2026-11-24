@@ -2,7 +2,7 @@
 /* eslint-disable max-lines-per-function -- describe blocks group several tests */
 import { verify } from "@node-rs/argon2";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
@@ -81,12 +81,12 @@ describe("e2e globalSetup", () => {
   });
 
   it("e2eDataDir refuses a directory outside the repo and accepts one inside", () => {
-    const root = "/repo";
+    const root = resolve("/repo");
     const env = { DATABASE_URL: "pglite:./../elsewhere" };
     expect(() => e2eDataDir(env, root)).toThrow(/outside the repo/);
     expect(() => e2eDataDir({ DATABASE_URL: "pglite:./." }, root)).toThrow(/outside the repo/);
     expect(e2eDataDir({ PORT: "8019", DATABASE_URL: "pglite:./.pglite-e2e-8019" }, root)).toBe(
-      "/repo/.pglite-e2e-8019",
+      join(root, ".pglite-e2e-8019"),
     );
   });
 
