@@ -29,6 +29,10 @@ export interface LinkActionsState {
   regenerate: () => Promise<void>;
   cancel: () => Promise<boolean>;
   reset: () => void;
+  /** True while any save is in progress; the action buttons are disabled. */
+  busy: boolean;
+  /** Re-runs the action that last failed, keeping the card as it was. */
+  retry: () => void;
 }
 
 /** Copies `text`; `copied` is the label to flash (Copied or Couldn't copy). */
@@ -64,47 +68,71 @@ function useCopy(text: string) {
   return { copied, copy };
 }
 
-/** The three server actions on one link; the latest one's status and error are reported. */
-function useLinkMutations(
-  id: string,
-  onIssued: (i: LinkIssued) => void,
-  onCancelled: (v: VisitSummary) => void,
-) {
+type ActionKind = "resend" | "regenerate" | "cancel";
+
+/** Runs one action at a time (a ref blocks a fast second tap) and remembers which ran last. */
+function useGuard(reset: () => void) {
+  const inFlight = useRef(false);
+  const [last, setLast] = useState<ActionKind>("resend");
+  const guarded = async <T>(kind: ActionKind, run: () => Promise<T>, skipped: T): Promise<T> => {
+    if (inFlight.current) return skipped;
+    inFlight.current = true;
+    setLast(kind);
+    reset();
+    try {
+      return await run();
+    } finally {
+      inFlight.current = false;
+    }
+  };
+  return { last, guarded };
+}
+
+/** The three mutations, the latest one's status and error, a reset and a saving flag. */
+function useMutationSet() {
   const resendM = useRepoMutation(resendFn);
   const regen = useRepoMutation(regenerateFn);
   const cancelM = useRepoMutation(cancelFn);
   const active = [cancelM, regen, resendM].find((m) => m.status !== "idle") ?? resendM;
-
   const reset = useCallback(() => {
     resendM.reset();
     regen.reset();
     cancelM.reset();
   }, [resendM, regen, cancelM]);
+  const busy = [resendM, regen, cancelM].some((m) => m.status === "saving");
+  return { resendM, regen, cancelM, active, reset, busy };
+}
 
-  const issue = useCallback(
-    async (m: typeof regen) => {
-      reset();
-      const r = await m.run(id);
-      if (r.ok) onIssued(r.value);
-    },
-    [id, reset, onIssued],
-  );
-
-  const cancel = useCallback(async () => {
-    reset();
-    const r = await cancelM.run(id);
-    if (r.ok) onCancelled(r.value);
-    return r.ok;
-  }, [cancelM, id, onCancelled, reset]);
-
-  return {
-    status: active.status,
-    error: active.error,
-    resend: () => issue(resendM),
-    regenerate: () => issue(regen),
-    cancel,
-    reset,
-  };
+/** The three server actions on one link; one runs at a time and the latest is reported. */
+function useLinkMutations(
+  id: string,
+  onIssued: (i: LinkIssued) => void,
+  onCancelled: (v: VisitSummary) => void,
+) {
+  const { resendM, regen, cancelM, active, reset, busy } = useMutationSet();
+  const { last, guarded } = useGuard(reset);
+  const issue = (kind: "resend" | "regenerate", m: typeof regen) => () =>
+    guarded(
+      kind,
+      async () => {
+        const r = await m.run(id);
+        if (r.ok) onIssued(r.value);
+      },
+      undefined,
+    );
+  const cancel = () =>
+    guarded(
+      "cancel",
+      async () => {
+        const r = await cancelM.run(id);
+        if (r.ok) onCancelled(r.value);
+        return r.ok;
+      },
+      false,
+    );
+  const run = { resend: issue("resend", resendM), regenerate: issue("regenerate", regen), cancel };
+  const retry = () => void run[last]();
+  return { status: active.status, error: active.error, ...run, reset, retry, busy };
 }
 
 /** Resend, regenerate, copy and cancel for one link; `onCancelled` receives the cancelled visit. */

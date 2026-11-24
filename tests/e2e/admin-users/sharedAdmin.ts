@@ -2,7 +2,13 @@ import type { Page, PlaywrightWorkerArgs } from "@playwright/test";
 import { existsSync } from "node:fs";
 import { open, readFile, rm, writeFile } from "node:fs/promises";
 
-import { adminApi, adminPasswordFiles, listBranches, type AppApi } from "../../support/e2e";
+import {
+  adminApi,
+  adminPasswordFiles,
+  isLockBusy,
+  listBranches,
+  type AppApi,
+} from "../../support/e2e";
 
 /**
  * One admin sign-in shared by the T-32 specs (all workers, both screen sizes). The shared sign-in
@@ -48,7 +54,7 @@ async function takeLock(lock: string): Promise<void> {
       await handle.close();
       return;
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+      if (!isLockBusy(err)) throw err;
       if (Date.now() > deadline) throw new Error("timed out waiting for the shared admin session");
       await new Promise((r) => setTimeout(r, POLL_MS));
     }

@@ -5,7 +5,7 @@ import { CopyIcon, RefreshCwIcon, XCircleIcon } from "lucide-react";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { SaveState } from "@/components/shared/SaveState";
 import { Button } from "@/components/ui/button";
-import { FEEDBACK_RECEIVED, NEEDS_MOBILE } from "./messages";
+import { EXPIRED_HINT, FEEDBACK_RECEIVED, NEEDS_MOBILE } from "./messages";
 import type { LinkActionsState } from "./useLinkActions";
 import { WhatsAppIcon } from "./WhatsAppIcon";
 
@@ -42,15 +42,22 @@ function SendOrResend({ a }: { a: LinkActionsState }) {
   }
   if (visit.status === "expired") return null;
   return (
-    <Button
-      type="button"
-      disabled={visit.phone === null}
-      className={WA_CLASS}
-      onClick={() => void a.resend()}
-    >
+    <Button type="button" disabled={a.busy} className={WA_CLASS} onClick={() => void a.resend()}>
       <WhatsAppIcon /> Resend
     </Button>
   );
+}
+
+/** Save status; Retry only for a generic save failure, other errors cannot succeed on a repeat. */
+function ActionStatus({ a, status }: { a: LinkActionsState; status: LinkActionsState["status"] }) {
+  if (status === "error" && a.error !== undefined && a.error.code !== "SAVE_FAILED") {
+    return (
+      <p role="alert" className="text-sm text-danger">
+        {a.error.message}
+      </p>
+    );
+  }
+  return <SaveState status={status} error={a.error} onRetry={a.retry} />;
 }
 
 /** Send, copy, resend, regenerate and cancel for one link (US-04, US-06). */
@@ -70,6 +77,7 @@ export function LinkActions({ a }: { a: LinkActionsState }) {
           type="button"
           variant="outline"
           className="h-12"
+          disabled={a.busy}
           onClick={() => void a.regenerate()}
         >
           <RefreshCwIcon aria-hidden /> Regenerate
@@ -78,6 +86,7 @@ export function LinkActions({ a }: { a: LinkActionsState }) {
           type="button"
           variant="outline"
           className="h-12"
+          disabled={a.busy}
           onClick={() => {
             setConfirming(true);
           }}
@@ -86,14 +95,17 @@ export function LinkActions({ a }: { a: LinkActionsState }) {
         </Button>
       </div>
       {noMobile && <p className="text-sm text-muted-foreground">{NEEDS_MOBILE}</p>}
-      <SaveState status={confirming ? "idle" : a.status} error={a.error} onRetry={a.reset} />
+      {visit.status === "expired" && issued === null && (
+        <p className="text-sm text-muted-foreground">{EXPIRED_HINT}</p>
+      )}
+      <ActionStatus a={a} status={confirming ? "idle" : a.status} />
       <ConfirmDialog
         open={confirming}
         title="Cancel this link?"
         body="The customer will no longer be able to open it."
         confirmLabel="Cancel link"
         destructive
-        status={<SaveState status={a.status} error={a.error} onRetry={a.reset} />}
+        status={<ActionStatus a={a} status={a.status} />}
         onConfirm={() =>
           void a.cancel().then((done) => {
             if (done) setConfirming(false);

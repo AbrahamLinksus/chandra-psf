@@ -52,6 +52,12 @@ export interface AppApi {
 
 type RpcBody<T> = { ok: true; value: T } | { ok: false; error: { code: string; message: string } };
 
+/** True when a lock file is held or being deleted; Windows reports EPERM/EACCES for the latter. */
+export function isLockBusy(err: unknown): boolean {
+  const code = (err as NodeJS.ErrnoException).code;
+  return code === "EEXIST" || code === "EPERM" || code === "EACCES";
+}
+
 function need(name: string): string {
   const v = process.env[name];
   if (!v) {
@@ -114,7 +120,7 @@ async function ensureOwnPassword(api: AppApi): Promise<void> {
     try {
       handle = await open(lock, "wx");
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+      if (!isLockBusy(err)) throw err;
       if (Date.now() > deadline) throw new Error("timed out waiting for the admin password switch");
       await new Promise((r) => setTimeout(r, LOCK_POLL_MS));
       continue;
@@ -215,7 +221,7 @@ export async function switchAdminPasswordOnce(flow: () => Promise<void>): Promis
     try {
       handle = await open(lock, "wx");
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+      if (!isLockBusy(err)) throw err;
       if (Date.now() > deadline) throw new Error("timed out waiting for the admin password switch");
       await new Promise((r) => setTimeout(r, LOCK_POLL_MS));
       continue;
