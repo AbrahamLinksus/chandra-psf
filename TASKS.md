@@ -548,12 +548,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/visits.ts, src/server/rpc/visits.ts, src/features/support/**, tests/unit/server/visits-actions/**, tests/e2e/support-link-actions/**
 - Context: SPEC US-06, F-2 step 7, §5 F-2 Resend rows · LLD-phase2 §21 (resend, regenerate, cancel) · files: src/server/tokens.ts, src/features/support/*
 - Why separate: second half of the link repo; runs beside the customer form slice.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
-  - [ ] A link of 15 Nov resent on 18 Nov → new code, WhatsApp opens with it, Copy offered, still expires 22 Nov; the 15 Nov code shows "A newer link was sent to you on WhatsApp"; audit `link.resend` (G-1, S-17)
-  - [ ] Arun resends a link Priya made, from All branch links → audit actor Arun (G-8); Regenerate → a new 7-day visit and the old link shows the newer-link page (S-05); Cancel (confirm) → Cancelled, the link shows "Link not valid", audit `link.cancel` (S-14)
-  - [ ] Resend on an expired link → CONFLICT (use Regenerate); any action on a completed, cancelled or replaced link → "This link can no longer be changed"; another branch's visit id → NOT_FOUND (US-29); a failed save shows "Couldn't save, try again" (S-13)
-- Result: —
+  - [x] A link of 15 Nov resent on 18 Nov → new code, WhatsApp opens with it, Copy offered, still expires 22 Nov; the 15 Nov code shows "A newer link was sent to you on WhatsApp"; audit `link.resend` (G-1, S-17)
+  - [x] Arun resends a link Priya made, from All branch links → audit actor Arun (G-8); Regenerate → a new 7-day visit and the old link shows the newer-link page (S-05); Cancel (confirm) → Cancelled, the link shows "Link not valid", audit `link.cancel` (S-14)
+  - [x] Resend on an expired link → CONFLICT (use Regenerate); any action on a completed, cancelled or replaced link → "This link can no longer be changed"; another branch's visit id → NOT_FOUND (US-29); a failed save shows "Couldn't save, try again" (S-13)
+- Result: approved 2026-11-24 · 3/3 goals · resend/regenerate/cancel UI for any branch link, double-tap guard · review 0 major after rework, 2 minor · 16 unit + 9 e2e tests (3 fixme until T-04b's customer pages) · also Windows EPERM fix in e2e lock helpers
 
 ### T-04b · Customer form on any phone, privacy notice and `/privacy`
 - Owner: backend-coder, frontend-coder

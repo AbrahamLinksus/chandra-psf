@@ -14,8 +14,8 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M4 · Support → customer loop across devices (6/9 original + T-22s, T-22s2 done) |
-| Next step | M4: T-03d tester fixing Windows EPERM in sharedAdmin lock → sync (8013) → card; then T-04b sync (8014) → card; then T-07b, T-23, M4-docs. Run full checks one at a time (parallel runs cause timeouts). |
+| Milestone | M4 · Support → customer loop across devices (7/9 original + T-22s, T-22s2 done) |
+| Next step | M4: T-04b sync (PORT=8014, NODE_OPTIONS=--max-old-space-size=4096) → card; un-fixme the 3 T-03d e2e tests that need T-04b's customer pages; then T-07b, T-23, M4-docs. Run full checks one at a time. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
@@ -132,6 +132,12 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-32 | tests/e2e/admin-users/sharedAdmin.ts | one shared admin session per run to stay under the 5-per-email sign-in limit; little headroom left → flake risk | ≈5 min |
 | T-32 | tests/unit/server/{auth-limits/parallelLimits,auth/signInTransaction}.test.ts | two unused eslint-disable warnings | ≈1 min |
 | Windows | scripts/check.sh (gate, env-setup) | set the Ubuntu Playwright override only when `uname -s` is Linux | ≈2 min |
+| T-03d | src/components/shared/ConfirmDialog.tsx | add a confirmDisabled prop so Cancel's confirm button is disabled while saving (ref guard already blocks a 2nd request) | ≈3 min |
+| T-03d | src/components/shared/SaveState.tsx | add canRetry prop; drop the ActionStatus wrapper in LinkActions.tsx:51-61 | ≈5 min |
+| T-03d | src/features/support/useLinkActions.ts:80-81 | move reset() inside the try block (tidy) | ≈1 min |
+| T-03d | tests/e2e/admin-users uniq() | Date.now() names collide under --repeat-each (NAME_IN_USE); fix must keep names short (360 px row) | ≈5 min |
+| T-03d | tests/e2e/support-link-actions | 3 test.fixme need T-04b customer pages (newer link, Link not valid); un-fixme after T-04b | ≈5 min |
+| Windows | vitest | V8 out-of-memory in a worker on this machine; run check.sh with NODE_OPTIONS=--max-old-space-size=4096 | ≈0 |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
