@@ -15,7 +15,7 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M4 · Support → customer loop across devices (6/9 original + T-22s, T-22s2 done) |
-| Next step | M4: T-04b frontend-coder step running, T-03d frontend-coder step running; then test+review + sync for both; then T-07b, T-23, M4-docs |
+| Next step | M4: T-03d tester fixing Windows EPERM in sharedAdmin lock → sync (8013) → card; then T-04b sync (8014) → card; then T-07b, T-23, M4-docs. Run full checks one at a time (parallel runs cause timeouts). |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
@@ -146,6 +146,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | frontend-coder, backend-coder | <wt>/AGENTS.md + node_modules/next/dist/docs/ (relevant guide) | Next 16.4 has breaking API changes vs training data |
 | architect | <plugin root>/.devteam default scopes.json | needed to decide whether to override scopes |
 | docs | <wt>/src/config/env.ts + full STATE.md | README env keys and run steps (M3 gap) |
+| reviewer (server/public tasks) | src/domain/visibility.ts, src/server/rpc/schemas.ts, src/server/rpc/args.ts, src/server/db/schema/responses.ts, src/components/shared/SaveState.tsx | verify validation and unique constraints (T-04b gap) |
+| debugger, tester (e2e) | tests/e2e/admin-users/sharedAdmin.ts, tests/e2e/support-links/helpers.ts, playwright.config.ts | shared e2e lock/session helpers (T-03d gap) |
 | task-runner, devops | (rule) | the hook blocks git push, gh and vercel for agents: the Orchestrator pushes wip/* and checks Vercel builds, then resumes the runner |
 
 ## Notes for the next session

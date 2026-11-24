@@ -44,3 +44,4 @@
 | A-01 | 2026-11-21 | Architect decisions (9) | see .results/plan/design-architect.md | architect | plan |
 | D-34 | 2026-11-24 | src/config/env.ts must be safe for client pages under the strict CSP (zod's Function probe is blocked) | Drop zod from src/config/env.ts (plain checks, same behaviour); keep the single process.env reader rule | owner | T-22s2 |
 | D-35 | 2026-11-24 | Who may Resend/Regenerate a branch's links | Any support user at the branch (LLD §21 G-8), not creator-only; erased-customer check on Resend/Regenerate too | owner | T-03c |
+| D-36 | 2026-11-24 | A submit that answers a hidden follow-up (e.g. Q1 = 5 with Q1a set) | Drop the hidden answer silently and save the rest (SPEC US-09); not a VALIDATION error. T-04b criterion "rejected" reads as "dropped" | owner | T-04b |
