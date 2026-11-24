@@ -47,3 +47,19 @@ export function clearDraft(visitId: string): void {
     // nothing to clear
   }
 }
+
+const SUBMISSION_PREFIX = "psf:submission:";
+
+/** One id per visit on this phone, reused by every retry so the server can replay a lost reply (G-15). */
+export function submissionIdFor(visitId: string): string {
+  const key = `${SUBMISSION_PREFIX}${visitId}`;
+  try {
+    const saved = localStorage.getItem(key);
+    if (saved !== null) return saved;
+    const fresh = crypto.randomUUID();
+    localStorage.setItem(key, fresh);
+    return fresh;
+  } catch {
+    return crypto.randomUUID();
+  }
+}

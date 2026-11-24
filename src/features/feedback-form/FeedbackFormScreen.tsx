@@ -19,7 +19,13 @@ function Body({ token }: { token: string }) {
   if (state.status === "error") return <LinkStateScreen state="error" onRetry={reload} />;
   const ctx = state.context;
   if (ctx.state === "ready") return <FeedbackFlowScreen token={token} context={ctx} />;
-  return <LinkStateScreen state={ctx.state} replaced={ctx.state === "expired" && ctx.replaced} />;
+  return (
+    <LinkStateScreen
+      state={ctx.state}
+      replaced={ctx.state === "expired" && ctx.replaced}
+      onRetry={reload}
+    />
+  );
 }
 
 /** Public customer form for /f/[token]. */

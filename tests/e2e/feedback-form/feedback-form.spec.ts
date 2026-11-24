@@ -1,474 +1,272 @@
-/* eslint-disable max-lines-per-function, max-lines -- scenario tests read top to bottom */
-import { expect, test, type Page } from "@playwright/test";
+/* eslint-disable max-lines-per-function -- each test plays one scenario end to end */
+import { expect, test, type Page, type PlaywrightWorkerArgs } from "@playwright/test";
+import { rpcCall } from "../../support/e2e";
+import { makeCard, newBranch, type Staff } from "../support-links/helpers";
 
-const DAY = 86_400_000;
-const PHONE = "+91 98400 12345";
+type Playwright = PlaywrightWorkerArgs["playwright"];
+const SHOT = ".results/T-04b";
+const BUSY = "Too many requests, try again in a few minutes";
+const NOTES = "Do you have any additional feedback or suggestions? (optional)";
 
-/** Same shape the app issues: base64url(JSON payload) + "." + 8 characters (LLD 9 Token). */
-function makeToken(
-  visitId: string,
-  ageDays: number,
-  jobCardNo = "JC-24-1042",
-  expiresAt?: Date,
-): string {
-  const created = new Date(Date.now() - ageDays * DAY);
-  const payload = {
-    v: visitId,
-    j: jobCardNo,
-    c: created.toISOString(),
-    e: (expiresAt ?? new Date(created.getTime() + 7 * DAY)).toISOString(),
-    p: PHONE,
-  };
-  return `${Buffer.from(JSON.stringify(payload)).toString("base64url")}.abcd2345`;
+interface Issued {
+  visit: { id: string; status: string };
+  url: string;
 }
-
-/** "14 Nov" for the seeded service date (7 days ago in IST). */
-function serviceDateText(): string {
-  const ist = new Date(Date.now() + 5.5 * 3_600_000 - 7 * DAY);
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "UTC",
-    day: "numeric",
-    month: "short",
-  }).format(ist);
-}
-
-async function stored<T>(page: Page, name: string): Promise<T[]> {
-  return page.evaluate(
-    (key) => JSON.parse(window.localStorage.getItem(key) ?? "[]") as unknown,
-    `psf:v1:${name}`,
-  ) as Promise<T[]>;
-}
-
-interface VisitRow {
-  id: string;
-  openedAt: string | null;
-  completedAt: string | null;
-}
-interface AlertRow {
-  responseId: string;
-  reasons: { kind: string; code?: string }[];
-}
-interface ResponseRow {
-  id: string;
+interface Link {
+  path: string;
+  code: string;
   visitId: string;
-  answers: Record<string, unknown>;
+  staff: Staff;
 }
 
-/** Waits until every finite animation/transition on the page has finished (no fixed sleeps). */
-async function settle(page: Page): Promise<void> {
-  await page.evaluate(() =>
-    Promise.all(
-      document
-        .getAnimations()
-        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
-        .map((a) => a.finished.catch(() => undefined)),
-    ),
-  );
+async function issue(playwright: Playwright, base: string): Promise<Link> {
+  const { staff } = await newBranch(playwright, base, { label: "Velachery", name: "Kavitha" });
+  const card = await makeCard(staff);
+  const out = await rpcCall<Issued>(staff.api, "visits", "createVisitLink", [
+    { jobCardId: card.id },
+  ]);
+  const path = new URL(out.url).pathname;
+  return { path, code: path.replace("/f/", ""), visitId: out.visit.id, staff };
 }
 
-const shot = async (page: Page, name: string): Promise<void> => {
-  await settle(page);
-  await page.screenshot({ path: `.results/T-04/${name}.png` });
-};
+async function statusOf(l: Link): Promise<string | undefined> {
+  const rows = await rpcCall<Issued["visit"][]>(l.staff.api, "visits", "listVisits", [
+    { scope: "mine" },
+  ]);
+  return rows.find((v) => v.id === l.visitId)?.status;
+}
 
 const q = (page: Page, code: string) => page.locator(`[data-question="${code}"]`);
-const rate = (page: Page, code: string, label: string) =>
-  q(page, code).getByRole("button", { name: label });
+const rate = (page: Page, code: string, name: RegExp) =>
+  q(page, code).getByRole("button", { name });
 const chip = (page: Page, code: string, name: string) =>
   q(page, code).getByRole("button", { name, exact: true });
 const next = (page: Page) => page.getByRole("button", { name: "Next", exact: true });
+const submit = (page: Page) => page.getByRole("button", { name: "Submit", exact: true });
+const width = (page: Page) => String(page.viewportSize()?.width);
+const pwned = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned);
 
-async function patchVisit(page: Page, id: string, patch: Record<string, unknown>): Promise<void> {
-  await page.evaluate(
-    ([key, visitId, changes]) => {
-      const list = JSON.parse(window.localStorage.getItem(key) ?? "[]") as {
-        id: string;
-      }[];
-      const out = list.map((v) => (v.id === visitId ? { ...v, ...(changes as object) } : v));
-      window.localStorage.setItem(key, JSON.stringify(out));
-    },
-    ["psf:v1:visits", id, patch] as const,
-  );
-}
-
-async function fillStep1Happy(page: Page): Promise<void> {
-  await rate(page, "Q1", "5 Excellent").click();
+/** Welcome to step 6 with Q12 = 1; `extra` runs on step 5. Leaves Q15 to the caller. */
+async function fillToCallback(page: Page, extra?: () => Promise<void>): Promise<void> {
+  await page.getByRole("button", { name: "Start" }).click();
+  await rate(page, "Q1", /^5 /).click();
   await chip(page, "Q2", "Yes").click();
   await chip(page, "Q3", "No").click();
-}
-
-async function fillSteps2to4Happy(page: Page): Promise<void> {
+  await next(page).click();
   await chip(page, "Q4", "Yes").click();
   await chip(page, "Q5", "Yes").click();
-  await rate(page, "Q6", "5 Excellent").click();
+  await rate(page, "Q6", /^5 /).click();
   await next(page).click();
   await chip(page, "Q7", "Yes").click();
   await chip(page, "Q8", "Yes").click();
   await chip(page, "Q9", "Yes").click();
   await next(page).click();
   await chip(page, "Q10", "Yes").click();
-  await rate(page, "Q11", "5 Excellent").click();
+  await rate(page, "Q11", /^5 /).click();
+  await next(page).click();
+  await rate(page, "Q12", /^1 /).click();
+  await chip(page, "Q13", "Yes").click();
+  if (extra) await extra();
   await next(page).click();
 }
 
-// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-04b.
-test.fixme(true, "rebuilt by T-04b");
+async function reachSubmit(page: Page, link: Link, extra?: () => Promise<void>): Promise<void> {
+  await page.goto(link.path);
+  await fillToCallback(page, extra);
+  await chip(page, "Q15", "Yes").click();
+}
 
-test.describe("T-04 customer feedback form", () => {
-  test("welcome greets the customer and marks the visit Opened; steps fit 360 px with big targets (AC-3, AC-11)", async ({
+test.describe("T-04b customer form on a real server", () => {
+  test("welcome: greeting, 2 minutes, SPEC notice, /privacy link; Opened only by a real browser (S-26, G-12, AC-3)", async ({
     page,
+    playwright,
+    baseURL,
   }) => {
-    const token = makeToken("v-t04-welcome", 1);
-    await page.goto(`/f/${token}`);
+    const link = await issue(playwright, String(baseURL));
+    // Fetching the HTML without running its script must not set Opened.
+    const res = await page.request.get(link.path);
+    expect(res.ok()).toBe(true);
+    expect(await statusOf(link)).toBe("created");
+
+    await page.goto(link.path);
     await expect(
-      page.getByRole("heading", {
-        name: `Hi Ramesh Kumar, how was your Activa 6G's service on ${serviceDateText()}?`,
-      }),
+      page.getByRole("heading", { name: /^Hi Ramesh Kumar, how was your Activa 6G's service on / }),
     ).toBeVisible();
     await expect(page.getByText("Takes about 2 minutes")).toBeVisible();
-    await expect
-      .poll(
-        async () =>
-          (await stored<VisitRow>(page, "visits")).find((v) => v.id === "v-t04-welcome")?.openedAt,
-      )
-      .not.toBeNull();
-    await shot(page, `welcome-${String(page.viewportSize()?.width)}`);
-
-    await page.getByRole("button", { name: "Start" }).click();
-    await expect(page.getByText("Step 1 of 6").first()).toBeVisible();
-    await expect(page.getByText("Very poor").first()).toBeVisible();
-    await expect(next(page)).toBeDisabled();
-    await rate(page, "Q1", "5 Excellent").click();
-    await chip(page, "Q2", "Yes").click();
-    await expect(next(page)).toBeDisabled();
-    await chip(page, "Q3", "No").click();
-    await expect(next(page)).toBeEnabled();
-
-    // tap targets >= 48 px and nothing wider than the screen
-    const buttons = page.locator("main button");
-    for (const b of await buttons.all()) {
-      const box = await b.boundingBox();
-      expect(box?.height ?? 0).toBeGreaterThanOrEqual(48);
-    }
+    const notice = page.getByRole("complementary", { name: "Privacy notice" });
+    await expect(notice).toContainText("Chandra Honda");
+    await expect(notice).toContainText("3 years");
+    await expect(notice).toContainText("outside India");
+    await expect(notice).toContainText("[head-office phone]");
+    const more = notice.getByRole("link", { name: "How we use your answers" });
+    await expect(more).toHaveAttribute("href", "/privacy");
+    await expect.poll(() => statusOf(link)).toBe("opened");
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+    await page.screenshot({ path: `${SHOT}/welcome-${width(page)}.png` });
 
-    await next(page).click();
-    await expect(page.getByText("Step 2 of 6").first()).toBeVisible();
-    await page.getByRole("button", { name: "Back" }).click();
-    await expect(rate(page, "Q1", "5 Excellent")).toHaveAttribute("aria-pressed", "true");
-    await expect(chip(page, "Q2", "Yes")).toHaveAttribute("aria-pressed", "true");
-    await shot(page, `step1-${String(page.viewportSize()?.width)}`);
+    await more.click();
+    await expect(page).toHaveURL(/\/privacy$/);
+    await expect(page.getByRole("heading", { name: "How we use your answers" })).toBeVisible();
+    await page.screenshot({ path: `${SHOT}/privacy-${width(page)}.png` });
   });
 
-  test("s04 unhappy customer changes their mind, reloads on step 4 and submits; alert raised (S-04, AC-4, AC-7, S-12)", async ({
+  test("Q12 = 1, Q15 = Yes: thank-you with the callback line; script text stays text (AC-7, US-11, G-05, G-W3)", async ({
     page,
+    playwright,
+    baseURL,
   }) => {
-    const token = makeToken("v-t04-s04", 1);
-    await page.goto(`/f/${token}`);
-    await page.getByRole("button", { name: "Start" }).click();
-
-    // Step 1: Q1 = 2 opens Q1a
-    await expect(q(page, "Q1a")).toHaveCount(0);
-    await rate(page, "Q1", "2 Poor").click();
-    await expect(q(page, "Q1a")).toBeVisible();
-    await expect(q(page, "Q1a").getByRole("button")).toHaveText([
-      "Problem not fixed",
-      "Same problem came back",
-      "New problem appeared",
-      "Other",
-    ]);
-    await expect(next(page)).toBeDisabled();
-    await chip(page, "Q1a", "Same problem came back").click();
-    await chip(page, "Q2", "Yes").click();
-    await chip(page, "Q3", "No").click();
-    await next(page).click();
-
-    // Step 2
-    await chip(page, "Q4", "Yes").click();
-    await chip(page, "Q5", "Yes").click();
-    await rate(page, "Q6", "4 Good").click();
-    await next(page).click();
-
-    // Step 3: Q7 No opens Q7a, back to Yes hides it
-    await chip(page, "Q7", "No").click();
-    await expect(q(page, "Q7a")).toBeVisible();
-    await chip(page, "Q7a", "1 day late").click();
-    await chip(page, "Q7", "Yes").click();
-    await expect(q(page, "Q7a")).toHaveCount(0);
-    await chip(page, "Q8", "Yes").click();
-    await chip(page, "Q9", "Yes").click();
-    await next(page).click();
-
-    // Step 4, then reload (phone locks)
-    await expect(page.getByText("Step 4 of 6").first()).toBeVisible();
-    await chip(page, "Q10", "Yes").click();
-    await page.reload();
-    await expect(page.getByText("Step 4 of 6").first()).toBeVisible();
-    await expect(chip(page, "Q10", "Yes")).toHaveAttribute("aria-pressed", "true");
-    await rate(page, "Q11", "4 Good").click();
-    await next(page).click();
-    await page.getByRole("button", { name: "Back" }).click();
-    await page.getByRole("button", { name: "Back" }).click();
-    await page.getByRole("button", { name: "Back" }).click();
-    await page.getByRole("button", { name: "Back" }).click();
-    await expect(rate(page, "Q1", "2 Poor")).toHaveAttribute("aria-pressed", "true");
-    await expect(chip(page, "Q1a", "Same problem came back")).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    for (let i = 0; i < 4; i++) await next(page).click();
-
-    // Step 5 and 6
-    await rate(page, "Q12", "1 Very poor").click();
-    await chip(page, "Q13", "Yes").click();
-    await q(page, "Q14").getByRole("textbox").fill("Brake noise still there");
-    await next(page).click();
-    await chip(page, "Q15", "Yes").click();
-    await page.getByRole("button", { name: "Submit" }).click();
-
-    await expect(page.getByTestId("success-animation")).toBeVisible();
-    await expect(page.getByText("Our team will call you soon")).toBeVisible();
-    await shot(page, `thanks-${String(page.viewportSize()?.width)}`);
-
-    // This browser now holds the visit, the response and the alert (S-12)
-    const visit = (await stored<VisitRow>(page, "visits")).find((v) => v.id === "v-t04-s04");
-    expect(visit?.openedAt).not.toBeNull();
-    expect(visit?.completedAt).not.toBeNull();
-    const response = (await stored<ResponseRow>(page, "responses")).find(
-      (r) => r.visitId === "v-t04-s04",
-    );
-    expect(response).toBeDefined();
-    expect(response?.answers["Q7"]).toBe("Yes");
-    expect(response?.answers).not.toHaveProperty("Q7a");
-    expect(response?.answers["Q14"]).toBe("Brake noise still there");
-    const alerts = (await stored<AlertRow>(page, "alerts")).filter(
-      (a) => a.responseId === response?.id,
-    );
-    expect(alerts).toHaveLength(1);
-    expect(alerts[0]?.reasons).toEqual([{ kind: "callback" }, { kind: "low_rating", code: "Q12" }]);
-
-    // Opening the same link again is now "already submitted"
-    await page.goto(`/f/${token}`);
-    await expect(page.getByText("Thank you — already submitted")).toBeVisible();
-  });
-
-  test("a seeded completed link says already submitted (AC-5)", async ({ page }) => {
-    await page.goto(`/f/${makeToken("v-s001", 1, "JC-24-1001")}`);
-    await expect(page.getByText("Thank you — already submitted")).toBeVisible();
-  });
-
-  test("a link made 8 days ago shows the expired page (AC-5)", async ({ page }) => {
-    await page.goto(`/f/${makeToken("v-t04-old", 8)}`);
-    await expect(
-      page.getByText("This feedback link has expired. Please contact Chandra Honda."),
-    ).toBeVisible();
-    await expect(page.getByText("A newer link was sent to you on WhatsApp")).toHaveCount(0);
-    await shot(page, `expired-${String(page.viewportSize()?.width)}`);
-  });
-
-  test("s05 an old link after Regenerate says a newer link was sent on WhatsApp (S-05)", async ({
-    page,
-  }) => {
-    const token = makeToken("v-t04-s05", 1);
-    await page.goto(`/f/${token}`);
-    await expect(page.getByRole("button", { name: "Start" })).toBeVisible();
-    await patchVisit(page, "v-t04-s05", { replacedBy: "v-t04-s05-new" });
-    await page.goto(`/f/${token}`);
-    await expect(
-      page.getByText("This feedback link has expired. Please contact Chandra Honda."),
-    ).toBeVisible();
-    await expect(page.getByText("A newer link was sent to you on WhatsApp")).toBeVisible();
-  });
-
-  test("s14 unknown and cancelled links say Link not valid (S-14, G-01)", async ({ page }) => {
-    await page.goto("/f/not-a-real-token");
-    await expect(page.getByText("Link not valid")).toBeVisible();
-
-    const token = makeToken("v-t04-s14", 1);
-    await page.goto(`/f/${token}`);
-    await expect(page.getByRole("button", { name: "Start" })).toBeVisible();
-    await patchVisit(page, "v-t04-s14", { cancelledAt: new Date().toISOString() });
-    await page.goto(`/f/${token}`);
-    await expect(page.getByText("Link not valid")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start" })).toHaveCount(0);
-  });
-
-  test("s13 long Tamil/emoji/<script> comment is capped at 1,000, a failed save keeps answers and Retry works (S-13, G-05, G-W3)", async ({
-    page,
-  }) => {
-    const token = makeToken("v-t04-s13", 1);
-    await page.goto(`/f/${token}?demoFail=1`);
-    await page.getByRole("button", { name: "Start" }).click();
-    await fillStep1Happy(page);
-    await next(page).click();
-    await chip(page, "Q4", "Yes").click();
-    await chip(page, "Q5", "Yes").click();
-    await rate(page, "Q6", "5 Excellent").click();
-    await next(page).click();
-    await chip(page, "Q7", "Yes").click();
-    await chip(page, "Q8", "Yes").click();
-    await chip(page, "Q9", "Yes").click();
-    await next(page).click();
-    await chip(page, "Q10", "Yes").click();
-    await rate(page, "Q11", "5 Excellent").click();
-    await next(page).click();
-    await rate(page, "Q12", "4 Good").click();
-    await chip(page, "Q13", "Yes").click();
-
-    const unit = "<script>alert(1)</script> வணக்கம் 😀 ";
-    const box = q(page, "Q14").getByRole("textbox");
-    await box.fill(unit.repeat(80)); // far over 1,000 characters
-    await expect(q(page, "Q14").getByText("1000/1000")).toBeVisible();
-    expect((await box.inputValue()).length).toBeLessThanOrEqual(1000);
-    await next(page).click();
-    await chip(page, "Q15", "No").click();
-
-    await page.getByRole("button", { name: "Submit" }).click();
-    await expect(page.getByText("Couldn't save, try again")).toBeVisible();
-    await expect(page.getByTestId("success-animation")).toHaveCount(0);
-    await shot(page, `save-failed-${String(page.viewportSize()?.width)}`);
-    await expect(chip(page, "Q15", "No")).toHaveAttribute("aria-pressed", "true");
-    await page.getByRole("button", { name: "Retry" }).click();
-    await expect(page.getByTestId("success-animation")).toBeVisible();
-    await expect(page.getByText("Our team will call you soon")).toHaveCount(0);
-    const response = (await stored<ResponseRow>(page, "responses")).find(
-      (r) => r.visitId === "v-t04-s13",
-    );
-    const saved = response?.answers["Q14"] as string;
-    expect(saved.length).toBeLessThanOrEqual(1000);
-    expect(saved).toContain("<script>alert(1)</script>");
-    expect(saved).toContain("வணக்கம்");
-    expect(saved).toContain("😀");
-  });
-
-  test("a <script> comment is shown as plain text, never run (G-05)", async ({ page }) => {
-    await page.goto(`/f/${makeToken("v-t04-xss", 1)}`);
-    await page.getByRole("button", { name: "Start" }).click();
-    await fillStep1Happy(page);
-    await next(page).click();
-    await fillSteps2to4Happy(page);
-    await rate(page, "Q12", "4 Good").click();
-    await chip(page, "Q13", "No").click();
-    await q(page, "Q13a").getByRole("textbox").fill("<img src=x onerror=window.__xss=1>");
-    await expect(q(page, "Q13a").getByRole("textbox")).toHaveValue(
-      "<img src=x onerror=window.__xss=1>",
-    );
-    expect(
-      await page.evaluate(() => (window as unknown as { __xss?: number }).__xss),
-    ).toBeUndefined();
-    await expect(q(page, "Q13a").getByText("34/1000")).toBeVisible();
-  });
-  test("a link that expires while the form is open shows Expired on Submit, not Couldn't save (AC-5)", async ({
-    page,
-  }) => {
-    const expiresAt = new Date(Date.now() + 6000);
-    await page.goto(`/f/${makeToken("v-t04-midexp", 1, "JC-24-1042", expiresAt)}`);
-    await page.getByRole("button", { name: "Start" }).click();
-    await fillStep1Happy(page);
-    await next(page).click();
-    await fillSteps2to4Happy(page);
-    await rate(page, "Q12", "4 Good").click();
-    await chip(page, "Q13", "Yes").click();
-    await next(page).click();
-    await chip(page, "Q15", "No").click();
-    await page.waitForFunction((t) => Date.now() > t, expiresAt.getTime());
-    await page.getByRole("button", { name: "Submit" }).click();
-    await expect(
-      page.getByText("This feedback link has expired. Please contact Chandra Honda."),
-    ).toBeVisible();
-    await expect(page.getByText("Couldn't save, try again")).toHaveCount(0);
-    await expect(page.getByTestId("success-animation")).toHaveCount(0);
-    expect(
-      (await stored<ResponseRow>(page, "responses")).some((r) => r.visitId === "v-t04-midexp"),
-    ).toBe(false);
-    await shot(page, `expired-submit-${String(page.viewportSize()?.width)}`);
-  });
-
-  test("a follow-up slides closed, is hidden from keyboard and screen readers while closing, then removed (AC-4)", async ({
-    page,
-  }) => {
-    await page.goto(`/f/${makeToken("v-t04-anim", 1)}`);
-    await page.getByRole("button", { name: "Start" }).click();
-    await rate(page, "Q1", "2 Poor").click();
-    await expect(q(page, "Q1a")).toBeVisible();
-    const wrapper = q(page, "Q1a").locator("xpath=ancestor::div[@aria-hidden][1]");
-    await expect(wrapper).toHaveAttribute("aria-hidden", "false");
-    if (page.viewportSize()?.width === 360) {
-      await settle(page);
-      await shot(page, "step1-followup-360");
-    }
-    await rate(page, "Q1", "4 Good").click();
-    await expect(wrapper).toHaveAttribute("aria-hidden", "true");
-    await expect(wrapper).toHaveAttribute("inert", "");
-    await expect(q(page, "Q1a")).toHaveCount(0);
-  });
-
-  test("with reduced motion the follow-up still opens and closes, with no transition (AC-4)", async ({
-    page,
-  }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto(`/f/${makeToken("v-t04-rm", 1)}`);
-    await page.getByRole("button", { name: "Start" }).click();
-    await rate(page, "Q1", "2 Poor").click();
-    await expect(q(page, "Q1a")).toBeVisible();
-    const wrapper = q(page, "Q1a").locator("xpath=ancestor::div[@aria-hidden][1]");
-    await expect(wrapper).toHaveCSS("transition-property", "none");
-    await rate(page, "Q1", "5 Excellent").click();
-    await expect(q(page, "Q1a")).toHaveCount(0);
-  });
-
-  test("the selected answer and the progress bar are the brand red, an unselected one is not (AC-11)", async ({
-    page,
-  }) => {
-    await page.goto(`/f/${makeToken("v-t04-red", 1)}`);
-    await page.getByRole("button", { name: "Start" }).click();
-    const bg = (loc: ReturnType<Page["locator"]>) =>
-      loc.evaluate((el) => getComputedStyle(el).backgroundColor);
-    const brand = await page.evaluate(() => {
-      const probe = document.createElement("div");
-      probe.className = "bg-primary";
-      document.body.appendChild(probe);
-      const colour = getComputedStyle(probe).backgroundColor;
-      probe.remove();
-      return colour;
+    const link = await issue(playwright, String(baseURL));
+    const sent: unknown[][] = [];
+    page.on("request", (r) => {
+      if (r.url().includes("/api/rpc/feedback/submitResponse")) {
+        sent.push((r.postDataJSON() as { args: unknown[] }).args);
+      }
     });
-    expect(brand).not.toBe("rgba(0, 0, 0, 0)");
-    const yes = chip(page, "Q2", "Yes");
-    const no = chip(page, "Q2", "No");
-    await yes.click();
-    await settle(page);
-    expect(await bg(yes)).toBe(brand);
-    expect(await bg(no)).not.toBe(brand);
-    await expect(page.locator('[data-slot="progress-indicator"]')).toBeVisible();
-    expect(await bg(page.locator('[data-slot="progress-indicator"]'))).toBe(brand);
+    const evil = "<script>window.__pwned = 1</script>";
+    await reachSubmit(page, link, async () => {
+      await page.getByLabel(NOTES).fill(evil);
+    });
+    await submit(page).click();
+    await expect(page.getByRole("heading", { name: "Thank you for your feedback" })).toBeVisible();
+    await expect(page.getByText("Our team will call you soon")).toBeVisible();
+    await page.screenshot({ path: `${SHOT}/thanks-${width(page)}.png` });
+    expect(await pwned(page)).toBeUndefined();
+    expect(sent).toHaveLength(1);
+    // The client sends a submission id with every real submit (the optional parameter is unused).
+    expect(sent[0]?.[2]).toMatch(/^[0-9a-f-]{36}$/);
+    expect((sent[0]?.[1] as Record<string, unknown>)["Q14"]).toBe(evil);
+
+    await expect.poll(() => statusOf(link)).toBe("completed");
+    await page.goto(link.path);
+    await expect(page.getByText("Thank you — already submitted")).toBeVisible();
   });
 
-  test("screenshots of steps 2 and 6 at phone and desktop size (AC-11)", async ({ page }) => {
-    await page.goto(`/f/${makeToken("v-t04-shots", 1)}`);
-    await page.getByRole("button", { name: "Start" }).click();
-    await fillStep1Happy(page);
-    await next(page).click();
-    await expect(page.getByText("Step 2 of 6").first()).toBeVisible();
-    await shot(page, page.viewportSize()?.width === 360 ? "step2-360" : "step2-desktop");
-    await chip(page, "Q4", "Yes").click();
-    await chip(page, "Q5", "Yes").click();
-    await rate(page, "Q6", "5 Excellent").click();
-    await next(page).click();
-    await chip(page, "Q7", "Yes").click();
-    await chip(page, "Q8", "Yes").click();
-    await chip(page, "Q9", "Yes").click();
-    await next(page).click();
-    await chip(page, "Q10", "Yes").click();
-    await rate(page, "Q11", "5 Excellent").click();
-    await next(page).click();
-    await rate(page, "Q12", "4 Good").click();
-    await chip(page, "Q13", "Yes").click();
-    await next(page).click();
-    await expect(page.getByText("Step 6 of 6").first()).toBeVisible();
-    await chip(page, "Q15", "No").click();
-    if (page.viewportSize()?.width === 360) await shot(page, "step6-360");
+  test("script and markup typed in the box are shown as text, never run (G-05)", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const link = await issue(playwright, String(baseURL));
+    const evil = '<img src=x onerror="window.__pwned=1"><script>window.__pwned=1</script>';
+    await page.goto(link.path);
+    await fillToCallback(page);
+    await page.getByRole("button", { name: "Back" }).click();
+    const box = page.getByLabel(NOTES);
+    await box.fill(evil);
+    await expect(box).toHaveValue(evil);
+    await expect(page.locator("main img")).toHaveCount(0);
+    expect(await pwned(page)).toBeUndefined();
+  });
+
+  test("a failed submit keeps every answer; Retry reuses the submission id and shows the callback line (S-13, S-29, G-15)", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const link = await issue(playwright, String(baseURL));
+    const ids: unknown[] = [];
+    let failures = 0;
+    await page.route("**/api/rpc/feedback/submitResponse", async (route) => {
+      ids.push((route.request().postDataJSON() as { args: unknown[] }).args[2]);
+      if (failures === 0) {
+        failures += 1;
+        // The server stores the answer, but the phone never hears back; Retry then replays.
+        await route.fetch();
+        await route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ ok: false, error: { code: "SAVE_FAILED", message: "x" } }),
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await reachSubmit(page, link);
+    await submit(page).click();
+    await expect(
+      page.getByRole("alert").filter({ hasText: "Couldn't save, try again" }),
+    ).toBeVisible();
+    await expect(chip(page, "Q15", "Yes")).toHaveAttribute("aria-pressed", "true");
+    await page.screenshot({ path: `${SHOT}/save-failed-${width(page)}.png` });
+    await page.getByRole("button", { name: "Retry" }).click();
+    await expect(page.getByRole("heading", { name: "Thank you for your feedback" })).toBeVisible();
+    await expect(page.getByText("Our team will call you soon")).toBeVisible();
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).toBe(ids[1]);
+    expect(ids[0]).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  test("two contexts submit the same link: one response, the other sees 'Thank you — already submitted' (S-29)", async ({
+    browser,
+    playwright,
+    baseURL,
+  }) => {
+    const link = await issue(playwright, String(baseURL));
+    const ca = await browser.newContext({ baseURL: String(baseURL) });
+    const cb = await browser.newContext({ baseURL: String(baseURL) });
+    const a = await ca.newPage();
+    const b = await cb.newPage();
+    await reachSubmit(a, link);
+    await reachSubmit(b, link);
+    await submit(a).click();
+    await expect(a.getByRole("heading", { name: "Thank you for your feedback" })).toBeVisible();
+    await submit(b).click();
+    await expect(b.getByText("Thank you — already submitted")).toBeVisible();
+    await b.screenshot({ path: `${SHOT}/already-${width(b)}.png` });
+    expect(await statusOf(link)).toBe("completed");
+    await ca.close();
+    await cb.close();
+  });
+
+  test("cancelled, replaced and unknown links show their own pages (AC-5, S-05, S-14)", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const link = await issue(playwright, String(baseURL));
+    await rpcCall(link.staff.api, "visits", "cancelLink", [link.visitId]);
+    await page.goto(link.path);
+    await expect(page.getByText("Link not valid")).toBeVisible();
+    await page.screenshot({ path: `${SHOT}/cancelled-${width(page)}.png` });
+
+    const second = await issue(playwright, String(baseURL));
+    const fresh = await rpcCall<Issued>(second.staff.api, "visits", "resendLink", [second.visitId]);
+    expect(new URL(fresh.url).pathname).not.toBe(second.path);
+    await page.goto(second.path);
+    await expect(page.getByText("A newer link was sent to you on WhatsApp")).toBeVisible();
+    await page.screenshot({ path: `${SHOT}/replaced-${width(page)}.png` });
+    await page.goto(new URL(fresh.url).pathname);
+    await expect(page.getByRole("button", { name: "Start" })).toBeVisible();
+
+    await page.goto("/f/not-a-real-code");
+    await expect(page.getByText("Link not valid")).toBeVisible();
+  });
+
+  test("the 6th submit on one link in an hour: 'Too many requests, try again in a few minutes' (S-22, G-7)", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const link = await issue(playwright, String(baseURL));
+    const anon = await playwright.request.newContext({ baseURL: String(baseURL) });
+    const origin = new URL(String(baseURL)).origin;
+    for (let i = 0; i < 5; i++) {
+      const res = await anon.post("/api/rpc/feedback/submitResponse", {
+        headers: { origin },
+        data: { args: [link.code, {}] },
+      });
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe("VALIDATION");
+    }
+    await reachSubmit(page, link);
+    await submit(page).click();
+    await expect(page.getByRole("alert").filter({ hasText: BUSY })).toBeVisible();
+    await expect(chip(page, "Q15", "Yes")).toHaveAttribute("aria-pressed", "true");
+    await page.screenshot({ path: `${SHOT}/rate-limited-${width(page)}.png` });
+    expect(await statusOf(link)).not.toBe("completed");
+    await anon.dispose();
   });
 });

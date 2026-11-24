@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useState, type Dispatch } from "react";
-import { err, ok, type DataAccess, type Result } from "@/data/access";
+import { err, ok, type DataAccess, type RepoError, type Result } from "@/data/access";
 import { useDataAccess } from "@/data/access/provider";
 import { useRepoMutation } from "@/hooks/useRepoMutation";
 import type { AnswerMap, AnswerValue, QuestionCode } from "@/domain/types";
-import { loadDraft, saveDraft } from "./draft";
+import { loadDraft, saveDraft, submissionIdFor } from "./draft";
 import {
   canGoNext,
   formReducer,
@@ -24,6 +24,7 @@ export interface FeedbackFlow {
   nextEnabled: boolean;
   lastStep: boolean;
   submitStatus: SubmitStatus;
+  submitError: RepoError | undefined;
   /** set when the link turned out to be unusable while submitting */
   ended: FlowEnd;
   start: () => void;
@@ -43,8 +44,10 @@ function useSubmit(ids: SubmitIds, answers: AnswerMap, dispatch: Dispatch<FormAc
   const { token, visitId } = ids;
   const send = useCallback(
     async (da: DataAccess, input: AnswerMap): Promise<Result<SubmitOutcome>> => {
-      const outcome = await submitFeedback(da, token, visitId, input);
-      return outcome.kind === "failed" ? err("SAVE_FAILED", outcome.message) : ok(outcome);
+      const outcome = await submitFeedback(da, token, visitId, input, submissionIdFor(visitId));
+      return outcome.kind === "failed"
+        ? err(outcome.code ?? "SAVE_FAILED", outcome.message)
+        : ok(outcome);
     },
     [token, visitId],
   );
@@ -66,14 +69,14 @@ function useSubmit(ids: SubmitIds, answers: AnswerMap, dispatch: Dispatch<FormAc
   }, [run, answers, dispatch]);
   const status: SubmitStatus =
     mutation.status === "saving" || mutation.status === "error" ? mutation.status : "idle";
-  return { status, ended, submit };
+  return { status, error: mutation.error, ended, submit };
 }
 
 /** Drives the form: reducer, browser draft, "opened" marker and the submit with retry. */
 export function useFeedbackFlow(token: string, visitId: string): FeedbackFlow {
   const data = useDataAccess();
   const [state, dispatch] = useReducer(formReducer, visitId, (id) => initialState(loadDraft(id)));
-  const { status, ended, submit } = useSubmit({ token, visitId }, state.answers, dispatch);
+  const { status, error, ended, submit } = useSubmit({ token, visitId }, state.answers, dispatch);
 
   useEffect(() => {
     void data.feedback.markOpened(token);
@@ -88,6 +91,7 @@ export function useFeedbackFlow(token: string, visitId: string): FeedbackFlow {
     nextEnabled: canGoNext(state),
     lastStep: isLastStep(state),
     submitStatus: status,
+    submitError: error,
     ended,
     start: () => {
       dispatch({ type: "start" });

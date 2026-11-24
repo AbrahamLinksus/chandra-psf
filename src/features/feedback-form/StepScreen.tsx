@@ -18,7 +18,7 @@ export function StepScreen({ flow }: { flow: FeedbackFlow }) {
         <StepView step={step} answers={answers} onAnswer={flow.answer} />
       </div>
       <footer className="sticky bottom-0 -mx-4 space-y-2 border-t bg-background px-4 py-3">
-        <SaveState status={flow.submitStatus} onRetry={flow.submit} />
+        <SaveState status={flow.submitStatus} error={flow.submitError} onRetry={flow.submit} />
         <div className="flex gap-3">
           <Button
             type="button"

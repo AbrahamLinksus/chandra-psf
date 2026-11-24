@@ -1,23 +1,40 @@
-import { BanIcon, CircleCheckIcon, ClockIcon, TriangleAlertIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import {
+  BanIcon,
+  CircleCheckIcon,
+  ClockIcon,
+  MessageCircleIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import type { FormContext } from "@/data/access/repos/feedback";
 
 export type LinkState = Exclude<FormContext, { state: "ready" }>["state"] | "already" | "error";
 
-const REPLACED_HINT = "A newer link was sent to you on WhatsApp";
+export const REPLACED_TITLE = "A newer link was sent to you on WhatsApp";
+export const BUSY_TITLE = "Too many requests, try again in a few minutes";
 
-function content(state: LinkState, replaced: boolean) {
+interface Content {
+  icon: LucideIcon;
+  title: string;
+  hint?: string;
+}
+
+function content(state: LinkState, replaced: boolean): Content {
   switch (state) {
     case "expired":
-      return {
-        icon: ClockIcon,
-        title: "This feedback link has expired. Please contact Chandra Honda.",
-        hint: replaced ? REPLACED_HINT : undefined,
-      };
+      return replaced
+        ? { icon: MessageCircleIcon, title: REPLACED_TITLE, hint: "Please use the newest link." }
+        : {
+            icon: ClockIcon,
+            title: "This feedback link has expired. Please contact Chandra Honda.",
+          };
     case "completed":
     case "already":
-      return { icon: CircleCheckIcon, title: "Thank you — already submitted", hint: undefined };
+      return { icon: CircleCheckIcon, title: "Thank you — already submitted" };
+    case "rate_limited":
+      return { icon: ClockIcon, title: BUSY_TITLE };
     case "error":
       return {
         icon: TriangleAlertIcon,
@@ -37,10 +54,11 @@ export interface LinkStateScreenProps {
 
 export function LinkStateScreen({ state, replaced = false, onRetry }: LinkStateScreenProps) {
   const { icon, title, hint } = content(state, replaced);
+  const retryable = (state === "error" || state === "rate_limited") && onRetry !== undefined;
   return (
     <div role={state === "error" ? "alert" : "status"} className="flex flex-col items-center">
       <EmptyState icon={icon} title={title} {...(hint === undefined ? {} : { hint })} />
-      {state === "error" && onRetry !== undefined && (
+      {retryable && (
         <Button type="button" className="h-12" onClick={onRetry}>
           Try again
         </Button>

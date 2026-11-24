@@ -10,6 +10,6 @@ export const feedbackRpc = {
   submitResponse: {
     kind: "write",
     access: "public",
-    input: z.tuple([textArg, answersArg]),
+    input: z.union([z.tuple([textArg, answersArg]), z.tuple([textArg, answersArg, z.uuid()])]),
   },
 } satisfies RpcTable<FeedbackRepo>;

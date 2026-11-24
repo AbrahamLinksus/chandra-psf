@@ -72,8 +72,8 @@ function call(repo: string, method: string, o: CallOpts = {}): Promise<Response>
   });
 }
 
-/** A public method that is still a stub (feedback lands in a later task). */
-function publicStub(o: CallOpts = {}): Promise<Response> {
+/** A public method that really works but needs no seed: an unknown link answers state "invalid". */
+function publicCall(o: CallOpts = {}): Promise<Response> {
   return call("feedback", "getVisitByToken", { ...o, args: ["tok"] });
 }
 
@@ -139,8 +139,8 @@ describe("RPC door lookups and args", () => {
     expect(await res.json()).toMatchObject({ ok: false, error: { code: "UNAUTHENTICATED" } });
   });
 
-  it("returns UNAVAILABLE for a stub method (public, and staff with a session)", async () => {
-    expect(await (await publicStub()).json()).toMatchObject({ error: { code: "UNAVAILABLE" } });
+  it("answers a public method, and UNAVAILABLE for a staff stub with a session", async () => {
+    expect(await (await publicCall()).json()).toMatchObject({ ok: true });
     await signedIn();
     const res = await call("jobCards", "listFreshJobCards");
     expect(res.headers.get("Cache-Control")).toBe("no-store");
@@ -179,13 +179,13 @@ describe("per-IP flood limit and HMAC-only storage", () => {
     await env.db
       .insert(rateLimits)
       .values({ bucket: PUBLIC_FLOOD_BUCKET, key: hashIp(ip), windowStart, count: 299 });
-    const ok: unknown = await (await publicStub({ ip })).json();
-    expect(ok).toMatchObject({ error: { code: "UNAVAILABLE" } });
-    const res = await publicStub({ ip });
+    const ok: unknown = await (await publicCall({ ip })).json();
+    expect(ok).toMatchObject({ ok: true });
+    const res = await publicCall({ ip });
     expect(res.headers.get("Cache-Control")).toBe("no-store");
     expect(await res.json()).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
-    const other = await publicStub({ ip: "198.51.100.10" });
-    expect(await other.json()).toMatchObject({ error: { code: "UNAVAILABLE" } });
+    const other = await publicCall({ ip: "198.51.100.10" });
+    expect(await other.json()).toMatchObject({ ok: true });
   });
 });
 
@@ -208,8 +208,8 @@ describe("staff skip the anonymous flood limit", () => {
     await signedIn();
     await seedFlood(ip, 300);
     for (let i = 0; i < 3; i++) {
-      expect(await (await publicStub({ ip })).json()).toMatchObject({
-        error: { code: "UNAVAILABLE" },
+      expect(await (await publicCall({ ip })).json()).toMatchObject({
+        ok: true,
       });
     }
     expect(await floodCount()).toBe(300);
@@ -217,7 +217,7 @@ describe("staff skip the anonymous flood limit", () => {
 
   it("still refuses the 301st anonymous request (no cookie) and counts it", async () => {
     await seedFlood(ip, 300);
-    expect(await (await publicStub({ ip })).json()).toMatchObject({
+    expect(await (await publicCall({ ip })).json()).toMatchObject({
       error: { code: "RATE_LIMITED" },
     });
   });
@@ -229,7 +229,7 @@ describe("anonymous-like sessions are limited as before", () => {
   it("limits a forged cookie as before", async () => {
     state.cookie = "forged-token-that-is-not-a-session";
     await seedFlood(ip, 300);
-    expect(await (await publicStub({ ip })).json()).toMatchObject({
+    expect(await (await publicCall({ ip })).json()).toMatchObject({
       error: { code: "RATE_LIMITED" },
     });
   });
@@ -237,7 +237,7 @@ describe("anonymous-like sessions are limited as before", () => {
   it("limits an expired session as before", async () => {
     await signedIn(400 * 24 * 3_600_000);
     await seedFlood(ip, 300);
-    expect(await (await publicStub({ ip })).json()).toMatchObject({
+    expect(await (await publicCall({ ip })).json()).toMatchObject({
       error: { code: "RATE_LIMITED" },
     });
   });
@@ -246,7 +246,7 @@ describe("anonymous-like sessions are limited as before", () => {
     await signedIn();
     await env.db.delete(sessions);
     await seedFlood(ip, 300);
-    expect(await (await publicStub({ ip })).json()).toMatchObject({
+    expect(await (await publicCall({ ip })).json()).toMatchObject({
       error: { code: "RATE_LIMITED" },
     });
   });

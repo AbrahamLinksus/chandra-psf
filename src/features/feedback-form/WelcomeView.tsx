@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { formatISTDate } from "@/domain/time";
+import { PrivacyNotice } from "./PrivacyNotice";
 
 export interface WelcomeViewProps {
   customerName: string;
@@ -15,6 +16,7 @@ export function WelcomeView({ customerName, model, serviceDate, onStart }: Welco
         Hi {customerName}, how was your {model}&apos;s service on {formatISTDate(serviceDate)}?
       </h1>
       <p className="text-muted-foreground">Takes about 2 minutes</p>
+      <PrivacyNotice />
       <Button type="button" size="lg" className="h-14 w-full text-lg" onClick={onStart}>
         Start
       </Button>
