@@ -7,7 +7,7 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | C:/Users/Jake/chandraProject (Windows 11, Git Bash; worktrees in C:/Users/Jake/chandraProject-wt/; start sessions in C:/Users/Jake/chandraProject) |
-| Status | Paused |
+| Status | In progress |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
@@ -15,7 +15,7 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M4 · Support → customer loop across devices (9/9 original + T-22s, T-22s2 done) |
-| Next step | M4: finish T-23 (wip/T-23: preview suite written in tests/e2e/preview/; owner runs it on the preview per its README, then review + sync + card) → M4-docs → M4 milestone card → M5 |
+| Next step | M4: (a) M4-docs on wip/M4-docs — architect as-built sync of docs/LLD-phase2.md running (restart that step fresh if interrupted), then docs README pass, sync, card; (b) T-23 on wip/T-23 — preview suite written, waiting for the owner to run it on the preview (tests/e2e/preview/README.md), then review + sync + card; then the M4 milestone card → M5 |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
