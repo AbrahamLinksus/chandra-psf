@@ -636,6 +636,18 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 
 ## M5 · Admin console, privacy, clean-up, go-live readiness
 
+### T-36 · Contact details from env keys (D-37)
+- Owner: frontend-coder
+- Depends on: —
+- Files: src/config/env.ts, src/features/feedback-form/contact.ts, src/features/privacy/contact.ts, src/features/feedback-form/PrivacyNotice.tsx, src/features/privacy/**, tests/unit/foundation/**
+- Context: LLD-phase2 §15.5 · SPEC §9 · D-37
+- Why separate: small config wiring; removes the duplicated constants from T-04b.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The welcome notice and /privacy show NEXT_PUBLIC_COMPANY_NAME, _PRIVACY_PHONE and _PRIVACY_EMAIL from src/config/env.ts (one shared source, no duplicated constants); .env.example keeps the keys with placeholders
+  - [ ] Missing keys fall back to the placeholders outside production; the go-live check still flags placeholders
+- Result: —
+
 ### T-06b · Overview analytics on the server, with the branch filter
 - Owner: backend-coder, frontend-coder
 - Depends on: T-04b, T-21
@@ -693,7 +705,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Owner: backend-coder, frontend-coder
 - Depends on: T-24, T-20
 - Files: src/server/erasure.ts, src/server/repos/customers.ts, src/server/rpc/customers.ts, src/features/admin-customers/**, scripts/admin.ts (reapply-erasures command), tests/unit/server/erasure/**, tests/e2e/admin-customers-erase/**
-- Context: SPEC US-30, F-10 step 4, US-32 (G-5), §5 F-10 rows · LLD-phase2 §24 (`eraseJobCards`), §26 (Restore) · files: src/domain/erasure.ts, src/server/auth/stepUp.ts
+- Context: SPEC US-30, F-10 step 4, US-32 (G-5), §5 F-10 rows · LLD-phase2 §24 (`eraseJobCards`), §26 (Restore) · files: src/domain/erasure.ts, src/server/auth/stepUp.ts · D-38: also align domain JobCard/Visit types with LLD §17.2 (erasedAt, nullable name/reg no)
 - Why separate: the irreversible path gets its own tester + reviewer; the cron reuses `eraseJobCards`.
 - Status: Backlog
 - Acceptance criteria:
