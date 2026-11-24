@@ -91,3 +91,32 @@ describe("env fallback", () => {
     await expect(load("production")).rejects.toThrow();
   });
 });
+
+describe("POLL_SECONDS (LLD §20)", () => {
+  async function poll(value: string | undefined) {
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_POLL_SECONDS", value);
+    return (await import("@/config/env")).POLL_SECONDS;
+  }
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  it(".env.example lists NEXT_PUBLIC_POLL_SECONDS with a one-line comment above it", () => {
+    const lines = readFileSync(".env.example", "utf8").split(/\r?\n/);
+    const i = lines.findIndex((l) => l.startsWith("NEXT_PUBLIC_POLL_SECONDS="));
+    expect(i).toBeGreaterThan(0);
+    expect(lines[i - 1]).toMatch(/^#\s*\S/);
+  });
+
+  it.each([
+    ["unset", undefined, 30],
+    ["non-numeric", "abc", 30],
+    ["zero", "0", 30],
+    ["negative", "-5", 30],
+    ["empty", "", 30],
+    ["valid", "15", 15],
+  ])("%s -> %s gives %i", async (_name, raw, expected) => {
+    expect(await poll(raw)).toBe(expected);
+  });
+});

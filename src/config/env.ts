@@ -17,6 +17,18 @@ export const env = EnvSchema.parse({
     process.env.NEXT_PUBLIC_DEALER_PHONE ?? fallback?.NEXT_PUBLIC_DEALER_PHONE,
 });
 
+const DEFAULT_POLL_SECONDS = 30;
+
+/** Poll cadence in seconds (LLD §20). Missing, non-numeric or <= 0 values fall back to 30. */
+function parsePollSeconds(raw: string | undefined): number {
+  const n = Number(raw);
+  return raw !== undefined && raw.trim() !== "" && Number.isFinite(n) && n > 0
+    ? n
+    : DEFAULT_POLL_SECONDS;
+}
+
+export const POLL_SECONDS = parsePollSeconds(process.env.NEXT_PUBLIC_POLL_SECONDS);
+
 export type Env = z.infer<typeof EnvSchema>;
 
 /** True only under `next dev`; the CSP in src/proxy.ts relaxes eval and websockets for HMR then. */

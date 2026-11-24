@@ -517,10 +517,10 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-03b · Support: find a job card or type in a new one
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02b, T-21
-- Files: src/server/repos/jobCards.ts, src/server/rpc/jobCards.ts, src/data/access/repos/jobCards.ts, src/features/support/**, src/app/support/new/**, tests/unit/server/jobCards/**, tests/e2e/support-jobcards/**
+- Files: src/server/repos/jobCards.ts, src/server/rpc/jobCards.ts, src/data/access/repos/jobCards.ts, src/features/support/**, src/app/support/new/**, tests/unit/server/jobCards/**, tests/e2e/support-jobcards/**, src/server/repos/jobCardRules.ts
 - Context: SPEC US-02, US-26, F-2 steps 1–4, §5 F-2 rows · LLD-phase2 §22 · files: src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/jobCard.ts, src/domain/phone.ts, src/features/support/*
 - Why separate: own repo (personal data, branch scope); links (T-03c) need a saved job card.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] SPEC §5 row Ramesh Kumar · 98400 12345 · tn09bx4521 · Activa 6G · Paid service · 14 Nov 2026 · Suresh → details card "+91 98400 12345 · TN 09 BX 4521 · Scooter · Advisor: Suresh"; ` jc241042` finds it (S-02); not found → "No job card JC-24-1042 at this branch yet" + New job card with the number prefilled
   - [ ] Tambaram support looking up Velachery's `JC-24-1042` → not found (US-29); a duplicate at the same branch → "JC-24-1042 already exists at this branch" + Open it; a retry with the same request id after a lost reply → the saved card (S-29, G-15)
@@ -569,13 +569,25 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] 45 submits of different links from one address in an hour are all accepted; the 6th submit on one link in an hour → "Too many requests, try again in a few minutes" (S-22, G-7); a failed submit keeps every answer and Retry succeeds (S-13)
 - Result: —
 
+### T-22s · Expose POLL_SECONDS as a public setting (shared-change)
+- Owner: frontend-coder
+- Depends on: —
+- Files: src/config/env.ts, .env.example, tests/unit/foundation/config.test.ts
+- Context: LLD-phase2 §15.5, §20 · files: src/config/env.ts, .env.example, tests/unit/foundation/config.test.ts
+- Why separate: src/config/env.ts and .env.example are frozen; T-22 needs the poll interval from config (NEEDS FILE from T-22).
+- Status: Done
+- Acceptance criteria:
+  - [x] `src/config/env.ts` exports the poll interval from `NEXT_PUBLIC_POLL_SECONDS`, default 30, invalid/≤0 values fall back to 30
+  - [x] `.env.example` lists `NEXT_PUBLIC_POLL_SECONDS=` with a one-line comment; the foundation config test still passes (updated only for the new key)
+- Result: approved 2026-11-24 · 2/2 goals · NEXT_PUBLIC_POLL_SECONDS (default 30) · ≈$0.24
+
 ### T-22 · Live refresh only while staff use the screen
 - Owner: frontend-coder
 - Depends on: T-01b
 - Files: src/data/remote/activity.ts, src/data/remote/poller.ts, src/app/providers.tsx, tests/unit/remote/poller/**
 - Context: SPEC US-05, §4 Rules (Shared data on every device), DoD G-6 item · LLD-phase2 §20 · files: src/data/remote/*
 - Why separate: client-only refresh engine with no repo (free-plan budget).
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] A visible tab used in the last 15 min → all staff topics refresh every `POLL_SECONDS`; hidden, or idle > 15 min → no requests (fake timers, request counter) (S-23, G-6)
   - [ ] Returning to the tab, or the first input after idle → one refresh at once; `x-psf-active: 1` only within 60 s of input

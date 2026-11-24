@@ -87,6 +87,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-19 | tests/support/e2e.ts:108-128 | stale-OTP retry loop can lock the shared admin if marker write fails (m8) | ≈3 min |
 | T-21 | src/server/repos/advisors.ts | writes audit `advisor.rename`; AuditAction/auditFormat only know `advisor.update` (M3 as-built) | ≈3 min |
 | M3-docs | README.md env section | lists NEXT_PUBLIC_COMPANY_NAME / PRIVACY_PHONE / PRIVACY_EMAIL / POLL_SECONDS, which no code reads; drop or mark future | ≈2 min |
+| T-22s | src/config/env.ts:21 | DEFAULT_POLL_SECONDS belongs in src/domain/constants.ts | ≈2 min |
+| T-22s | src/config/env.ts:26 | accepts fractional poll seconds (0.01); require integer ≥ 1 | ≈2 min |
 | T-20 | tests/e2e/account change-password success | test.fixme until T-10b can create a throwaway user | ≈5 min |
 | T-02b | src/components/shared/RoleGuard.tsx m6 | usePathname drops the query string, so next= loses it on mid-page session end; add useSearchParams | ≈3 min |
 | T-02b | src/server/auth/password.ts m7 | no import "server-only" (tsx scripts import it); record the exemption | ≈1 min |
