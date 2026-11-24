@@ -6,8 +6,8 @@
 |---|---|
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
-| Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Paused |
+| Local folder | C:/Users/Jake/chandraProject (Windows 11, Git Bash; worktrees in C:/Users/Jake/chandraProject-wt/; start sessions in C:/Users/Jake/chandraProject) |
+| Status | In progress |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
@@ -131,6 +131,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-32 | useRefreshingMutation.ts / useUsersMutation.ts | near-duplicate hooks; merge (optional) | ≈10 min |
 | T-32 | tests/e2e/admin-users/sharedAdmin.ts | one shared admin session per run to stay under the 5-per-email sign-in limit; little headroom left → flake risk | ≈5 min |
 | T-32 | tests/unit/server/{auth-limits/parallelLimits,auth/signInTransaction}.test.ts | two unused eslint-disable warnings | ≈1 min |
+| Windows | scripts/check.sh (gate, env-setup) | set the Ubuntu Playwright override only when `uname -s` is Linux | ≈2 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
@@ -148,6 +149,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | task-runner, devops | (rule) | the hook blocks git push, gh and vercel for agents: the Orchestrator pushes wip/* and checks Vercel builds, then resumes the runner |
 
 ## Notes for the next session
+- RESUMED 2026-11-24 on Windows 11 (Git Bash, not WSL; owner's choice). Setup: pnpm 11.24.0 via npm -g, gitleaks.exe 8.30.1 in ~/.cache/chandra-psf/tools/, ~/bin/python3 shim → Anaconda python (the WindowsApps python3 is a Store stub; taskgit scope + the scope-guard hook need python3). main 40d207c made the spawned-CLI tests Windows-safe. check.sh still defaults PLAYWRIGHT_HOST_PLATFORM_OVERRIDE to ubuntu24.04-x64, so on Windows run it with `export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64` (agents may need the Orchestrator to run it). T-04b/T-03d merged main with TASKGIT_SKIP_CHECK=1 so their testers get both fixes.
 - PAUSED 2026-11-24 14:48 +05:30. Owner switching OS (Linux → Windows); resume on the new machine with `/setup-project resume chandra-psf`. M4: done T-03b, T-03c, T-22s, T-22s2 (+ M3 approved). Open wip branches (all pushed):
   - wip/T-22 — TASK READY, sync ✅ (PORT=8022), card in Batch queue; only the approve is left (Windows: re-run sync first, worktree is new).
   - wip/T-04b — backend-coder stopped mid-implement; partial files checkpointed (src/server/repos/feedback.ts, src/server/rpc/feedback.ts, src/data/access/repos/feedback.ts, NEW src/server/repos/linkAccess.ts — not in Files; add it or have the coder fold it in). Restart a fresh runner `Resume at: implement`, tell the backend-coder to inspect the partial files first.
