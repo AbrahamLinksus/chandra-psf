@@ -10,7 +10,15 @@ const TINT: Record<AlertStatus, string> = {
   resolved: "bg-success-soft/50 border-success/30",
 };
 
-export function AlertRow({ alert, onOpen }: { alert: AlertView; onOpen: () => void }) {
+export function AlertRow({
+  alert,
+  showBranch,
+  onOpen,
+}: {
+  alert: AlertView;
+  showBranch: boolean;
+  onOpen: () => void;
+}) {
   return (
     <li>
       <button
@@ -26,7 +34,15 @@ export function AlertRow({ alert, onOpen }: { alert: AlertView; onOpen: () => vo
         <span className="grid gap-0.5">
           <span className="font-medium">{alert.customerName}</span>
           <span className="text-sm text-muted-foreground">{alert.reasonsText}</span>
-          <span className="text-xs text-muted-foreground">{formatIST(alert.createdAt)}</span>
+          <span className="text-xs text-muted-foreground">
+            {showBranch && (
+              <span data-testid="alert-branch" className="font-medium">
+                {alert.branchName}
+                {" · "}
+              </span>
+            )}
+            {formatIST(alert.createdAt)}
+          </span>
         </span>
         <StatusBadge kind={alert.status} />
       </button>

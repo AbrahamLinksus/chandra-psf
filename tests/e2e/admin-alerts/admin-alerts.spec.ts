@@ -1,149 +1,257 @@
-/* eslint-disable max-lines-per-function -- describe blocks group many tests */
-import { expect, test, type Page } from "@playwright/test";
-import { signInAs } from "../../support/e2e";
+/* eslint-disable max-lines-per-function -- each test plays one scenario end to end */
+import { expect, test, type Browser, type Page, type PlaywrightWorkerArgs } from "@playwright/test";
+import { createUser, listBranches, rpcCall, type AppApi } from "../../support/e2e";
+import { sharedAdminApi, sharedAdminInBrowser } from "../admin-users/sharedAdmin";
+import { newBranch, newStaff } from "../support-links/helpers";
 
-const width = (page: Page): number => page.viewportSize()?.width ?? 0;
+type Playwright = PlaywrightWorkerArgs["playwright"];
+type Cookies = Awaited<ReturnType<AppApi["request"]["storageState"]>>["cookies"];
+const SHOT = ".results/T-07b";
+const TEMP = "Temp-Pass-4471";
+const OWN = "My-Own-Pass-2026!";
+const NOTE = "Called, bike rechecked 22 Nov";
+const STALE = "Someone else changed this alert. Reload to see the latest.";
+const width = (page: Page): string => String(page.viewportSize()?.width);
+const uniq = (): string => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
-async function openAlerts(page: Page, q = ""): Promise<void> {
-  await signInAs(page, "admin");
-  await page.goto(`/admin/alerts${q}`);
-  await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Kavitha P/ })).toBeVisible();
+// Q12 = 1 and Q15 = Yes: raises one alert for the visit's branch.
+const ANSWERS = {
+  Q1: 5,
+  Q2: "Yes",
+  Q3: "No",
+  Q4: "Yes",
+  Q5: "Yes",
+  Q6: 5,
+  Q7: "Yes",
+  Q8: "Yes",
+  Q9: "Yes",
+  Q10: "Yes",
+  Q11: 5,
+  Q12: 1,
+  Q13: "Yes",
+  Q15: "Yes",
+};
+
+interface Scene {
+  branchId: string;
+  branchName: string;
+  advisorId: string;
+  customer: string;
+  admin: AppApi;
+  boss: AppApi;
+  cookies: Cookies;
 }
 
-async function markDeleted(page: Page, responseId: string): Promise<void> {
-  await page.evaluate((id) => {
-    const key = "psf:v1:responses";
-    const rows = JSON.parse(window.localStorage.getItem(key) ?? "[]") as { id: string }[];
-    const next = rows.map((r) => (r.id === id ? { ...r, deletedAt: new Date().toISOString() } : r));
-    window.localStorage.setItem(key, JSON.stringify(next));
-  }, responseId);
+interface AlertRow {
+  id: string;
+  customerName: string;
+  version: number;
+  status: string;
 }
 
-async function stored(page: Page, key: string): Promise<string> {
-  return page.evaluate((k) => window.localStorage.getItem(`psf:v1:${k}`) ?? "", key);
+/** A new branch with one open alert (customer `customer`) and a branch admin signed in. */
+async function scene(playwright: Playwright, base: string, customer: string): Promise<Scene> {
+  const { branchId, advisorId, staff } = await newBranch(playwright, base, {
+    label: "Velachery",
+    name: "Priya",
+  });
+  const card = await rpcCall<{ id: string }>(staff.api, "jobCards", "createJobCard", [
+    {
+      requestId: crypto.randomUUID(),
+      jobCardNo: `JC-24-${String(1000 + Math.floor(Math.random() * 8999))}`,
+      customerName: customer,
+      phone: "98400 12345",
+      regNo: "tn09bx4521",
+      model: "Activa 6G",
+      serviceType: "Paid service",
+      serviceDate: new Date().toISOString().slice(0, 10),
+      advisorId,
+    },
+  ]);
+  const out = await rpcCall<{ url: string }>(staff.api, "visits", "createVisitLink", [
+    { jobCardId: card.id },
+  ]);
+  const code = new URL(out.url).pathname.replace("/f/", "");
+  await rpcCall(staff.api, "feedback", "submitResponse", [code, ANSWERS]);
+
+  const admin = await sharedAdminApi(playwright, base);
+  const email = `bos${uniq()}@ch.in`;
+  await createUser(admin, {
+    name: "Meena",
+    email,
+    tempPassword: TEMP,
+    role: "branch_admin",
+    branchId,
+  });
+  const request = await playwright.request.newContext({ baseURL: base });
+  const boss = { request, origin: new URL(base).origin };
+  await rpcCall(boss, "auth", "signIn", [email, TEMP]);
+  await rpcCall(boss, "auth", "setOwnPassword", [OWN]);
+  const cookies = (await request.storageState()).cookies;
+  const branchName = (await listBranches(admin)).find((b) => b.id === branchId)?.name ?? "";
+  return { branchId, branchName, advisorId, customer, admin, boss, cookies };
 }
 
-async function openAlertToContacted(page: Page): Promise<void> {
-  await page.getByRole("button", { name: /Kavitha P/ }).click();
+const listAs = (api: AppApi) => rpcCall<AlertRow[]>(api, "alerts", "listAlerts", [{}]);
+
+/** A new browser window signed in as the scene's branch admin, at the same size as `page`. */
+async function asBoss(browser: Browser, page: Page, s: Scene, base: string): Promise<Page> {
+  const context = await browser.newContext({ baseURL: base, viewport: page.viewportSize() });
+  await context.addCookies(s.cookies);
+  return context.newPage();
+}
+
+const card = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(name) });
+
+async function toContacted(page: Page, name: string): Promise<void> {
+  await card(page, name).click();
   await page.getByRole("button", { name: "Contacted", exact: true }).last().click();
-  await page.getByLabel("Add a note").fill("Called, bike rechecked 22 Nov");
+  await page.getByLabel("Add a note").fill(NOTE);
   await page.getByRole("button", { name: "Save", exact: true }).click();
 }
 
-// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-07b.
-test.fixme(true, "rebuilt by T-07b");
-
-test.describe("T-07 admin alerts queue", () => {
-  test("AC-8 lists alerts newest first, filters by status, tints rows", async ({ page }) => {
-    await openAlerts(page);
-    const rows = page.locator("li > button[data-status]");
-    const ids = await rows.evaluateAll((els) => els.map((e) => e.getAttribute("data-alert-id")));
-    const all = JSON.parse(await stored(page, "alerts")) as { id: string; createdAt: string }[];
-    const newestFirst = all.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((a) => a.id);
-    expect(ids).toEqual(newestFirst);
-    await page.getByRole("button", { name: "Open", exact: true }).first().click();
-    const shown = await rows.evaluateAll((els) => els.map((e) => e.getAttribute("data-status")));
-    expect(shown.length).toBeGreaterThan(0);
-    expect(new Set(shown)).toEqual(new Set(["open"]));
-    await page.screenshot({ path: `.results/T-07/list-${String(width(page))}.png` });
+async function updateAs(api: AppApi, args: unknown[]) {
+  const res = await api.request.post("/api/rpc/alerts/updateAlert", {
+    headers: { origin: api.origin },
+    data: { args },
   });
+  return (await res.json()) as { ok: boolean; error?: { code: string } };
+}
 
-  // The AC names 'Priya S.'; the seed has no alert for her, so Kavitha P (a seeded open alert) stands in.
-  test("AC-8 Kavitha P → Contacted with a note turns amber, updates badge and audit", async ({
+test.describe("T-07b alerts queue on the server", () => {
+  test("US-13 the branch admin sees only their branch's alerts and badge count (S-30)", async ({
+    browser,
     page,
+    playwright,
+    baseURL,
   }) => {
-    await openAlerts(page);
-    const desktop = width(page) >= 768;
-    const badge = page.getByLabel(/\d+ open/).first();
-    const before = desktop ? Number((await badge.innerText()).trim()) : 0;
-    const wasOpen = await page
-      .getByRole("button", { name: /Kavitha P/ })
-      .getAttribute("data-status");
-    expect(wasOpen).toBe("open");
-    await openAlertToContacted(page);
-    await expect(page.getByText("Called, bike rechecked 22 Nov").first()).toBeVisible();
-    await page.screenshot({ path: `.results/T-07/drawer-${String(width(page))}.png` });
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("button", { name: /Kavitha P/ })).toHaveAttribute(
-      "data-status",
-      "contacted",
-    );
-    if (desktop) await expect(page.getByLabel(/\d+ open/).first()).toHaveText(String(before - 1));
-    else {
-      // phone: the Alerts tab shows a dot while any alert is still open
-      const left = (JSON.parse(await stored(page, "alerts")) as { status: string }[]).filter(
-        (a) => a.status === "open",
-      ).length;
-      const dot = page
-        .getByRole("navigation", { name: "Admin tabs" })
-        .locator('a[href="/admin/alerts"] .bg-brand');
-      await expect(dot).toHaveCount(left > 0 ? 1 : 0);
+    const base = String(baseURL);
+    const mine = `Kavitha ${uniq()}`;
+    const other = `Zainab ${uniq()}`;
+    const s = await scene(playwright, base, mine);
+    const otherScene = await scene(playwright, base, other);
+    const boss = await asBoss(browser, page, s, base);
+    await boss.goto("/admin/alerts");
+    await expect(boss.getByRole("heading", { name: "Alerts" })).toBeVisible();
+    await expect(card(boss, mine)).toBeVisible();
+    await expect(boss.locator("li > button[data-status]")).toHaveCount(1);
+    await expect(boss.getByText(other)).toHaveCount(0);
+    await expect(boss.getByRole("combobox", { name: "Branch" })).toHaveCount(0);
+    await expect(boss.getByTestId("alert-branch")).toHaveCount(0);
+    if (Number(width(page)) >= 768) {
+      await expect(boss.getByLabel(/\d+ open/).first()).toHaveText("1");
+    } else {
+      await expect(
+        boss
+          .getByRole("navigation", { name: "Admin tabs" })
+          .locator('a[href="/admin/alerts"] .bg-brand'),
+      ).toHaveCount(1);
     }
-    const audit = await stored(page, "audit");
-    expect(audit).toContain("alert.status");
-    expect(audit).toContain("alert.note");
-    expect(audit).toContain('"oldValue":"open"');
-    expect(audit).toContain('"newValue":"contacted"');
-  });
-
-  test("AC-8 a resolved alert can be reopened to Open", async ({ page }) => {
-    await openAlerts(page);
-    await page.getByRole("button", { name: /Kavitha P/ }).click();
-    await page.getByRole("button", { name: "Resolved", exact: true }).last().click();
-    await page.getByRole("button", { name: "Save", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Save", exact: true })).toBeDisabled();
-    await page.getByRole("button", { name: "Open", exact: true }).last().click();
-    await page.getByRole("button", { name: "Save", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Save", exact: true })).toBeDisabled();
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("button", { name: /Kavitha P/ })).toHaveAttribute(
-      "data-status",
-      "open",
-    );
-  });
-
-  test("AC-8 the drawer shows customer, phone, vehicle, reasons and the response link", async ({
-    page,
-  }) => {
-    await openAlerts(page);
-    await page.getByRole("button", { name: /Kavitha P/ }).click();
-    const drawer = page.getByRole("dialog");
-    await expect(drawer.getByText("Kavitha P")).toBeVisible();
-    await expect(drawer.getByText("Phone")).toBeVisible();
-    await expect(drawer.getByText("Vehicle")).toBeVisible();
-    const link = drawer.getByRole("link", { name: "View response" });
-    await expect(link).toHaveAttribute("href", /^\/admin\/responses\/r-/);
-  });
-
-  test("AC-8 alerts of deleted responses are hidden", async ({ page }) => {
-    await openAlerts(page);
-    const before = await page.locator("li > button[data-status]").count();
-    await markDeleted(page, "r-s005");
-    await page.reload();
-    await expect(page.locator("li > button[data-status]")).toHaveCount(before - 1);
-  });
-
-  test("AC-8 with no alerts it says all customers are happy", async ({ page }) => {
-    await openAlerts(page);
-    await page.evaluate(() => {
-      window.localStorage.setItem("psf:v1:alerts", "[]");
+    expect(await rpcCall(s.boss, "alerts", "countOpen", [])).toBe(1);
+    await boss.screenshot({ path: `${SHOT}/branch-admin-${width(page)}.png` });
+    await boss.context().close();
+    // AC-6 (US-29, G-W2): another branch's alert is Not found; support is FORBIDDEN
+    const theirId = (await listAs(otherScene.boss))[0]?.id;
+    expect(await updateAs(s.boss, [theirId, { status: "contacted" }, 1])).toMatchObject({
+      ok: false,
+      error: { code: "NOT_FOUND" },
     });
-    await page.reload();
-    await expect(page.getByText("No alerts — all customers happy")).toBeVisible();
-    await page.screenshot({ path: `.results/T-07/empty-${String(width(page))}.png` });
+    const support = await newStaff(playwright, base, {
+      branchId: s.branchId,
+      advisorId: s.advisorId,
+      name: "Arun",
+    });
+    expect(await updateAs(support.api, [theirId, { status: "contacted" }, 1])).toMatchObject({
+      ok: false,
+      error: { code: "FORBIDDEN" },
+    });
+    const res = await support.api.request.post("/api/rpc/alerts/listAlerts", {
+      headers: { origin: support.api.origin },
+      data: { args: [] },
+    });
+    expect(await res.json()).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
   });
 
-  test("s13 a failed save keeps the note and shows Couldn't save, try again (S-13)", async ({
+  test("US-13 the main admin sees every branch with a branch label and a Branch filter", async ({
     page,
+    playwright,
+    baseURL,
   }) => {
-    await openAlerts(page, "?demoFail=1");
-    await openAlertToContacted(page);
-    await expect(page.getByText("Couldn't save, try again")).toBeVisible();
-    await expect(page.getByLabel("Add a note")).toHaveValue("Called, bike rechecked 22 Nov");
-    await page.screenshot({ path: `.results/T-07/save-failed-${String(width(page))}.png` });
-    await page.getByRole("button", { name: "Retry" }).click();
-    await expect(page.getByLabel("Add a note")).toHaveValue("");
-    expect(await stored(page, "audit")).toContain("alert.note");
+    const base = String(baseURL);
+    const a = await scene(playwright, base, `Kavitha ${uniq()}`);
+    const b = await scene(playwright, base, `Zainab ${uniq()}`);
+    await sharedAdminInBrowser(page, playwright, base);
+    await page.goto("/admin/alerts");
+    await expect(card(page, a.customer)).toBeVisible();
+    await expect(card(page, b.customer)).toBeVisible();
+    const label = card(page, a.customer).getByTestId("alert-branch");
+    await expect(label).toContainText(a.branchName);
+    await expect(card(page, b.customer).getByTestId("alert-branch")).toContainText(b.branchName);
+    await page.screenshot({ path: `${SHOT}/main-admin-${width(page)}.png` });
+
+    await page.getByRole("combobox", { name: "Branch" }).click();
+    await page.getByRole("option", { name: a.branchName, exact: true }).click();
+    await expect(card(page, a.customer)).toBeVisible();
+    await expect(card(page, b.customer)).toHaveCount(0);
+    await page.screenshot({ path: `${SHOT}/main-admin-filtered-${width(page)}.png` });
+    await page.getByRole("combobox", { name: "Branch" }).click();
+    await page.getByRole("option", { name: "All branches" }).click();
+    await expect(card(page, b.customer)).toBeVisible();
+  });
+
+  test("AC-8 Contacted with a note turns the row amber; a stale second window gets the exact message and keeps its note (S-13)", async ({
+    browser,
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const base = String(baseURL);
+    const s = await scene(playwright, base, `Priya S ${uniq()}`);
+    const boss = await asBoss(browser, page, s, base);
+    const other = await asBoss(browser, page, s, base);
+    for (const p of [boss, other]) {
+      await p.goto("/admin/alerts");
+      await expect(card(p, s.customer)).toHaveAttribute("data-status", "open");
+    }
+    await toContacted(boss, s.customer);
+    await expect(boss.getByText(NOTE).first()).toBeVisible();
+    await boss.screenshot({ path: `${SHOT}/drawer-${width(page)}.png` });
+    await boss.keyboard.press("Escape");
+    await expect(card(boss, s.customer)).toHaveAttribute("data-status", "contacted");
+    await expect(card(boss, s.customer)).toHaveClass(/bg-warning-soft/);
+    await boss.screenshot({ path: `${SHOT}/contacted-${width(page)}.png` });
+    const row = (await listAs(s.boss)).find((x) => x.customerName === s.customer);
+    expect(row).toMatchObject({ status: "contacted", version: 2 });
+    // audit checked at unit level until T-09b's listAudit lands
+
+    await toContacted(other, s.customer);
+    await expect(other.getByText(STALE)).toBeVisible();
+    await expect(other.getByRole("button", { name: "Reload" })).toBeVisible();
+    await expect(other.getByLabel("Add a note")).toHaveValue(NOTE);
+    await other.screenshot({ path: `${SHOT}/stale-${width(page)}.png` });
+    await boss.context().close();
+    await other.context().close();
+  });
+
+  test("S-13 a failed save keeps the note, and Retry then saves it", async ({
+    browser,
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const base = String(baseURL);
+    const s = await scene(playwright, base, `Kavitha ${uniq()}`);
+    const boss = await asBoss(browser, page, s, base);
+    await boss.goto("/admin/alerts");
+    await expect(card(boss, s.customer)).toBeVisible();
+    await boss.route("**/api/rpc/alerts/updateAlert", (r) => r.abort());
+    await toContacted(boss, s.customer);
+    await expect(boss.getByText("Couldn't save, try again")).toBeVisible();
+    await expect(boss.getByLabel("Add a note")).toHaveValue(NOTE);
+    await boss.screenshot({ path: `${SHOT}/save-failed-${width(page)}.png` });
+    await boss.unroute("**/api/rpc/alerts/updateAlert");
+    await boss.getByRole("button", { name: "Retry" }).click();
+    await expect(boss.getByLabel("Add a note")).toHaveValue("");
+    await boss.context().close();
   });
 });

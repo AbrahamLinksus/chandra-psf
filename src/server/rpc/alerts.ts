@@ -10,12 +10,18 @@ export const alertsRpc = {
   listAlerts: {
     kind: "read",
     access: "staff",
-    input: z.tuple([z.object({ status: status.optional() }).optional()]),
+    input: z.tuple([
+      z.object({ status: status.optional(), branchId: idArg.optional() }).optional(),
+    ]),
   },
   countOpen: { kind: "read", access: "staff", input: z.tuple([]) },
   updateAlert: {
     kind: "write",
     access: "staff",
-    input: z.tuple([idArg, z.object({ status: status.optional(), note: textArg.optional() })]),
+    input: z.tuple([
+      idArg,
+      z.object({ status: status.optional(), note: textArg.optional() }),
+      z.number().int().min(1),
+    ]),
   },
 } satisfies RpcTable<AlertRepo>;

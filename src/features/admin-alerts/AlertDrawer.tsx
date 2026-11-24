@@ -59,6 +59,7 @@ export function AlertDrawer({
             <div className="grid gap-4 px-4 pb-4">
               <dl className="grid grid-cols-2 gap-3">
                 <Field label="Phone" value={alert.phone ?? "No phone"} />
+                <Field label="Branch" value={alert.branchName} />
                 <Field label="Vehicle" value={`${alert.model} · ${alert.regNo}`} />
               </dl>
               <Link

@@ -226,39 +226,35 @@ test.describe("T-03d support: resend, regenerate and cancel", () => {
 });
 
 test.describe("T-03d customer pages for an old code", () => {
-  // needs T-04b: the customer pages in src/app/f/** are not built yet.
-  test.fixme("test_old_code_after_resend_shows_a_newer_link_was_sent (S-17)", async ({
+  test("test_old_code_after_resend_shows_a_newer_link_was_sent (S-17)", async ({
     page,
     playwright,
     baseURL,
   }) => {
     const { priya, issued } = await scene(playwright, String(baseURL));
     await rpcCall<Issued>(priya.api, "visits", "resendLink", [issued.visit.id]);
-    await page.goto(issued.url);
+    // the link is built on the configured app URL; the test server runs on its own port
+    await page.goto(new URL(issued.url).pathname);
     await expect(page.getByText("A newer link was sent to you on WhatsApp")).toBeVisible();
   });
 
-  // needs T-04b
-  test.fixme("test_old_code_after_regenerate_shows_the_newer_link_page (S-05)", async ({
+  test("test_old_code_after_regenerate_shows_the_newer_link_page (S-05)", async ({
     page,
     playwright,
     baseURL,
   }) => {
     const { priya, issued } = await scene(playwright, String(baseURL));
     await rpcCall<Issued>(priya.api, "visits", "regenerateLink", [issued.visit.id]);
-    await page.goto(issued.url);
+    // the link is built on the configured app URL; the test server runs on its own port
+    await page.goto(new URL(issued.url).pathname);
     await expect(page.getByText("A newer link was sent to you on WhatsApp")).toBeVisible();
   });
 
-  // needs T-04b
-  test.fixme("test_cancelled_link_shows_link_not_valid (S-14)", async ({
-    page,
-    playwright,
-    baseURL,
-  }) => {
+  test("test_cancelled_link_shows_link_not_valid (S-14)", async ({ page, playwright, baseURL }) => {
     const { priya, issued } = await scene(playwright, String(baseURL));
     await rpcCall(priya.api, "visits", "cancelLink", [issued.visit.id]);
-    await page.goto(issued.url);
+    // the link is built on the configured app URL; the test server runs on its own port
+    await page.goto(new URL(issued.url).pathname);
     await expect(page.getByText("Link not valid")).toBeVisible();
   });
 });
