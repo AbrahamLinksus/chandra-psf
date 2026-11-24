@@ -14,8 +14,8 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M4 · Support → customer loop across devices (7/9 original + T-22s, T-22s2 done) |
-| Next step | M4: T-04b sync (PORT=8014, NODE_OPTIONS=--max-old-space-size=4096) → card; un-fixme the 3 T-03d e2e tests that need T-04b's customer pages; then T-07b, T-23, M4-docs. Run full checks one at a time. |
+| Milestone | M4 · Support → customer loop across devices (8/9 original + T-22s, T-22s2 done) |
+| Next step | M4: T-07b (alerts queue by branch; deps done) → then T-23 wire-up on the preview → M4-docs. Un-fixme T-03d's 3 e2e tests (T-04b pages now on main) inside T-07b's or T-23's test step. Run full checks one at a time with NODE_OPTIONS=--max-old-space-size=4096. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
@@ -138,6 +138,15 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-03d | tests/e2e/admin-users uniq() | Date.now() names collide under --repeat-each (NAME_IN_USE); fix must keep names short (360 px row) | ≈5 min |
 | T-03d | tests/e2e/support-link-actions | 3 test.fixme need T-04b customer pages (newer link, Link not valid); un-fixme after T-04b | ≈5 min |
 | Windows | vitest | V8 out-of-memory in a worker on this machine; run check.sh with NODE_OPTIONS=--max-old-space-size=4096 | ≈0 |
+| T-04b | src/data/access/repos/feedback.ts submitFeedback | submissionId optional only for old tests; make it required (LLD §17.2) | ≈3 min |
+| T-04b | src/features/{feedback-form,privacy}/contact.ts + PrivacyNotice | duplicated (depcruise bans feature→feature); move to a shared module | ≈5 min |
+| T-04b | src/server/repos/feedback.ts | openedAt can be overwritten by a racing markOpened; small race windows vs erasure/Resend during submit | ≈5 min |
+| T-04b | src/server/repos/feedback.ts rate limits | local limit constants → src/domain/constants.ts; hitLinkLimit duplicates hitIpLimit | ≈5 min |
+| T-04b | src/features/feedback-form draft id | crypto.randomUUID has no fallback (old browsers / http) | ≈2 min |
+| T-04b | src/domain/answers.ts (validation) | duplicate multi-select options are not rejected | ≈2 min |
+| T-04b | review | 10 minors total; the rest were in the git-ignored review report that approve deleted (Windows) | — |
+| T-04b debug | playwright.config.ts (gate) | `workers: Number(process.env.E2E_WORKERS ?? 8)` to stop CPU starvation in the first wave | ≈2 min |
+| T-04b debug | tests/e2e admin-users.spec.ts:85, admin-branches.spec.ts:39-41 | test.slow() on s15; call listBranches before the 5 s waitFor (keep-alive ECONNRESET) | ≈3 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
@@ -157,6 +166,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | task-runner, devops | (rule) | the hook blocks git push, gh and vercel for agents: the Orchestrator pushes wip/* and checks Vercel builds, then resumes the runner |
 
 ## Notes for the next session
+- 2026-11-24 Windows lessons: (1) if the pre-commit hook blocks a checkpoint, the next agent's `taskgit scope` reverts the previous agent's uncommitted files — get each step committed (fix lint first) before the next agent runs; never run scope while two agents' work is uncommitted. (2) `taskgit approve` deletes the worktree incl. .results (cards/reports gone) and leaves locked node_modules/.next folders in C:/Users/Jake/chandraProject-wt/<id> — copy anything needed before approving; delete leftovers when no server runs. (3) Agents can't set PORT; the Orchestrator runs sync/approve with PORT, PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64 and NODE_OPTIONS=--max-old-space-size=4096.
 - RESUMED 2026-11-24 on Windows 11 (Git Bash, not WSL; owner's choice). Setup: pnpm 11.24.0 via npm -g, gitleaks.exe 8.30.1 in ~/.cache/chandra-psf/tools/, ~/bin/python3 shim → Anaconda python (the WindowsApps python3 is a Store stub; taskgit scope + the scope-guard hook need python3). main 40d207c made the spawned-CLI tests Windows-safe. check.sh still defaults PLAYWRIGHT_HOST_PLATFORM_OVERRIDE to ubuntu24.04-x64, so on Windows run it with `export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64` (agents may need the Orchestrator to run it). T-04b/T-03d merged main with TASKGIT_SKIP_CHECK=1 so their testers get both fixes.
 - PAUSED 2026-11-24 14:48 +05:30. Owner switching OS (Linux → Windows); resume on the new machine with `/setup-project resume chandra-psf`. M4: done T-03b, T-03c, T-22s, T-22s2 (+ M3 approved). Open wip branches (all pushed):
   - wip/T-22 — TASK READY, sync ✅ (PORT=8022), card in Batch queue; only the approve is left (Windows: re-run sync first, worktree is new).

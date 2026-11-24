@@ -561,13 +561,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/feedback.ts, src/server/rpc/feedback.ts, src/data/access/repos/feedback.ts, src/features/feedback-form/**, src/app/f/**, src/features/privacy/**, src/app/privacy/**, tests/unit/server/feedback/**, tests/e2e/feedback-form/**
 - Context: SPEC US-07 to US-12, F-3, §9 Privacy notice, §5 F-3 rows · LLD-phase2 §21 (getVisitByToken, markOpened, submitResponse), LLD §9 (draft) · files: src/domain/alertRules.ts, src/domain/answers.ts, src/domain/visibility.ts, src/server/tokens.ts, src/server/rateLimit.ts
 - Why separate: the public flow with its own repo (abuse, personal data); no staff screens.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
-  - [ ] The welcome shows the greeting, "Takes about 2 minutes", the SPEC §9 notice with placeholder company and phone, 3 years, providers possibly outside India, and "How we use your answers" → `/privacy` (S-26, G-12); fetching the page without running its script does not set Opened, a real browser does (US-07, AC-3)
-  - [ ] Submit with Q12 = 1, Q15 = Yes → thank-you "Our team will call you soon"; the server stores one response and the alert "Callback requested · Q12 rated 1" for the visit's branch; hidden follow-ups and text over 1,000 characters are rejected by the server; `<script>` text is shown as plain text (AC-7, US-11, G-05, G-W3)
-  - [ ] Two contexts submit the same link → one response, the other sees "Thank you — already submitted"; a same-phone retry with the same submission id → the normal thank-you with the callback line (S-29, G-15); expired, replaced, cancelled and erased links → their pages (AC-5, S-05, S-14)
-  - [ ] 45 submits of different links from one address in an hour are all accepted; the 6th submit on one link in an hour → "Too many requests, try again in a few minutes" (S-22, G-7); a failed submit keeps every answer and Retry succeeds (S-13)
-- Result: —
+  - [x] The welcome shows the greeting, "Takes about 2 minutes", the SPEC §9 notice with placeholder company and phone, 3 years, providers possibly outside India, and "How we use your answers" → `/privacy` (S-26, G-12); fetching the page without running its script does not set Opened, a real browser does (US-07, AC-3)
+  - [x] Submit with Q12 = 1, Q15 = Yes → thank-you "Our team will call you soon"; the server stores one response and the alert "Callback requested · Q12 rated 1" for the visit's branch; hidden follow-ups and text over 1,000 characters are rejected by the server; `<script>` text is shown as plain text (AC-7, US-11, G-05, G-W3)
+  - [x] Two contexts submit the same link → one response, the other sees "Thank you — already submitted"; a same-phone retry with the same submission id → the normal thank-you with the callback line (S-29, G-15); expired, replaced, cancelled and erased links → their pages (AC-5, S-05, S-14)
+  - [x] 45 submits of different links from one address in an hour are all accepted; the 6th submit on one link in an hour → "Too many requests, try again in a few minutes" (S-22, G-7); a failed submit keeps every answer and Retry succeeds (S-13)
+- Result: approved 2026-11-24 · 4/4 goals (hidden follow-ups dropped, D-36) · welcome + §9 notice, /privacy, submit + alert, link-state pages, rate limits · review 0 major, 10 minor · cov 95.5% · sync flake = CPU load in older admin specs (debugger)
 
 ### T-22s · Expose POLL_SECONDS as a public setting (shared-change)
 - Owner: frontend-coder
