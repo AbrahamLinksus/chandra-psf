@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (14/16) |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (15/16) |
 | Next step | M3: T-31s (CSP, debugging), T-32 queued for batch card, then M3 milestone (M3-docs + card) |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-24 10:33 +05:30 |
+| Last updated | 2026-11-24 10:55 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -93,6 +93,13 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-17 | src/server/{ctx,scope,audit}.ts, auth/{session,cookies}.ts | add `import "server-only"` (CONVENTIONS §2) or an exemption comment like log.ts | ≈2 min |
 | T-16 | docs/LLD-phase2.md §25 | retention cut-off says `<`; code + SPEC use inclusive `<=` (12 Feb 2027 example) | ≈1 min |
 | T-16 | src/domain/commonPasswords.ts | ~900 hand-built entries, not a real top-1000 list | ≈5 min |
+| T-31s | src/app/layout.tsx nonce script | beforeInteractive nonce script may be blocked under strict-dynamic on Safari/Firefox; check on the preview | ≈5 min |
+| T-31s | src/proxy.ts dev CSP | dev connect-src `ws: wss:` allows any host; limit to localhost | ≈2 min |
+| T-31s | src/proxy.ts buildCsp | move buildCsp + sonner style hashes to src/config/csp.ts; re-derive hashes on any sonner upgrade | ≈5 min |
+| T-31s | nonce-script comment | wording | ≈1 min |
+| T-31s | e2e RPC budget | full e2e suite uses ~286 of the 300/h public-RPC limit; any new spec may trip it (raise limit in test env or share sessions) | ≈10 min |
+| T-31s | currentUser errors | any error incl. RATE_LIMITED shows "Your session has ended" (product wording) | ≈5 min |
+| T-31s | e2e suite | 136 skipped tests per run; confirm they are all intended test.fixme specs | ≈5 min |
 | T-33s | .env.example + LLD-phase2 §15.5 | AUTH_HASH_TIMING missing; add the LLD row first (config.test.ts reads it), then .env.example → M3 docs pass | ≈3 min |
 | T-33s | tests/support/e2e.ts | RATE_LIMITED-only retry for shared-admin sign-in under parallel workers; watch for masking real lockout regressions | ≈2 min |
 | T-32 | src/features/admin-*/use{Branch,User}List.ts | use the exported list-key constants (review minor) | ≈2 min |

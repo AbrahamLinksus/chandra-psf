@@ -18,3 +18,6 @@ export const env = EnvSchema.parse({
 });
 
 export type Env = z.infer<typeof EnvSchema>;
+
+/** True only under `next dev`; the CSP in src/proxy.ts relaxes eval and websockets for HMR then. */
+export const isDevelopment = process.env.NODE_ENV === "development";

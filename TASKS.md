@@ -468,12 +468,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: next.config.ts, src/proxy.ts, src/app/layout.tsx, src/config/env.ts, tests/e2e/foundation/**
 - Context: SPEC §9 (Security & privacy) · LLD-phase2 §16.2, §26 · T-05b verify-preview report (no CSP header on the preview) · files: next.config.ts, src/proxy.ts, src/app/layout.tsx, /AGENTS.md + node_modules/next/dist/docs/ (CSP guide)
 - Why separate: owner follow-up from T-05b (2026-11-24); next.config.ts and src/proxy.ts are frozen shared files.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] Every HTML response carries a Content-Security-Policy that allows only the app's own origin for scripts, styles, images, fonts and connections, plus `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`, `object-src 'none'` (nonce-based scripts if Next 16 supports it without breaking static pages; otherwise documented why not)
   - [ ] No CSP violations in the browser console across sign-in, admin pages, support pages and the customer feedback form (e2e asserts the header and no `securitypolicyviolation` events)
   - [ ] Dev mode (`pnpm dev`) still works (HMR allowed in development only)
-- Result: —
+- Result: 3/3 goals ✅ · nonce + strict-dynamic CSP in src/proxy.ts; all pages render per request (D-31) · 2 debugger rounds (Radix scroll-lock style nonce; e2e RPC budget) · Opus review 0/0/4 minor · ≈$3.76 · tester 38% · debugger 35% · reviewer 15% · frontend-coder 12%
 
 ### T-32 · Lists refresh right after Add branch / Add user
 - Owner: frontend-coder
