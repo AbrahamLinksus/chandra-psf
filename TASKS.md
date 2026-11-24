@@ -548,7 +548,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/visits.ts, src/server/rpc/visits.ts, src/features/support/**, tests/unit/server/visits-actions/**, tests/e2e/support-link-actions/**
 - Context: SPEC US-06, F-2 step 7, §5 F-2 Resend rows · LLD-phase2 §21 (resend, regenerate, cancel) · files: src/server/tokens.ts, src/features/support/*
 - Why separate: second half of the link repo; runs beside the customer form slice.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] A link of 15 Nov resent on 18 Nov → new code, WhatsApp opens with it, Copy offered, still expires 22 Nov; the 15 Nov code shows "A newer link was sent to you on WhatsApp"; audit `link.resend` (G-1, S-17)
   - [ ] Arun resends a link Priya made, from All branch links → audit actor Arun (G-8); Regenerate → a new 7-day visit and the old link shows the newer-link page (S-05); Cancel (confirm) → Cancelled, the link shows "Link not valid", audit `link.cancel` (S-14)
@@ -561,7 +561,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/feedback.ts, src/server/rpc/feedback.ts, src/data/access/repos/feedback.ts, src/features/feedback-form/**, src/app/f/**, src/features/privacy/**, src/app/privacy/**, tests/unit/server/feedback/**, tests/e2e/feedback-form/**
 - Context: SPEC US-07 to US-12, F-3, §9 Privacy notice, §5 F-3 rows · LLD-phase2 §21 (getVisitByToken, markOpened, submitResponse), LLD §9 (draft) · files: src/domain/alertRules.ts, src/domain/answers.ts, src/domain/visibility.ts, src/server/tokens.ts, src/server/rateLimit.ts
 - Why separate: the public flow with its own repo (abuse, personal data); no staff screens.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] The welcome shows the greeting, "Takes about 2 minutes", the SPEC §9 notice with placeholder company and phone, 3 years, providers possibly outside India, and "How we use your answers" → `/privacy` (S-26, G-12); fetching the page without running its script does not set Opened, a real browser does (US-07, AC-3)
   - [ ] Submit with Q12 = 1, Q15 = Yes → thank-you "Our team will call you soon"; the server stores one response and the alert "Callback requested · Q12 rated 1" for the visit's branch; hidden follow-ups and text over 1,000 characters are rejected by the server; `<script>` text is shown as plain text (AC-7, US-11, G-05, G-W3)

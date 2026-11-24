@@ -7,20 +7,20 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Active |
+| Status | Paused |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 approved 2026-11-24 · next M4 · Support → customer loop across devices |
-| Next step | M4 · Support → customer loop across devices: start the first ready tasks (taskgraph --ready) |
+| Milestone | M4 · Support → customer loop across devices (5/9 original + T-22s, T-22s2 done) |
+| Next step | Resume M4: T-22 card (batch, approve with PORT=8022), restart T-04b (backend-coder partial) and T-03d (frontend step) with fresh runners; then T-07b, T-23, M4-docs |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-24 12:47 +05:30 |
+| Last updated | 2026-11-24 14:48 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -148,6 +148,12 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | task-runner, devops | (rule) | the hook blocks git push, gh and vercel for agents: the Orchestrator pushes wip/* and checks Vercel builds, then resumes the runner |
 
 ## Notes for the next session
+- PAUSED 2026-11-24 14:48 +05:30. Owner switching OS (Linux → Windows); resume on the new machine with `/setup-project resume chandra-psf`. M4: done T-03b, T-03c, T-22s, T-22s2 (+ M3 approved). Open wip branches (all pushed):
+  - wip/T-22 — TASK READY, sync ✅ (PORT=8022), card in Batch queue; only the approve is left (Windows: re-run sync first, worktree is new).
+  - wip/T-04b — backend-coder stopped mid-implement; partial files checkpointed (src/server/repos/feedback.ts, src/server/rpc/feedback.ts, src/data/access/repos/feedback.ts, NEW src/server/repos/linkAccess.ts — not in Files; add it or have the coder fold it in). Restart a fresh runner `Resume at: implement`, tell the backend-coder to inspect the partial files first.
+  - wip/T-03d — backend-coder found no gaps (T-03c met every server criterion); restart at the frontend-coder step, then test+review. Customer newer-link/"Link not valid" pages may need T-04b's src/app/f/**.
+  - Runners can't set PORT (their Bash blocks env prefixes): tell them not to sync; the Orchestrator runs `PORT=<port> taskgit sync/approve`.
+  - New machine (Windows) setup: taskgit.sh, check.sh and .githooks are bash — run Claude Code in WSL2 (recommended) or Git Bash; clone into the WSL filesystem, not /mnt/c (PGlite + Playwright are slow there). Then `pnpm install`, `git config core.hooksPath .githooks`, `pnpm exec playwright install chromium` (no Arch override needed on Ubuntu/WSL), gitleaks v8.30.1 to ~/.cache/chandra-psf/tools/gitleaks. .results/ is git-ignored, so old cards/screens stay on the Linux machine; the Batch queue line above has what T-22's card needs.
 - 2026-11-24 M3 approved (37a3695). Lessons: never run two agent steps in one worktree at once (except tester+reviewer): `step done` for one reverted the other's files. STATE.md edits only on main (taskgit reverts them in task branches). Owner granted architect write on docs/LLD-phase2.md (.devteam/scopes.json). README run order (db:migrate → admin init) verified on scratch PGlite. approve/sync need PORT set to avoid 8000 collisions (runners can't set it: their Bash blocks env prefixes, so the Orchestrator runs sync with PORT when a runner reports BLOCKED on e2e timeouts).
 - PAUSED 2026-11-23 14:39 +05:30. Phase 2 M3: 11/13 done (T-13..T-21, T-01b, T-02b, T-19, T-20, T-21 approved). In flight: T-10b (wip/T-10b) — owner approved "fix last-admin race, then approve"; race fixed + tests done; sync failed on the order-dependent T-21 first-run e2e. The debugger's fix was REVERTED by the scope check (e2e files are tester-owned, not debugger). Restart a fresh tester step `fix-e2e-order` (brief: apply .results/T-10b/debug-sync-debugger.md fix + FirstRunCard unit test, check.sh twice), then `taskgit sync` (PORT=8010), record + approve with no new card. Then T-05b.
 - Lesson: route e2e/test fixes to the tester, not the debugger (debugger scope excludes tests/e2e and tests/support). Owner meeting brief published: https://claude.ai/artifact/X52xXkAVNinb4uaW5XuhfY (meeting/psf-owner-brief.html outside the repo).
