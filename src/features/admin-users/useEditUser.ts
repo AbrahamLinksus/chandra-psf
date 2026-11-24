@@ -3,6 +3,7 @@
 import { useState, type SyntheticEvent } from "react";
 import type { User } from "@/domain/types";
 import { useUsersMutation } from "./useUsersMutation";
+import { mergeUser } from "./listCache";
 import { pickerConfig } from "./pickerConfig";
 import { useBranchOptions } from "./useBranchOptions";
 import { canMove } from "./userPermissions";
@@ -36,7 +37,10 @@ export function useEditUser(me: User, user: User, onDone: () => void) {
   const moves = canMove(me, user);
   const branches = useBranchOptions(moves);
   const config = pickerConfig(me, draft, branches.options, branches.isLoading);
-  const mutation = useUsersMutation((da, patch: Patch) => da.users.updateUser(user.id, patch));
+  const mutation = useUsersMutation(
+    (da, patch: Patch) => da.users.updateUser(user.id, patch),
+    mergeUser,
+  );
 
   const setField = (key: DraftKey, value: string) => {
     setDraft((d) => ({ ...d, [key]: value }));

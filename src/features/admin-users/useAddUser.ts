@@ -3,6 +3,7 @@
 import { useState, type SyntheticEvent } from "react";
 import type { User } from "@/domain/types";
 import { useUsersMutation } from "./useUsersMutation";
+import { mergeUser } from "./listCache";
 import { pickerConfig } from "./pickerConfig";
 import { useBranchOptions } from "./useBranchOptions";
 import {
@@ -27,14 +28,16 @@ export function useAddUser(me: User) {
   const branches = useBranchOptions(me.role === "main_admin");
   const draft = effectiveDraft(me, raw);
   const config = pickerConfig(me, draft, branches.options, branches.isLoading);
-  const mutation = useUsersMutation((da, d: UserDraft) =>
-    da.users.createUser({
-      name: d.name,
-      email: d.email,
-      tempPassword: d.tempPassword,
-      role: d.role,
-      branchId: d.role === "main_admin" ? null : d.branchId === "" ? null : d.branchId,
-    }),
+  const mutation = useUsersMutation(
+    (da, d: UserDraft) =>
+      da.users.createUser({
+        name: d.name,
+        email: d.email,
+        tempPassword: d.tempPassword,
+        role: d.role,
+        branchId: d.role === "main_admin" ? null : d.branchId === "" ? null : d.branchId,
+      }),
+    mergeUser,
   );
 
   const setField = (key: DraftKey, value: string) => {

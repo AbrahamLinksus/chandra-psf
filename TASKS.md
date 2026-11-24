@@ -481,11 +481,11 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/features/admin-users/**, src/features/admin-branches/**, src/app/admin/users/**, src/app/admin/branches/**, tests/e2e/admin-users/**, tests/e2e/admin-branches/**
 - Context: T-05b verify-preview report (on the real host the new row shows only after a reload; local e2e passes) · LLD-phase2 §23 · files: src/features/admin-users/*, src/features/admin-branches/*
 - Why separate: owner follow-up from T-05b (2026-11-24); likely a cache or revalidation difference on Vercel vs local.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] After Add branch, Add user, Edit user and Deactivate, the list shows the change without a reload, both locally and on the preview deploy
   - [ ] An e2e test fails on the old behaviour (no reload between add and assert, no stale cache)
-- Result: —
+- Result: 2/2 goals ✅ (owner to confirm on the preview after deploy) · saved row merged into cached list, then refetch · review 0/0/2 minor · batch-approved · post-sync e2e flake fixed by T-34s (D-32) · ≈$1.33 · frontend-coder 50% · tester 42% · reviewer 7%
 
 ### T-34s · Signed-in staff skip the anonymous flood limit (shared-change)
 - Owner: backend-coder

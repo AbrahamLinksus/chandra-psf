@@ -3,13 +3,15 @@
 import { useRef, useState } from "react";
 import type { BranchWithCount } from "@/data/access/repos/branches";
 import { useRefreshingMutation } from "./useRefreshingMutation";
+import { mergeBranch } from "./listCache";
 import { useRepoQuery } from "@/hooks/useRepoQuery";
 
 /** Deactivate (confirmed) / reactivate; deactivating ends the branch staff's sessions. */
 function useBranchToggle() {
   const [pending, setPending] = useState<BranchWithCount | null>(null);
-  const toggle = useRefreshingMutation((da, i: { id: string; active: boolean }) =>
-    da.branches.setBranchActive(i.id, i.active),
+  const toggle = useRefreshingMutation(
+    (da, i: { id: string; active: boolean }) => da.branches.setBranchActive(i.id, i.active),
+    mergeBranch,
   );
   const last = useRef<{ b: BranchWithCount; active: boolean } | null>(null);
   const apply = async (b: BranchWithCount, active: boolean) => {
@@ -42,8 +44,10 @@ function useBranchToggle() {
 export function useBranchList() {
   const query = useRepoQuery(["branches", "list"], (da) => da.branches.listBranches());
   const t = useBranchToggle();
-  const update = useRefreshingMutation((da, i: { id: string; name: string; city: string }) =>
-    da.branches.updateBranch(i.id, { name: i.name, city: i.city }),
+  const update = useRefreshingMutation(
+    (da, i: { id: string; name: string; city: string }) =>
+      da.branches.updateBranch(i.id, { name: i.name, city: i.city }),
+    mergeBranch,
   );
   const rename = async (id: string, v: { name: string; city: string }) => {
     const r = await update.run({ id, ...v });

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { User } from "@/domain/types";
 import { useUsersMutation } from "./useUsersMutation";
+import { mergeUser } from "./listCache";
 import { useRepoQuery } from "@/hooks/useRepoQuery";
 import { useSession } from "@/hooks/useSession";
 
@@ -16,8 +17,9 @@ export function useUserList() {
   const query = useRepoQuery(["users", "list"], (da) => da.users.listUsers());
   const { user: me } = useSession();
   const [pending, setPending] = useState<ActiveChange | null>(null);
-  const mutation = useUsersMutation((da, c: ActiveChange) =>
-    da.users.setUserActive(c.user.id, c.active),
+  const mutation = useUsersMutation(
+    (da, c: ActiveChange) => da.users.setUserActive(c.user.id, c.active),
+    mergeUser,
   );
 
   const last = useRef<ActiveChange | null>(null);

@@ -2,6 +2,7 @@
 
 import { useState, type SyntheticEvent } from "react";
 import { useRefreshingMutation } from "./useRefreshingMutation";
+import { mergeBranch } from "./listCache";
 import { fieldMessage } from "./branchMessages";
 
 const EMPTY = { name: "", city: "" };
@@ -10,7 +11,10 @@ const EMPTY = { name: "", city: "" };
 export function useAddBranch() {
   const [draft, setDraft] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
-  const mutation = useRefreshingMutation((da, i: typeof EMPTY) => da.branches.createBranch(i));
+  const mutation = useRefreshingMutation(
+    (da, i: typeof EMPTY) => da.branches.createBranch(i),
+    mergeBranch,
+  );
 
   const submit = async () => {
     setError(null);

@@ -14,8 +14,8 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (16/17) |
-| Next step | T-32 post-sync fix (owner-approved; one admin-users e2e failed after merging T-31s/T-33s), then M3 milestone: M3-docs + card |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (17/17) |
+| Next step | M3 milestone: M3-docs (architect as-built sync of LLD-phase2 incl. CSP, flood-limit, argon2 rows; docs README pass incl. AUTH_HASH_TIMING + DEPLOY.md env fixes), then M3 milestone card |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
