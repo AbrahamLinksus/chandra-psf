@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (17/17) |
-| Next step | M3 milestone: M3-docs (architect as-built sync of LLD-phase2 incl. CSP, flood-limit, argon2 rows; docs README pass incl. AUTH_HASH_TIMING + DEPLOY.md env fixes), then M3 milestone card |
+| Milestone | M3 approved 2026-11-24 · next M4 · Support → customer loop across devices |
+| Next step | M4 · Support → customer loop across devices: start the first ready tasks (taskgraph --ready) |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-24 11:30 +05:30 |
+| Last updated | 2026-11-24 12:47 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -51,7 +51,6 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 
 ## Known minors
 - Lockout counts failures per email for 15 min and a correct sign-in does not reset them — confirm against SPEC (≈5 min check)
-- DEPLOY.md phase-1 env table still says NEXT_PUBLIC_APP_URL; real key is APP_URL (≈2 min, docs)
 | Task | Where | Fix | Size |
 |---|---|---|---|
 | T-15 | src/server/env.ts | drop runtime DATABASE_URL_UNPOOLED requirement (review m-8; src + test change) | ≈5 min |
@@ -78,6 +77,16 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-20 | src/features/account ChangePasswordForm | Retry button resends the wrong password; clear the field on WRONG_PASSWORD | ≈3 min |
 | T-20 | src/server/auth/attempts.ts (new) | move clearSignInFailures out of repos | ≈5 min |
 | T-20 | email normalisation | normalised in 3 places; use one emailKey helper | ≈3 min |
+| T-10b | src/server/repos/users.ts:272 applyUpdate | overlapping edits can undo each other (set from a snapshot read outside the tx); write only changed fields (M3 review m1) | ≈5 min |
+| T-10b | src/features/admin-users/pickerConfig.ts:44 | listBranches error shows "Add a branch first"; show a load error instead (m2) | ≈3 min |
+| T-10b | tests (branch picker) | no regression test that useBranchOptions(false) never writes ["branches","list"] (m3) | ≈10 min |
+| T-20 | tests/e2e/account/account.spec.ts:74 | wrong-current-password e2e uses the shared admin; 5 step-up failures end its sessions → flake; use a throwaway user (m4) | ≈5 min |
+| T-20 | src/server/repos/auth.ts:243 doChangePassword | doesn't refuse users still on a one-time password (m5) | ≈2 min |
+| T-20/T-10b | stepUp.ts, userRules.ts, scripts/admin.ts | lockout/OTP constants duplicated; move to src/domain/constants.ts (m6) | ≈3 min |
+| T-20 | src/features/account/AccountDetails.tsx:3 | ROLE_LABELS duplicates admin-users/userForm.ts (m7) | ≈2 min |
+| T-19 | tests/support/e2e.ts:108-128 | stale-OTP retry loop can lock the shared admin if marker write fails (m8) | ≈3 min |
+| T-21 | src/server/repos/advisors.ts | writes audit `advisor.rename`; AuditAction/auditFormat only know `advisor.update` (M3 as-built) | ≈3 min |
+| M3-docs | README.md env section | lists NEXT_PUBLIC_COMPANY_NAME / PRIVACY_PHONE / PRIVACY_EMAIL / POLL_SECONDS, which no code reads; drop or mark future | ≈2 min |
 | T-20 | tests/e2e/account change-password success | test.fixme until T-10b can create a throwaway user | ≈5 min |
 | T-02b | src/components/shared/RoleGuard.tsx m6 | usePathname drops the query string, so next= loses it on mid-page session end; add useSearchParams | ≈3 min |
 | T-02b | src/server/auth/password.ts m7 | no import "server-only" (tsx scripts import it); record the exemption | ≈1 min |
@@ -119,9 +128,11 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 |---|---|---|
 | frontend-coder, backend-coder | <wt>/AGENTS.md + node_modules/next/dist/docs/ (relevant guide) | Next 16.4 has breaking API changes vs training data |
 | architect | <plugin root>/.devteam default scopes.json | needed to decide whether to override scopes |
+| docs | <wt>/src/config/env.ts + full STATE.md | README env keys and run steps (M3 gap) |
 | task-runner, devops | (rule) | the hook blocks git push, gh and vercel for agents: the Orchestrator pushes wip/* and checks Vercel builds, then resumes the runner |
 
 ## Notes for the next session
+- 2026-11-24 M3 approved (37a3695). Lessons: never run two agent steps in one worktree at once (except tester+reviewer): `step done` for one reverted the other's files. STATE.md edits only on main (taskgit reverts them in task branches). Owner granted architect write on docs/LLD-phase2.md (.devteam/scopes.json). README run order (db:migrate → admin init) verified on scratch PGlite. approve needs PORT set to avoid 8000 collisions.
 - PAUSED 2026-11-23 14:39 +05:30. Phase 2 M3: 11/13 done (T-13..T-21, T-01b, T-02b, T-19, T-20, T-21 approved). In flight: T-10b (wip/T-10b) — owner approved "fix last-admin race, then approve"; race fixed + tests done; sync failed on the order-dependent T-21 first-run e2e. The debugger's fix was REVERTED by the scope check (e2e files are tester-owned, not debugger). Restart a fresh tester step `fix-e2e-order` (brief: apply .results/T-10b/debug-sync-debugger.md fix + FirstRunCard unit test, check.sh twice), then `taskgit sync` (PORT=8010), record + approve with no new card. Then T-05b.
 - Lesson: route e2e/test fixes to the tester, not the debugger (debugger scope excludes tests/e2e and tests/support). Owner meeting brief published: https://claude.ai/artifact/X52xXkAVNinb4uaW5XuhfY (meeting/psf-owner-brief.html outside the repo).
 - PAUSED 2026-11-22 21:08 +05:30. Phase 2 (CR-1) build: M3 4/13 done (T-13, T-14, T-15, T-16). In flight: T-17 (wip/T-17) — runner stopped during implement; restart with a fresh runner `Resume at: implement` and tell the backend-coder to inspect partial files first. Batch queue empty. Owner Neon setup done (branches production + dev, 0.25 CU). Role limits learned: tests → tester, gate files → env-setup, docs/** → docs, .env* → Orchestrator with owner OK.
