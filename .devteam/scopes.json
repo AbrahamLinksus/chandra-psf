@@ -1,5 +1,5 @@
 {
-  "_comment": "Root-level Next.js app (src/, scripts/, tests/). Adds the Playwright config to the gate files code-writing roles may not change. CR-1 phase 2: server code lives in src/server/**, src/app/api/**, src/proxy.ts, drizzle/** and the maintainer scripts; the default backend_dirs glob (server/**) does not match src/server, so the frontend coder is denied them explicitly (LLD-phase2 \u00a715.2). M3 (owner-approved 2026-11-24): architect may also write docs/LLD-phase2.md, the phase-2 design doc.",
+  "_comment": "Root-level Next.js app (src/, scripts/, tests/). Adds the Playwright config to the gate files code-writing roles may not change. CR-1 phase 2: server code lives in src/server/**, src/app/api/**, src/proxy.ts, drizzle/** and the maintainer scripts; the default backend_dirs glob (server/**) does not match src/server, so the frontend coder is denied them explicitly (LLD-phase2 §15.2). M3 (owner-approved 2026-11-24): architect may also write docs/LLD-phase2.md, the phase-2 design doc. D-40 (owner-approved 2026-11-24): the M3 grant used write_add, which the scope guard ignores; architect now has an explicit write list = plugin defaults + docs/LLD-phase2.md.",
   "agents": {
     "frontend-coder": {
       "deny": [
@@ -21,7 +21,15 @@
       "deny": ["playwright.config.*"]
     },
     "architect": {
-      "write_add": ["docs/LLD-phase2.md"]
+      "write": [
+        "docs/LLD.md",
+        "docs/CONVENTIONS.md",
+        "docs/ARCHITECTURE.md",
+        "docs/WALKTHROUGH.md",
+        ".devteam/**",
+        ".results/**",
+        "docs/LLD-phase2.md"
+      ]
     }
   }
 }

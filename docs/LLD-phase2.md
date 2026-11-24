@@ -1,7 +1,7 @@
 # Low-level design — phase 2 (production) · §15–§27
 
 > Continues `docs/LLD.md` (phase-1 §0–§14 keep their numbers). Same rules: numbered self-contained sections, stable numbers, one fact in one place. System view: `docs/HLD.md`. Product rules: `docs/SPEC.md`. Diagrams: `.results/lld/dataflow-phase2.mmd`, `.results/lld/schema-phase2.mmd`. Cap: 400 lines.
-> As-built sync: **M3** (2026-11-24). Sections tagged "(as-built M3)" match the merged code; untagged parts are still the design for M4/M5.
+> As-built sync: **M3** (2026-11-24), **M4** (2026-11-24, code since `37a3695`). Sections tagged "(as-built M3)" / "(as-built M4)" match the merged code; untagged parts are still the design for M5.
 > Phase-1 sections that phase 2 **replaces**: §2.5 → §17; §3, §4, §5 (local store, seed, local repos) → removed by §27; §7 `DemoRepo`, `signInAsDemo` → removed. Sections §1, §2, §6, §8–§14 stay valid and are **amended** by the contract changes in §17.2.
 
 ## §15 Phase-2 overview
@@ -22,7 +22,7 @@
 | §26 Setup, migrations, backup & restore | `scripts/admin.ts`, `scripts/migrate.ts`, restore procedure | §16, §18 | US-23, 32 |
 | §27 Demo removal | What is deleted, how the demo stays frozen | — | §0.1 |
 
-Milestones (HLD): **M3** §15–§19, §23, §26 setup · **M4** §20–§22 + §8/§9 screens · **M5** §24, §25, scoped §10–§14 screens, §26 restore, §27.
+Milestones (HLD): **M3** §15–§19, §23, §26 setup · **M4** §20–§22 + §8/§9 screens (+ §11 alerts server, §17.4) · **M5** §24, §25, scoped §10, §12–§14 screens, §26 restore, §27.
 
 ### §15.1 Stack additions (as-built M3)
 | Concern | Choice | Rejected alternative (why) |
@@ -37,32 +37,33 @@ Milestones (HLD): **M3** §15–§19, §23, §26 setup · **M4** §20–§22 + �
 | Scheduler | Vercel Cron, `vercel.json` | GitHub Actions schedule (extra account/secret) |
 | Rate limits | Postgres tables | Upstash Redis (extra account) |
 
-### §15.2 Folder structure (new / changed) (as-built M3; `*` = not built yet, lands M4/M5)
+### §15.2 Folder structure (new / changed) (as-built M4; `*` = not built yet, lands M5)
 ```
 src/proxy.ts                               §18.5 (auth redirect + CSP)
 src/app/api/rpc/[repo]/[method]/route.ts   §17.3 (only data door; calls handleRpc)
 src/app/api/cron/daily/route.ts *          §25
-src/app/account/ admin/{branches,branches/[id],advisors,customers}/   new pages (thin); privacy/ *
-src/features/{account,admin-branches}/     built; admin-customers/ * privacy/ *
+src/app/account/ admin/{branches,branches/[id],advisors,customers}/ privacy/   new pages (thin); f/[token]/, support/{,new}/ keep phase-1 paths
+src/features/{account,admin-branches,admin-alerts,support,feedback-form,privacy}/   built or rebuilt; admin-customers/ *
 src/server/                                server-only (`import "server-only"`; exemptions below)
-  env.ts  log.ts  ctx.ts  scope.ts  audit.ts  rateLimit.ts   tokens.ts * erasure.ts * csv.ts *
+  env.ts  log.ts  ctx.ts  scope.ts  audit.ts  rateLimit.ts  tokens.ts (M4)   erasure.ts * csv.ts *
   db/client.ts  db/schema/<table>.ts  db/schema/{index,enums,bytea}.ts
   auth/{password,session,cookies,stepUp}.ts
-  repos/<name>.ts            Server<Name>Repo, one file per §2 repo (+ userRules.ts, unavailable.ts stub helper)
+  repos/<name>.ts            Server<Name>Repo, one file per §2 repo (+ helpers userRules.ts §23, jobCardRules.ts §22, visitRows.ts §21, unavailable.ts stub)
   rpc/<name>.ts  rpc/index.ts   method table per repo; index lists them (frozen)
   rpc/{handler,context,args,types}.ts   transport core (§17.3)
   createServerDataAccess.ts  server composition root
   jobs/cleanup.ts *
-src/data/remote/{createRemoteDataAccess,rpcClient}.ts   client side; activity.ts * poller.ts * (§20)
+src/data/remote/{createRemoteDataAccess,rpcClient,activity,poller}.ts   client side (§17.3, §20)
 src/lib/signInUrl.ts                       safeNext / signInUrl (shared by RoleGuard + sign-in)
 src/domain/ + roles.ts jobCardInput.ts models.ts passwordPolicy.ts commonPasswords.ts retention.ts erasure.ts
 drizzle/0000_init.sql  drizzle/meta/**  drizzle.config.ts   scripts/{admin,migrate}.ts (golive-check.ts *)   vercel.json
 tests/unit/server/<area>/  tests/support/{pglite,serverCtx,e2e,fakeDataAccess}.ts  tests/e2e/global-setup.ts
 ```
-`server-only` exemptions (run under tsx scripts or shared with `proxy.ts`): `env.ts`, `auth/password.ts` (commented), `auth/cookies.ts`; `ctx.ts`, `scope.ts`, `auth/session.ts` lack it without a comment (known minor T-17).
+`server-only` exemptions (run under tsx scripts or shared with `proxy.ts`): `env.ts`, `auth/password.ts` (commented), `auth/cookies.ts`; `ctx.ts`, `scope.ts`, `auth/session.ts` and `repos/jobCardRules.ts` lack it without a comment (known minors T-17, T-03b). The planned `repos/linkAccess.ts` was folded into `repos/feedback.ts` (T-04b).
 
 ### §15.3 Layer map (dependency-cruiser additions, `severity: error`)
 `app/api → server → domain`; `server → data/access` (types + `Result` only); `app (pages) → features → … → data/access`; `data/remote → data/access, domain`. Composition roots: `src/app/providers.tsx` (client, only importer of `@/data/remote`), `src/server/createServerDataAccess.ts` (server, only importer of `src/server/repos`).
+
 | Rule | From | Forbidden to |
 |---|---|---|
 | server-hidden | `^src/(features\|components\|hooks\|data)` and `^src/app/(?!api/)` | `^src/server` |
@@ -70,6 +71,7 @@ tests/unit/server/<area>/  tests/support/{pglite,serverCtx,e2e,fakeDataAccess}.t
 | remote-hidden | `^src/(features\|components\|hooks)`, `^src/app/(?!providers)` | `src/data/remote` |
 | repos-via-root | `^src/(?!server/createServerDataAccess)` | `^src/server/repos` (also `src/app/api`) |
 | domain-pure, access-pure, no-cross-feature, shared-no-features, no-circular | unchanged (§0.3); `access-pure` also forbids `src/server` | |
+
 `local-hidden` is deleted with `src/data/local` (§27). ESLint: `no-restricted-imports` of `next/headers`, `@neondatabase/serverless`, `drizzle-orm*`, `@node-rs/argon2` outside `src/server/**`, `scripts/**`; `react/no-danger` error everywhere.
 
 ### §15.4 Packages (Tier 1, versions from research 2026-11-22; env-setup pins exact)
@@ -82,20 +84,23 @@ tests/unit/server/<area>/  tests/support/{pglite,serverCtx,e2e,fakeDataAccess}.t
 | drizzle-kit (dev) | 0.31.11 | MIT | SQL migration generation | Prisma Migrate |
 | @electric-sql/pglite (dev) | latest 0.x (unverified; env-setup pins) | Apache-2.0 / PostgreSQL (unverified) | Postgres in-process for unit tests, e2e, local dev | Docker Postgres |
 | **removed:** exceljs (dev) | — | — | seed pipeline gone (§27) | — |
+
 Unchanged toolkit (§0.4): next 16, react 19, zod 4, TanStack Query 5, vitest, playwright, dependency-cruiser, eslint, prettier, tsx, gitleaks. Not added: next-auth, better-auth, Redis, CSV/date libraries.
 
-### §15.5 Env vars (as-built M3) (`src/config/env.ts` public · `src/server/env.ts` server-only, lazy `getServerEnv()`; both zod; `.env.example` documents all)
+### §15.5 Env vars (as-built M4) (`src/config/env.ts` public: **plain checks, no zod** (D-34: zod's eval-style probe is blocked by the strict CSP on client pages; still the only `process.env` reader on the client side) · `src/server/env.ts` server-only, lazy `getServerEnv()`, zod; `.env.example` documents all)
 | Key | Side | Required | Example | Use |
 |---|---|---|---|---|
 | `DATABASE_URL` | server | yes | `postgresql://…-pooler…/psf?sslmode=require` · local `pglite:./.pglite` | app connection (pooled) |
 | `DATABASE_URL_UNPOOLED` | scripts | migrate/admin; as built also required at runtime when `VERCEL_ENV=production` (review m-8: to drop) | `postgresql://…/psf` | migrations, maintainer scripts |
 | `CRON_SECRET` | server | yes (prod, 32+ chars) | 32+ random chars | §25 bearer |
 | `IP_HASH_PEPPER` | server | yes (prod, 32+ chars) | 32 random bytes b64 | HMAC of client IP in limit tables (unset in dev/tests → per-process random pepper) |
-| `APP_URL` | server | yes (prod, must be `https://`) | `https://chandra-psf-prod.vercel.app` | base of `/f/<code>` links (custom domain later = change this). Server-only: the phase-1 public key `NEXT_PUBLIC_APP_URL` is gone (row below); docs still naming it are stale |
+| `APP_URL` | server | yes (prod, must be `https://`) | `https://chandra-psf-prod.vercel.app` | base of `/f/<code>` links (`linkUrl`, §21; unset in dev/tests → `http://localhost:3000`). Server-only: the phase-1 public key `NEXT_PUBLIC_APP_URL` is gone (row below); docs still naming it are stale |
 | `AUTH_HASH_TIMING` | server | no (off) | `1` | opt-in: `1` writes one `{"evt":"auth.hash_timing","op","ms"}` line to stderr per argon2 hash/verify (§18.1, D-29). Read live by `isHashTimingEnabled()` in `src/server/env.ts`, not part of the zod schema or the cache |
-| `NEXT_PUBLIC_POLL_SECONDS` | public | no (30) | `30` | §20 cadence |
-| `NEXT_PUBLIC_COMPANY_NAME` · `_PRIVACY_PHONE` · `_PRIVACY_EMAIL` · `_DEALER_PHONE` | public | yes | placeholders until gate | notice, `/privacy`, link-state pages |
+| `NEXT_PUBLIC_POLL_SECONDS` | public | no (30) | `30` | §20 cadence; exported as `POLL_SECONDS`: missing, empty, non-numeric or ≤ 0 → 30 (fractional values accepted: known minor T-22s) |
+| `NEXT_PUBLIC_DEALER_PHONE` | public | yes (non-empty check; dev fallback) | `+91 44 0000 0000` | link-state pages, WhatsApp text |
+| `NEXT_PUBLIC_COMPANY_NAME` · `_PRIVACY_PHONE` · `_PRIVACY_EMAIL` | public | yes | placeholders until gate | notice, `/privacy`, link-state pages, read via `src/config/env.ts` (D-37). **Known gap:** as of M4 the notice and `/privacy` use placeholder constants in `src/features/{feedback-form,privacy}/contact.ts` (duplicated, T-04b); fixed by T-36 |
 | ~~`NEXT_PUBLIC_DEMO_PASSWORD`~~, ~~`NEXT_PUBLIC_APP_URL`~~ | — | removed | — | §27; links now built on the server |
+
 Non-production fallback (§0.5) kept for public keys; server keys have **no** fallback except `DATABASE_URL` → `pglite:memory` in tests.
 
 ## §16 Database (as-built M3)
@@ -110,7 +115,7 @@ Non-production fallback (§0.5) kept for public keys; server keys have **no** fa
 | `users` | id, name, email, password_hash, role `role_enum(support,branch_admin,main_admin)`, branch_id → branches null, active, must_set_password, otp_expires_at null, last_sign_in_at, created_at, updated_at | unique `lower(email)`; check `(role='main_admin') = (branch_id is null)` |
 | `sessions` | id_hash bytea PK (SHA-256 of token), user_id → users cascade, created_at, last_active_at | idx user_id |
 | `login_attempts` | id bigserial, email_key text, ip_hash bytea, at, kind `('signin','stepup')`, user_id null | idx (email_key, at), (ip_hash, at), (user_id, at) |
-| `rate_limits` | bucket text, key bytea, window_start timestamptz, count int | PK (bucket, key, window_start) |
+| `rate_limits` | bucket text, key bytea, window_start timestamptz, count int | PK (bucket, key, window_start). Buckets as built: `rpc_public` (key = HMAC of IP), `open` / `submit` (key = SHA-256 of the link code, §21) |
 | `advisors` | id, branch_id, name, active, created_at | unique (branch_id, lower(name)) |
 | `job_cards` | id, branch_id, job_card_no (display), job_card_key (normalised), customer_name null, phone null, phone_key null (10 digits), reg_no null, reg_no_key null, model, vehicle_type, service_type, service_date, advisor_id, created_by, create_request_id uuid null, created_at, updated_at, erased_at null | unique (branch_id, job_card_key); unique create_request_id; idx phone_key, reg_no_key, (branch_id, service_date) |
 | `visits` | id, job_card_id, branch_id (copy for scope), created_by → users, created_at, expires_at, opened_at, completed_at, cancelled_at, replaced_by → visits null | idx (branch_id, created_at desc), job_card_id |
@@ -120,11 +125,12 @@ Non-production fallback (§0.5) kept for public keys; server keys have **no** fa
 | `alerts` | id, response_id unique cascade, branch_id, reasons jsonb, status `alert_status`, notes jsonb `[{at,by,text}]`, created_at, updated_at, version | idx (branch_id, status) |
 | `audit_log` | id bigserial, at, actor_id null (null = system), actor_name, branch_id null, action text, entity_type, entity_id, old_value jsonb, new_value jsonb, note | idx (branch_id, id desc), (action, id desc); trigger `audit_log_guard`: no DELETE, no TRUNCATE; UPDATE only of old/new/note when `current_setting('psf.redact', true) = 'on'` (§24) |
 | `erasure_journal` | job_card_id, erased_at, source `('request','retention')` | PK (job_card_id); no personal data |
+
 Answers are one `jsonb` per response (not one row per answer): analytics loads whole responses; `toAnswerRows` (§1.1) stays unused. Diagram: `.results/lld/schema-phase2.mmd`.
 
 ### §16.2 Migrations
 - `drizzle-kit generate` → `drizzle/NNNN_<name>.sql` + `drizzle/meta/_journal.json` (shared file: **migrations are serial**, never two tasks at once). The foundation writes the whole schema as `0000_init.sql` plus hand-added SQL for the audit trigger and partial index.
-- Applied by `scripts/migrate.ts` (`drizzle-orm/neon-serverless/migrator`, `DATABASE_URL_UNPOOLED`; a `pglite:` URL uses the PGlite migrator instead, for local dev and e2e): Vercel build command `pnpm db:migrate && next build` (Preview → Neon `dev` branch, Production → `main`). Forward-only, additive first (expand → deploy → contract).
+- Applied by `scripts/migrate.ts` (`drizzle-orm/neon-serverless/migrator`, `DATABASE_URL_UNPOOLED`; a `pglite:` URL uses the PGlite migrator instead, for local dev and e2e): Vercel build command `pnpm db:migrate && next build` (Preview → Neon `dev` branch, Production → `main`). Forward-only, additive first (expand → deploy → contract). M4 added no migration.
 
 ## §17 Server data access
 
@@ -135,23 +141,35 @@ Server repos implement the **same §2 interfaces** (amended in §17.2): `class S
 | Where | Change |
 |---|---|
 | §1.1 `Role` | `'support' \| 'branch_admin' \| 'main_admin'`; `roles.ts`: `isAdmin(role)`, `isMainAdmin(role)` (replaces `role === 'admin'` in §6 `RoleGuard`, §7 `landingPath`, §8 `useLinkActions`) |
-| §1.1 types | `User` + `branchId \| null`, `branchName \| null`, `lastSignInAt`; new `Branch { id; name; city; active; createdAt }`; `Advisor` + `branchId`, `active`; `JobCard` + `id`, `branchId`, `erasedAt`, `customerName/regNo: string \| null`, `phone` lives here; `Visit` − `token`, − `phone`, `jobCardNo` → `jobCardId`, + `branchId`; `Filters` + `branchId?`; `AuditEntry` + `branchId`, `actorId: string \| null`; `AlertView`/`ResponseDetail` + `branchName`, `version` |
+| §1.1 types | `User` + `branchId \| null`, `branchName \| null`, `lastSignInAt`; new `Branch { id; name; city; active; createdAt }`; `Advisor` + `branchId`, `active`; `JobCard` + `id`, `branchId`, `erasedAt`, `customerName/regNo: string \| null`, `phone` lives here; `Visit` − `token`, − `phone`, `jobCardNo` → `jobCardId`, + `branchId`; `Filters` + `branchId?`; `AuditEntry` + `branchId`, `actorId: string \| null`; `AlertView`/`ResponseDetail` + `branchName`, `version`. **As built M4:** domain `JobCard` and `Visit` (`src/domain/types.ts`) are still the phase-1 shapes; the new fields live on the access types (`JobCardView` + `id`, §22; `VisitSummary` + `jobCardId`, nullable `customerName`/`regNo`, §21); no `branchId`/`erasedAt` on `JobCard` yet. **Known gap** until M5: aligned with this row together with erasure (T-25, D-38) |
 | §1.1 `AuditAction` | + `auth.sign_in`, `auth.lockout`, `user.update`, `user.reset_password`, `user.change_password`, `user.otp_reissue`, `user.recover`, `jobcard.create`, `jobcard.update`, `link.resend`, `branch.create/update/deactivate/reactivate`, `advisor.create/update/deactivate/reactivate`, `customer.export`, `customer.erase`, `response.purge`, `system.cleanup` |
 | §2.1 | `ErrorCode` + `RATE_LIMITED`, `OTP_EXPIRED`, `NAME_IN_USE`; `Topic` + `branches`, `advisors` |
 | §2.2 `DataAccess` | − `demo`; + `branches: BranchRepo`, `advisors: AdvisorRepo` (§23), `customers: CustomerRepo` (§24) |
 | §7 `AuthRepo` | − `signInAsDemo`; + `changePassword(current, next): Result<void>` (BAD_PASSWORD, VALIDATION); `signIn` + RATE_LIMITED, OTP_EXPIRED; `setOwnPassword` only while `mustSetPassword` |
-| §8 | see §21, §22: `listMyVisits` → `listVisits`, link issue returns `LinkIssued`, + `resendLink`, job card create/update, − `listFreshJobCards`, `VisitSummary` − `url`/`whatsappUrl`/`isMine` → + `createdByName`, `mine` |
-| §9 `FeedbackRepo` | `submitResponse(token, answers, submissionId: string)`; FormContext unchanged (+ `rate_limited` state) |
+| §8 | see §21, §22: `listMyVisits` → `listVisits`, link issue returns `LinkIssued`, + `resendLink`, job card create/update, − `listFreshJobCards`, `VisitSummary` − `url`/`whatsappUrl`/`isMine` → + `createdByName`, `mine`. **As built M4:** all done except `listFreshJobCards`, still in `JobCardRepo` and the registry as an `unavailable()` stub (known minor T-01b) |
+| §9 `FeedbackRepo` | `submitResponse(token, answers, submissionId: string)`; FormContext unchanged (+ `rate_limited` state). **As built M4:** `submissionId?: string` is **optional** in `src/data/access/repos/feedback.ts` (only for old tests; the server then makes one up, no retry protection; RPC input = 2- or 3-tuple, third `z.uuid()`); known minor T-04b: make it required |
 | §10 | `getFilterOptions(f?: { branchId? })` → + `branches: Branch[]` (main admin only), advisors carry branch name |
-| §11 | `listAlerts({ status?, branchId? })`; `updateAlert(id, patch, version)` → CONFLICT "Someone else changed this alert. Reload to see the latest." |
+| §11 | `listAlerts({ status?, branchId? })`; `updateAlert(id, patch, version)` → CONFLICT "Someone else changed this alert. Reload to see the latest." **As built M4** (§17.4); `version` required, int ≥ 1 in the RPC |
 | §12 | `editResponse(id, answers, version, s)` (CONFLICT); list/detail/deleted rows + `branchName`; `DeletedRow` + `purgeOn` |
-| §13 | `listAudit({ action?, branchId?, before?: string, limit?: number })` → `{ entries; nextCursor: string \| null }` (page 100) |
+| §13 | `listAudit({ action?, branchId?, before?: string, limit?: number })` → `{ entries; nextCursor: string \| null }` (page 100). As of M4 `ServerAuditRepo.listAudit` is still an `unavailable()` stub (T-09b, M5) |
 | §14 | see §23 `UserRepo` |
 
-### §17.3 RPC transport (as-built M3)
-- **Client** (`src/data/remote/`): `createRemoteDataAccess({ fetch, activity, poller, onUnauthenticated }): DataAccess` builds each repo as a `Proxy` whose any method `m` calls `rpc(deps, repo, m, args)`; `rpcClient.ts` `rpc()` → `POST /api/rpc/<repo>/<m>` body `{ args }`, headers `content-type: application/json`, `x-psf-active: 1|0` (§20); network or parse failure → `SAVE_FAILED`/`UNAVAILABLE` per the method kind; response is the `Result` JSON. As built the client's kind comes from `kindOf(method)` (name starts `get|list|count|current` → read), not from the registry (known minor T-18). `UNAUTHENTICATED` → `onUnauthenticated` → `invalidateQueries(SESSION_KEY)` → `RoleGuard` → `signInUrl(path, ended)` = `/sign-in?ended=1&next=<path>` ("Your session has ended. Sign in again."; `safeNext` in `src/lib/signInUrl.ts` accepts only same-origin relative paths). `providers.tsx` passes placeholder `activity` (always active) and `poller` (no-op) until §20 lands (M4).
-- **Registry** (`src/server/rpc/<repo>.ts`, one per repo; arg schemas in `rpc/args.ts`, `RpcEntry`/`RpcTable` in `rpc/types.ts`): `export const visitsRpc = { listVisits: { kind: 'read', access: 'staff', input: z.tuple([...]) }, … } satisfies RpcTable<VisitRepo>`; `rpc/index.ts` `rpcTables` maps repo name → table (frozen), `findRpcEntry(repo, method)` uses own-property lookups only. **`access: 'public'` as built:** `auth.signIn`, `auth.signOut`, `auth.currentUser`, `feedback.*` (`getVisitByToken`, `markOpened`, `submitResponse`). `signOut` is public on purpose (deviation from the design list): an ended or expired session must still be able to clear its cookie; it only deletes the caller's own session row. `signInAsDemo` is gone from `AuthRepo` and the registry (§27). Built repos (M3): `auth`, `branches`, `advisors`, `users`; every other repo is a `ServerXRepo` whose methods return `unavailable()` (`repos/unavailable.ts`, "Not available yet.") and whose registry still holds the phase-1 method shapes (e.g. `jobCards.listFreshJobCards`) until its M4/M5 task rebuilds it.
+### §17.3 RPC transport (as-built M3; client wiring as-built M4)
+- **Client** (`src/data/remote/`): `createRemoteDataAccess({ fetch, activity, poller, onUnauthenticated }): DataAccess` builds each repo as a `Proxy` whose any method `m` calls `rpc(deps, repo, m, args)`; `rpcClient.ts` `rpc()` → `POST /api/rpc/<repo>/<m>` body `{ args }`, headers `content-type: application/json`, `x-psf-active: 1|0` (`activity.isActive()`, §20); network or parse failure → `SAVE_FAILED`/`UNAVAILABLE` per the method kind; response is the `Result` JSON. As built the client's kind comes from `kindOf(method)` (name starts `get|list|count|current` → read), not from the registry (known minor T-18). `UNAUTHENTICATED` → `onUnauthenticated` → `invalidateQueries(SESSION_KEY)` → `RoleGuard` → `signInUrl(path, ended)` = `/sign-in?ended=1&next=<path>` ("Your session has ended. Sign in again."; `safeNext` in `src/lib/signInUrl.ts` accepts only same-origin relative paths). Since M4 `providers.tsx` passes the real `createActivityTracker({ target: window })` and `createPoller({ activity, pollSeconds: POLL_SECONDS, doc: document, getPathname, hasStaffSession })` (§20); both are built only in the browser.
+- **Registry** (`src/server/rpc/<repo>.ts`, one per repo; arg schemas in `rpc/args.ts`, `RpcEntry`/`RpcTable` in `rpc/types.ts`): `export const visitsRpc = { listVisits: { kind: 'read', access: 'staff', input: z.tuple([...]) }, … } satisfies RpcTable<VisitRepo>`; `rpc/index.ts` `rpcTables` maps repo name → table (frozen), `findRpcEntry(repo, method)` uses own-property lookups only. **`access: 'public'` as built:** `auth.signIn`, `auth.signOut`, `auth.currentUser`, `feedback.*` (`getVisitByToken`, `markOpened`, `submitResponse`). `signOut` is public on purpose (deviation from the design list): an ended or expired session must still be able to clear its cookie; it only deletes the caller's own session row. `signInAsDemo` is gone from `AuthRepo` and the registry (§27). Built repos: **M3** `auth`, `branches`, `advisors`, `users`; **M4** `jobCards` (§22), `visits` (§21), `feedback` (§21), `alerts` (§17.4). Still `unavailable()` stubs (`repos/unavailable.ts`, "Not available yet.") until their M5 task: `analytics`, `responses`, `audit`, `customers`, and `jobCards.listFreshJobCards` (phase-1 shape kept in the registry).
 - **Route** `POST /api/rpc/[repo]/[method]` (`runtime` default Node; `dynamic = 'force-dynamic'`), entry point `handleRpc(request, { repo, method })` in `src/server/rpc/handler.ts`: (1) `Origin` host must equal request host (else 403) and content-type JSON; (2) look up table entry (unknown → 404); (3) zod-parse args (→ `VALIDATION`); (4) `base = await buildBaseCtx(request)` (`src/server/rpc/context.ts`; `ip = clientIp(headers)`: first `X-Forwarded-For` entry, else `x-real-ip`, else `"unknown"`, known minor T-18), then `ctx = await withSession(base, request, kind)` reads the session once (§18.2; no cookie → no DB hit) and touches it when `kind === 'write'` or `x-psf-active: 1`; (5) per-IP flood limit 300/h (`hitIpLimit`, `PUBLIC_FLOOD_BUCKET`, `PUBLIC_FLOOD_LIMIT_PER_HOUR` in `src/server/rateLimit.ts`) on public methods **only when `ctx.session` is null**: a valid staff session skips it (D-32, T-34s; staff sharing one branch connection never trip it); a forged, expired or ended cookie reads as no session and is counted (cost: one indexed session lookup); over the limit → `RATE_LIMITED` "Too many requests. Try again later."; `hitIpLimit(ctx, { bucket, limit, windowMs? = 1 h })` is a fixed-window upsert on `rate_limits` keyed by `hashIp(ip)` = HMAC-SHA256 with `IP_HASH_PEPPER`; (6) staff method without session → `UNAUTHENTICATED` "Your session has ended. Sign in again." (HTTP 200 with Result); (7) `createServerDataAccess(ctx)[repo][method](...args)` (method missing on the repo → `UNAVAILABLE`); steps 4–7 are wrapped in `guard` (§17.1); (8) `Cache-Control: no-store`. Always HTTP 200 with a `Result` except 403/404 above.
+
+### §17.4 Alerts repo (server side of §11: `repos/alerts.ts`, `rpc/alerts.ts`) (as-built M4)
+```ts
+interface AlertView extends Alert { customerName; phone: string | null; model; regNo; reasonsText; branchName: string; version: number }
+interface AlertRepo { listAlerts(f?: { status?: AlertStatus; branchId?: string }): Result<AlertView[]>;  countOpen(): Result<number>;
+  updateAlert(id, patch: { status?: AlertStatus; note?: string }, version: number): Result<AlertView> }
+```
+- All methods `requireAdmin` (support → FORBIDDEN) and scope by `branchFilter(alerts.branch_id, scope, f.branchId)`: `branchId` narrows only for the main admin; a branch admin always gets their own branch. Alerts of deleted responses are excluded everywhere.
+- `listAlerts`: newest first, optional `status`; at most `LIST_LIMIT` 500 newest (silent truncation; known minor T-07b: move to `src/domain/constants.ts`, page or say "showing 500 newest"). `countOpen`: open alerts in scope.
+- Erased customer (`job_cards.erased_at` set) or null name → `customerName` "Erased customer", `phone` null, `regNo` "", `notes` [].
+- `updateAlert`: no status and blank note → VALIDATION "Choose a new status or type a note."; not a UUID, not found, out of scope or deleted response → NOT_FOUND "That alert no longer exists."; in one transaction: `version` ≠ stored → CONFLICT "Someone else changed this alert. Reload to see the latest."; same status and no note → ok, no write; else `UPDATE alerts SET status, notes (+ {at, by: user name, text}), updated_at, version = version + 1 WHERE id = ? AND version = <read>` (0 rows → the same CONFLICT); audit on the alert's branch: `alert.status` (`old {status}` → `new {status}`, with the note) when the status moved, else `alert.note` (note only). No row lock on the response (known minor T-07b).
+- Screen `src/features/admin-alerts/` (§11): `AlertBranchFilter` (main admin's branch choice), `useAlertEditor` sends the row's `version` and, after CONFLICT, refetches while keeping the typed note.
 
 ## §18 Auth & sessions
 - **Paths:** `src/server/auth/{password,session,cookies,stepUp}.ts`, `src/server/repos/auth.ts`, `src/proxy.ts`; screens §7 (+ `src/features/account/` My account, change password).
@@ -168,6 +186,7 @@ Server repos implement the **same §2 interfaces** (amended in §17.2): `class S
 | Touch | `last_active_at = now` when the request is a write or flagged active, at most once per 60 s |
 | End | sign-out (this session); deactivate, reset password, role/branch change (all of that user's); change own password (all others) |
 | API | `insertSession(tx, clock, userId): token` (row only, no cookie), `createSession(ctx, userId): sessionId` (insert + set cookie), `deleteSessionByToken(tx, token)`, `readSession(ctx): SessionInfo \| null` (never writes; §17.1 shape), `touchSession(ctx, info): boolean`, `endSession(ctx)` (delete own row + clear cookie), `endUserSessions(tx, userId, exceptId?)`, `idleLimitMs(role)`, `hashToken`, `TOUCH_INTERVAL_MS` |
+
 `SessionCookies` interface (`get/set/clear`, in `ctx.ts`) is implemented by `createNextSessionCookies(store, production)` over `next/headers` `cookies()` in `buildBaseCtx` (§17.3) and by a fake in tests; `clear` writes an empty value with Max-Age 0.
 
 ### §18.3 Sign-in sequence (`ServerAuthRepo.signIn`) (as-built M3)
@@ -180,16 +199,18 @@ Other `ServerAuthRepo` methods: `setOwnPassword` (only while `mustSetPassword`, 
 ### §18.5 Proxy (`src/proxy.ts`, Next 16: renamed middleware, Node runtime, no `runtime` export) (as-built M3)
 `export function proxy(req)`: matcher = every page `/((?!api|_next/static|_next/image|favicon.ico).*)`, `missing` the prefetch headers (`next-router-prefetch`, `purpose: prefetch`). Protected paths (`/admin/**`, `/support/**`, `/account`, `/set-password`) without a session cookie (`__Host-psf_session` or `psf_session`) → redirect `/sign-in?next=<path+query>`. Never reads the DB; not a security boundary: every RPC (§17.3) and `RoleGuard` re-verify. `/api/*` is outside the matcher.
 **CSP (T-31s, D-31):** every other page response gets `Content-Security-Policy` from `export buildCsp(nonce, isDev)` (`isDev` = `isDevelopment` from `src/config/env.ts`): per-request nonce (base64 of `crypto.randomUUID()`), also passed to Next as request headers `x-nonce` + CSP. Redirects and prefetches (outside the matcher) carry no CSP; `/api/*` gets none (JSON only).
+
 | Directive | Value |
 |---|---|
 | `script-src` | `'self' 'nonce-<n>' 'strict-dynamic'` (+ `'unsafe-eval'` dev only) |
 | `style-src` / `style-src-elem` | `'self' 'nonce-<n>'` / same + `SONNER_STYLE_HASHES` (sonner's two runtime `<style>` tags; re-derive on sonner upgrade) |
 | `style-src-attr` | `'unsafe-inline'` (React `style=` props; nonces cannot cover attributes) |
 | other | `default-src 'self'`, `img-src 'self' data: blob:`, `font-src 'self'`, `connect-src 'self'` (dev + `ws: wss:`), `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` |
-- **All pages dynamic:** `src/app/layout.tsx` calls `await connection()` so Next can stamp the nonce on its scripts (no static/ISR/CDN pages; cost accepted, D-31). The layout's `beforeInteractive` script `csp-style-nonce` sets `window.__webpack_nonce__` from the first nonced script, for Radix scroll-lock `<style>` tags. `tests/e2e/foundation/csp.spec.ts` fails on any violation.
+
+- **All pages dynamic:** `src/app/layout.tsx` calls `await connection()` so Next can stamp the nonce on its scripts (no static/ISR/CDN pages; cost accepted, D-31). The layout's `beforeInteractive` script `csp-style-nonce` sets `window.__webpack_nonce__` from the first nonced script, for Radix scroll-lock `<style>` tags. `tests/e2e/foundation/csp.spec.ts` fails on any violation. Because no `'unsafe-eval'` is allowed in production, client-loaded modules must not use eval-style probes (why `src/config/env.ts` dropped zod, D-34).
 - Static headers stay in `next.config.ts` (all paths): `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`; `robots` noindex in the layout metadata.
 
-## §19 Scope & roles (`src/server/scope.ts`, domain `roles.ts`) (as-built M3)
+## §19 Scope & roles (`src/server/scope.ts`, domain `roles.ts`) (as-built M3; table as-built M4)
 ```ts
 type Scope = { kind: 'all' } | { kind: 'branch'; branchId: string };   // declared in ctx.ts, re-exported
 scopeOf(user): Scope;                                    // main_admin → all; branch user with no branch → throws (guard → error Result)
@@ -198,47 +219,65 @@ branchFilter(col, scope, wanted?: string): SQL | undefined   // wanted only hono
 inScope(scope, branchId: string | null): boolean         // single-row checks → else NOT_FOUND
 ```
 Messages: UNAUTHENTICATED "Your session has ended. Sign in again.", FORBIDDEN "You can't do that.".
+
 | Repo area | support | branch_admin | main_admin |
 |---|---|---|---|
-| job cards, visits, links | own branch | own branch | all (no support screens; allowed) |
+| job cards, visits, links | own branch; any link of the branch (D-35) | own branch | all branches (no support screens; allowed); **creating** a job card needs a branch → FORBIDDEN (§22, D-39) |
 | analytics, alerts, responses, deleted, audit | FORBIDDEN | own branch | all + filter |
 | users | FORBIDDEN | support users of own branch | all except self edit of role/branch |
 | advisors | list own branch (active) | manage own branch | all |
 | branches | own (read) | own (read) | manage |
 | customers | FORBIDDEN | FORBIDDEN (G-4) | all |
+
 Audit rows carry the branch of the entity; user/branch/advisor admin actions carry the target's branch.
 
-## §20 Live refresh (`src/data/remote/activity.ts`, `poller.ts`)
-- `ActivityTracker`: listens `pointerdown`, `keydown`, `scroll` (passive); `lastInputAt`; `isActive(now, ms)`. Header `x-psf-active: 1` when input within 60 s.
-- `Poller` backs `DataAccess.subscribe`: every `POLL_SECONDS` while `document.visibilityState === 'visible'` and input within 15 min → emit all staff topics; on `visibilitychange` → visible, or first input after > 15 min idle → emit at once. Does not run on `/f/*`, `/privacy`, `/sign-in` (pathname check) or without a staff session.
-- `providers.tsx`: QueryClient `refetchOnWindowFocus: false` (the poller owns refresh), `retry: false`; the form query uses `staleTime: Infinity` so it never re-counts as an open. As of M3 the tracker and poller are placeholders in `providers.tsx` (§17.3); this section lands in M4.
+## §20 Live refresh (`src/data/remote/activity.ts`, `poller.ts`) (as-built M4)
+- `createActivityTracker({ target, now? }): ActivityTracker` listens `pointerdown`, `keydown`, `scroll` (passive) on `window`. `isActive(withinMs = ACTIVE_HEADER_MS 60 s)`: a real input within 60 s (page load does **not** count) → `x-psf-active: 1` on every RPC (§17.3), which lets the server touch the session (§18.2). `isInUse(withinMs = IDLE_MS 15 min)`: input, or page load, within 15 min. `onResume(listener)`: fires on the first input after > 15 min without one; returns an unsubscribe. `dispose()`.
+- `createPoller({ activity, pollSeconds, doc, getPathname, hasStaffSession }): Poller { subscribe(listener) }` backs `DataAccess.subscribe`: the interval, the `visibilitychange` listener and the `onResume` hook start with the first subscriber and stop with the last. A tick, a visibility change or a resume emits all `STAFF_TOPICS` (`session, visits, responses, alerts, audit, users, branches, advisors`) only when `document.visibilityState === 'visible'`, `isInUse(15 min)`, the path is not `/f`, `/privacy`, `/sign-in` (or below them) and `hasStaffSession()` (in `providers.tsx`: the cached `SESSION_KEY` query is ok with a non-null user). `useLiveInvalidation` turns topics into query invalidations.
+- Cadence `POLL_SECONDS` (`src/config/env.ts`, §15.5). Known minors T-22s: fractional seconds accepted; `DEFAULT_POLL_SECONDS` 30 is defined twice (`env.ts` private, `poller.ts` exported) instead of in `src/domain/constants.ts`.
+- `providers.tsx`: QueryClient `retry: false`, `refetchOnWindowFocus: false` (the poller owns refresh). The public form's context is **not** a TanStack query with `staleTime: Infinity` as designed but a one-shot effect `useFormContext(token)` (`src/features/feedback-form/useFormContext.ts`) that never follows invalidation: same intent (one load, the thank-you screen stays after submit).
 
-## §21 Links & public form (server: `repos/visits.ts`, `repos/feedback.ts`, `tokens.ts`)
+## §21 Links & public form (server: `repos/visits.ts` + `repos/visitRows.ts`, `repos/feedback.ts`, `tokens.ts`) (as-built M4)
 ```ts
 interface LinkIssued { visit: VisitSummary; url: string; whatsappUrl: string | null }   // the only time the code leaves the server
 interface VisitSummary { id; jobCardId; jobCardNo; customerName: string | null; regNo: string | null; model; serviceDate; phone: string | null;
-  status: VisitStatus; createdAt; expiresAt; createdByName: string; mine: boolean }
-interface VisitRepo { listVisits(q: { scope: 'mine' | 'branch'; search?: string }): Result<VisitSummary[]>;   // current links only, newest first, max 200
-  createVisitLink(i: { jobCardId: string }): Result<LinkIssued>;  // NOT_FOUND, ALREADY_COMPLETED, CONFLICT (current link exists), VALIDATION (erased)
-  resendLink(visitId): Result<LinkIssued>;       // new code, same visit + expiry; old token superseded; audit link.resend
-  regenerateLink(visitId): Result<LinkIssued>;   // new visit, 7 d; old.replaced_by; audit link.regenerate
-  cancelLink(visitId): Result<VisitSummary> }    // audit link.cancel
+  status: VisitStatus; createdAt; expiresAt; createdByName: string; mine: boolean }   // never the code, answers or ratings
+interface VisitRepo { listVisits(q: { scope: 'mine' | 'branch'; search?: string }): Result<VisitSummary[]>;
+  createVisitLink(i: { jobCardId: string }): Result<LinkIssued>;  resendLink(visitId): Result<LinkIssued>;
+  regenerateLink(visitId): Result<LinkIssued>;  cancelLink(visitId): Result<VisitSummary> }
 ```
-- `tokens.ts`: `newLinkCode(): { code: string /* 43 chars base64url of 32 bytes */; hash: Buffer }`, `hashCode(code)`. URL = `env.APP_URL + '/f/' + code`. Any branch support user may act (G-8); resend/regenerate/cancel on completed, cancelled or replaced → CONFLICT "This link can no longer be changed"; resend on expired → CONFLICT (use Regenerate).
-- `getVisitByToken(code)`: per-link limit `rate_limits('open', hash)` 30/h → `{ state: 'rate_limited' }`; lookup `link_tokens` by hash → none → `invalid`; superseded or visit `replaced_by` → `expired, replaced: true`; job card erased or visit cancelled → `invalid`; then `visitStatus`. Returns name, model, reg. no, service date, questionnaire of the current version.
-- `markOpened(code)`: `UPDATE visits SET opened_at = now WHERE id = ? AND opened_at IS NULL AND completed_at IS NULL` (called by client JS after render, so link-preview robots never set Opened).
-- `submitResponse(code, answers, submissionId)` (one transaction): per-link limit 5/h → `RATE_LIMITED`; resolve as above (expired → CONFLICT, invalid → NOT_FOUND); `UPDATE visits SET completed_at = now, opened_at = coalesce(opened_at, now) WHERE id = ? AND completed_at IS NULL AND cancelled_at IS NULL RETURNING`; 0 rows → if a response with the same `submission_id` exists → ok with its `callbackRequested` (G-15) else `ALREADY_COMPLETED`; `validateSubmission` (`VALIDATION`) → insert response → `evaluateAlertReasons` → alert + audit `alert.create` (actor system, visit's branch). `submissionId` is a UUID kept in the §9 draft (`draft.ts` gains it).
+- `tokens.ts`: `newLinkCode(): { code /* 43-char base64url of 32 bytes */; hash: Buffer /* SHA-256 */ }`, `hashCode(code)`, `linkUrl(code)` = `APP_URL` (trailing `/` stripped) + `/f/<code>`. `visitRows.ts`: `loadRecords(ctx, where, limit)` (visit + card + creator name, newest first), `summaryOf`, `issuedOf` (+ `url`, `buildWhatsAppUrl`), `currentSummary(ctx, jobCardId, userId)` (§22), `LIST_LIMIT` 200.
+- **Who (D-35, G-8):** every method `requireStaff` + branch scope (outside → NOT_FOUND); **any** staff user of the link's branch may resend, regenerate or cancel any link, not only its creator (the client no longer has `canManage`); the main admin acts on all branches. Link writes on one job card serialise on `pg_advisory_xact_lock(hashtext('link:<jobCardId>'))` (resend/regenerate/cancel read the visit, take the lock, re-read).
 
-## §22 Job cards (server: `repos/jobCards.ts`; domain `jobCardInput.ts`, `models.ts`)
+| Method | Rules in order (messages verbatim) | Audit (entity `visit`, its branch) |
+|---|---|---|
+| `listVisits` | current links only (`replaced_by` null); `mine` = created by me, `branch` = my branch (main admin: all); `search` → alnum upper-case `LIKE` on `job_card_key` / `reg_no_key`; newest first, max 200 | — |
+| `createVisitLink` | not a UUID / missing / out of scope → NOT_FOUND "That job card no longer exists."; erased → VALIDATION "This customer's data has been erased."; (lock) any completed visit → ALREADY_COMPLETED "Feedback already received"; a current, not cancelled visit (even expired: use Regenerate, D-39) → CONFLICT "A feedback link already exists for this job card."; else new visit, `expires_at = now + LINK_EXPIRY_DAYS` (7 d); a cancelled current visit gets `replaced_by` = new; new code | `link.create` |
+| `resendLink` | NOT_FOUND "That link no longer exists."; completed, cancelled or replaced → CONFLICT "This link can no longer be changed"; erased → VALIDATION (as above, D-35); past expiry → CONFLICT "This link has expired. Regenerate it instead."; new code, same visit and expiry, old codes superseded | `link.resend` |
+| `regenerateLink` | as resend, expired allowed; new visit 7 d, `old.replaced_by` = new, old codes superseded, new code | `link.regenerate` on the new visit, `new {replaced: oldId}` |
+| `cancelLink` | NOT_FOUND / CONFLICT as resend (no erased check); `cancelled_at = now`, codes superseded | `link.cancel` |
+
+- **Staff client** (§8 screens, `src/features/support/`): Generate = `useNewLink` `generateFn` saves a corrected phone with `updateJobCard` (audited `jobcard.update`) when the card is editable, then `createVisitLink`; CONFLICT → re-lookup. My links / All branch links = `useMyLinks` scope toggle → `listVisits({ scope, search })`. `useLinkActions(visit, issued, onCancelled)` (T-03d): a ref guard runs one action at a time (a fast second tap is dropped), `busy` disables the buttons, `retry` re-runs the last failed action; the URL is held in memory only after generate/resend/regenerate, so Copy works only then (known minor T-03c: expired or no-phone link shows no copy).
+- **Public form** (`repos/feedback.ts`; the planned `linkAccess.ts` helpers are folded in). Per-link limits: `hitLinkLimit(ctx, 'open' | 'submit', code, limit)` = fixed 1 h window on `rate_limits` keyed by `hashCode(code)`; local constants `OPEN_LIMIT_PER_HOUR` 30, `SUBMIT_LIMIT_PER_HOUR` 5 (known minor T-04b: move to `src/domain/constants.ts`; duplicates `hitIpLimit`). All three methods are `public`, so the per-IP flood limit 300/h (§17.3) also applies without a staff session. `resolveLink(code)`: no token → invalid; visit cancelled or card erased → invalid; completed → completed; token superseded or visit replaced → expired (replaced); past `expires_at` → expired; else ready.
+- `getVisitByToken(code)`: unknown code → `{ state: 'invalid' }` **without** a counter row; open limit hit → `{ state: 'rate_limited' }`; else the resolved state; ready → `{ visitId, customerName, model, regNo, serviceDate, questionnaire: QUESTIONNAIRE_V1 }`. Page `/f/[token]` → `FeedbackFormScreen` → `LinkStateScreen`: replaced "A newer link was sent to you on WhatsApp", expired "This feedback link has expired. Please contact Chandra Honda.", completed "Thank you — already submitted", rate_limited "Too many requests, try again in a few minutes" (+ Try again), invalid, error. Welcome screen shows `PrivacyNotice` → `/privacy`.
+- `markOpened(code)`: called **only** by client JS (`useFeedbackFlow` effect once the form is ready), so link-preview robots never set Opened. Always ok (unknown or finished link = silent no-op); sets `opened_at = now` only for a live (not superseded) code whose visit is not opened, completed, cancelled, replaced or past expiry.
+- `submitResponse(code, answers, submissionId?)`: unknown code → NOT_FOUND "Link not valid"; submit limit hit → RATE_LIMITED "Too many requests, try again in a few minutes"; `subId = submissionId ?? randomUUID()`; resolved completed → replay, invalid → NOT_FOUND, expired → CONFLICT "This feedback link has expired"; `validateSubmission` **drops** answers to hidden follow-ups and unknown codes silently (D-36, SPEC US-09); missing visible answers → VALIDATION "Answer every question to submit." (`fields` = question codes). Then **one transaction** (the per-link limit and resolve run just before it, accepted D-39: the claim below is guarded): claim `UPDATE visits SET completed_at = now, opened_at = <read value> ?? now WHERE id = ? AND completed_at, cancelled_at, replaced_by IS NULL AND expires_at >= now RETURNING`; 0 rows → completed meanwhile → replay, else CONFLICT; insert `responses` (`questions_version` 1, `submission_id`); `evaluateAlertReasons` + `reconcileAlert` → alert row + audit `alert.create` (actor System, visit's branch, `new {reasons}`). Replay: stored `submission_id` = `subId` → ok `{ callbackRequested: Q15 === 'Yes' }` (G-15), else ALREADY_COMPLETED "Feedback already received". Client `draft.ts` `submissionIdFor(visitId)` keeps one UUID per visit in `localStorage` (`psf:submission:<visitId>`), reused by every retry; RATE_LIMITED shows its own message in `SaveState`.
+- Known minors (T-04b): a racing `markOpened` can be overwritten by the claim's pre-read `opened_at`; small windows vs erasure/Resend during submit; `crypto.randomUUID` has no fallback; duplicate multi-select options not rejected.
+
+## §22 Job cards (server: `repos/jobCards.ts` + `repos/jobCardRules.ts`; domain `jobCardInput.ts`, `models.ts`) (as-built M4)
 ```ts
-interface JobCardView extends JobCard { advisorName: string; branchName: string; editable: boolean /* no completed visit, not erased */ }
-type JobCardInput = { jobCardNo; customerName; phone: string | null; regNo; model; modelOther?: string; serviceType; serviceDate: ISODate; advisorId };
-interface JobCardRepo { getJobCard(jobCardNo): Result<{ jobCard: JobCardView; current: VisitSummary | null }>;   // own branch only; NOT_FOUND
-  createJobCard(i: JobCardInput & { requestId: string }): Result<JobCardView>;   // VALIDATION fields; CONFLICT fields ['jobCardNo'] "JC-… already exists at this branch"
-  updateJobCard(id, patch: Partial<JobCardInput>): Result<JobCardView> }         // CONFLICT "Feedback already received" when not editable; audit jobcard.update old/new
+interface JobCardView extends JobCard { id: string; advisorName: string; branchName: string; editable: boolean /* no completed visit, not erased */ }   // null name / reg. no → ""
+interface JobCardInput { jobCardNo; customerName; phone: string | null; regNo; model; modelOther?; vehicleType?: 'scooter' | 'motorcycle' /* with "Other" */; serviceType; serviceDate; advisorId }   // raw; the server validates
+interface JobCardRepo { getJobCard(jobCardNo): Result<{ jobCard: JobCardView; current: VisitSummary | null }>;
+  createJobCard(i: JobCardInput & { requestId: string /* uuid */ }): Result<JobCardView>;
+  updateJobCard(id, patch: Partial<JobCardInput>): Result<JobCardView>;
+  listFreshJobCards(): Result<string[]> }   // phase-1 leftover, unavailable() (known minor T-01b: remove)
 ```
-- `jobCardInputSchema(now)` (zod, domain) = SPEC F-2 table: number 3–20 `[A-Za-z0-9 -]`, name ≤ 80, Indian mobile or null, reg. no 6–12 after strip (stored upper-case, display spaced), model from `HONDA_MODELS` (`models.ts`: name → vehicle type; "Other" needs `modelOther` + vehicle type), service date ≤ today IST and ≥ today − 60, advisor active in the user's branch (server check). Branch = session user's branch; inactive branch → FORBIDDEN "Account disabled, contact admin".
-- Idempotent create: same `requestId` already stored → return that card (G-15). Keys: `normalizeJobCardNo` (§1.5), `phone_key` = 10 national digits, `reg_no_key` = upper alnum.
+- `getJobCard`: `requireStaff`; key `normalizeJobCardNo(typed)`, not erased, in scope; none or empty key → NOT_FOUND "No job card <TYPED> at this branch yet"; `current` = `currentSummary` (the visit with `replaced_by` null, any status). Main admin: all branches; `limit(1)` picks one when numbers collide across branches (known minor T-03b).
+- `createJobCard`: (1) a card already stored under this `requestId` **by this user** → that card (G-15); (2) branch = the session user's: none (main admin) → FORBIDDEN "You can't do that.", inactive → FORBIDDEN "Account disabled, contact admin"; (3) `parseInput` = `jobCardInputSchema(now)` (SPEC F-2 table; first issue's message, `fields` = issue paths); (4) advisors: none active in the branch → VALIDATION "Ask your admin to add advisors for this branch", chosen one not among them → VALIDATION "Pick an advisor" (`fields ['advisorId']`); (5) insert + audit `jobcard.create` `new {jobCardNo, model, serviceDate}`; unique violation → a parallel retry's card if the `requestId` matches (same user), else CONFLICT "<JC> already exists at this branch" `fields ['jobCardNo']` (also for a reused `requestId` from another user, accepted D-39). Main admin FORBIDDEN on create accepted (D-39).
+- `updateJobCard`: missing, erased or out of scope → NOT_FOUND "That job card no longer exists."; a completed visit → CONFLICT "Feedback already received" (checked before, not inside, the update transaction: known minor T-03b); merge = stored card (`inputOf`) + patch, re-validated as a whole (an untouched old service date is kept; legacy null name/reg. no blocks edits: known minor T-03b); advisor re-checked only when patched; no changed column → current view, no audit; else update + audit `jobcard.update` old → new of changed columns only (`diffColumns`); unique violation → CONFLICT as create.
+- Columns (`columnsOf`): `job_card_no` upper-case, `job_card_key` = `normalizeJobCardNo` (§1.5), `phone_key` = 10 national digits, `reg_no_key` = upper alnum, model "Other" stores `modelOther` with the chosen `vehicleType` (default scooter).
+- Staff client (`src/features/support/`): `LookupBar` → `FoundCardSection` (phone edit, §21 Generate) or `MissingCard` → `JobCardForm` (`useJobCardForm`, one `requestId` per form) → the saved card is shown.
 
 ## §23 Branches, advisors, users (server repos `branches.ts`, `advisors.ts`, `users.ts`; screens `src/features/admin-branches/`, `admin-users/` (§14 extended)) (as-built M3)
 ```ts
@@ -253,7 +292,7 @@ interface UserRepo { listUsers(f?: { branchId? }): Result<User[]>;   // admins; 
   setUserActive(id, active): Result<User>;  resetPassword(id, tempPassword): Result<void> }   // reset: must_set_password, otp_expires_at + 72 h, end sessions, clearSignInFailures (§18.3); audit {mustSetPassword:true} only
 ```
 Pure rules in `src/server/repos/userRules.ts`: `assertCanManage(actor, target, changes: Change[])` (`Change = 'profile'|'role'|'branch'|'active'|'reset'`), `cleanPatch`, `tempPasswordError`, `wantedBranch`, `diff`/`snapshot` (audit old → new of changed fields only), `toUser`, `OTP_TTL_MS`. Rules: branch admin acting outside own branch → NOT_FOUND; branch admin may touch only support users of own branch, never self, never role/branch; main admin may change own profile only (no own role/branch/active/reset: self uses Change password); the last active main admin cannot be deactivated or demoted (`CONFLICT` "There must be at least one active main admin."; `keepsAnAdmin` locks the active main-admin rows `FOR UPDATE`, D-27). A branch move is audited under the new branch only (known minor). Password fields never audited.
-Audit actions as built: `branch.create/update/deactivate/reactivate`, `advisor.create/deactivate/reactivate` and **`advisor.rename`**, `user.create/update/deactivate/reactivate/reset_password`. **Open item:** `repos/advisors.ts` writes `advisor.rename`, but the `AuditAction` union (`src/domain/types.ts`, `schemas.ts`) and `auditFormat.ts` only know `advisor.update`; align one side in M4 (≈3 min; code unchanged by this sync). `isUniqueViolation(e)` (Postgres 23505 on the error or its cause) is exported from `repos/branches.ts` and imported by `advisors.ts` and `users.ts` (known minor: move to a db helper).
+Audit actions as built: `branch.create/update/deactivate/reactivate`, `advisor.create/deactivate/reactivate` and **`advisor.rename`**, `user.create/update/deactivate/reactivate/reset_password`. **Open item (still open after M4):** `repos/advisors.ts` writes `advisor.rename`, but the `AuditAction` union (`src/domain/types.ts`, `schemas.ts`) and `auditFormat.ts` only know `advisor.update`; align one side before the audit screen (T-09b, M5) (≈3 min; code unchanged by this sync). `isUniqueViolation(e)` (Postgres 23505 on the error or its cause) is exported from `repos/branches.ts` and imported by `advisors.ts`, `users.ts` and (M4) `jobCards.ts` (known minor: move to a db helper).
 **Admin list refresh (T-32):** after a successful save the screen puts the saved row into the cached list at once, then refetches. `src/features/admin-branches/listCache.ts` `mergeBranch(queryClient, saved)` (key `BRANCHES_LIST_KEY = ['branches','list']`; keeps the row's `staffCount`, new row → 0) via `useRefreshingMutation(fn, merge?)`, which then invalidates `['branches']` and `['advisors']`; `src/features/admin-users/listCache.ts` `mergeUser(queryClient, saved)` (key `USERS_LIST_KEY = ['users','list']`) via `useUsersMutation`. Both replace by id or append, and leave an empty or failed cache alone.
 
 ## §24 Customers & erasure (`repos/customers.ts`, `src/server/erasure.ts`, domain `erasure.ts`)
@@ -270,6 +309,7 @@ interface CustomerRepo { searchCustomers(q: { phone?: string; regNo?: string }):
 - `vercel.json`: `{ "crons": [{ "path": "/api/cron/daily", "schedule": "30 21 * * *" }] }` (03:00 IST; Hobby runs within that hour). As of M3 `vercel.json` holds only `buildCommand`, `regions` (§15.1) and `git`; the `crons` entry, route and job land in M5.
 - Cut-offs built (M3): domain `retentionCutoffs(now): { unansweredOn, answeredOn, deletedBefore }` and `retentionDueDate(serviceDate, answered)` in `src/domain/retention.ts`. The two erase steps are **inclusive** (`service_date <= cut-off`, matching SPEC F-10's worked example); purge stays strict (`deleted_at < deletedBefore`). `GET` only; `Authorization` must equal `Bearer ${CRON_SECRET}` (`timingSafeEqual`) else 401; `maxDuration = 300`.
 - `runDailyCleanup(db, clock): Promise<CleanupCounts>`; each step loops in batches of 500 until done or 240 s elapsed (next run continues; all steps idempotent):
+
 | Step | Rule (domain `retention.ts` cut-offs, IST dates) |
 |---|---|
 | unanswered | job cards not erased, no visit with `completed_at`, `service_date <= today − 90 d` → `eraseJobCards(…, 'retention')` |
@@ -314,3 +354,16 @@ interface CustomerRepo { searchCustomers(q: { phone?: string; regNo?: string }):
 | M3 | §23 | **Open:** audit action `advisor.rename` written while `AuditAction` / `auditFormat.ts` say `advisor.update`; align one side in M4 (code not changed) | drift found in sync | T-21 |
 | M3 | §25 | Retention erase cut-offs inclusive (`<=`), purge strict; only the domain cut-offs built | matches SPEC F-10 example | T-16 |
 | M3 | §26 | `init` advisory lock; `reissue` ends sessions; `recover` refuses a deactivated main admin; `golive-check.ts` and `reapply-erasures` not built yet | as built | T-19 |
+| M4 | §15.0, §15.2 | M4 also built the §11 alerts server (§17.4); folder map: `tokens.ts`, `activity.ts`, `poller.ts`, `repos/{jobCardRules,visitRows}.ts`, features `support`, `feedback-form`, `admin-alerts`, `privacy`, page `/privacy`; `linkAccess.ts` folded into `repos/feedback.ts`; `jobCardRules.ts` lacks `server-only` | as built | T-03b, T-03c, T-04b, T-07b, T-22 |
+| M4 | §15.5, §18.5 | `src/config/env.ts` drops zod (plain non-empty check, same behaviour); `POLL_SECONDS` parsing (missing / ≤ 0 → 30) | strict CSP blocks zod's eval probe on client pages | D-34, T-22s, T-22s2 |
+| M4 | §15.5 | Company name and privacy phone/email stay env keys via `src/config/env.ts` as designed; the M4 placeholder constants in `contact.ts` are a known gap fixed by T-36 | owner decision | D-37, T-04b, T-36 |
+| M4 | §16.1 | `rate_limits` buckets listed (`rpc_public`, `open`, `submit`); no migration in M4 | as built | T-04b |
+| M4 | §17.2 | §8, §9, §11, §13 rows: as-built notes; `submissionId` optional (known minor); `listFreshJobCards` kept as stub; domain `JobCard`/`Visit` not amended (fields on the access types), known gap until M5 erasure | as built; owner: align with T-25 | D-38, T-01b, T-03b, T-04b, T-07b, T-25 |
+| M4 | §17.3 | Real tracker + poller wired in `providers.tsx`; M4 built-repo list; remaining stubs (`listAudit` until T-09b) | as built | T-22, T-04b, T-07b |
+| M4 | §17.4 | New: alerts server repo (branch scope, `branchId` for main admin, `branchName`, required `version` + atomic check, `alert.status` / `alert.note` audit, erased customers without notes, `LIST_LIMIT` 500) | as built | T-07b |
+| M4 | §19 | Table: any branch staff act on any link; main admin cannot create job cards (no branch) | owner decisions | D-35, D-39, T-03b, T-03c |
+| M4 | §20 | As built: `isActive` (60 s, header) vs `isInUse` (15 min, page load counts), `onResume`, `STAFF_TOPICS`, starts with the first subscriber; form context is a one-shot effect, not `staleTime: Infinity` | as built | T-22 |
+| M4 | §21 | Visits methods, order and messages as built; any branch staff may resend/regenerate/cancel (not creator-only) and resend/regenerate also check erased; per-job-card advisory lock; cancelled current visit replaced by a new link; current-but-expired link → CONFLICT (Regenerate); client double-tap guard + retry | owner: G-8 as written; accepted as built | D-35, D-39, T-03c, T-03d |
+| M4 | §21 | Public form: unknown codes not counted; limits keyed by link hash; limit + resolve run just outside the guarded claim transaction; `markOpened` client-only and guarded; hidden follow-up answers dropped, not rejected; `submissionIdFor` in `localStorage` | SPEC US-09; accepted as built | D-36, D-39, T-04b |
+| M4 | §22 | Job card repo as built: `vehicleType?` in the input, idempotency per user (another user's reused `requestId` → "already exists"), main admin FORBIDDEN on create, messages, whole-card re-validation on update, `jobCardRules.ts`; `listFreshJobCards` stub remains | accepted as built | D-39, T-03b, T-01b |
+| M4 | §23 | `advisor.rename` vs `advisor.update` still open after M4 (now before T-09b); `isUniqueViolation` also used by `jobCards.ts` | not in M4 scope | T-21 |

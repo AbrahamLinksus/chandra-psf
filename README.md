@@ -2,7 +2,7 @@
 
 A mobile-first web app that replaces the paper post-service questionnaire for Chandra Honda: support staff create a WhatsApp feedback link from a job card, and the customer answers a short form on their phone. An admin console shows the results.
 
-**Status:** phase 2 under construction. Milestone M3 is an empty system that staff can sign into, deployed as a preview. The phase 1 demo (sample data, kept in the browser) is frozen at https://chandra-psf.vercel.app (presenter steps in [docs/DEMO-GUIDE.md](docs/DEMO-GUIDE.md)). Phase 2 design: [docs/LLD-phase2.md](docs/LLD-phase2.md).
+**Status:** phase 2, milestone M4 built: the support → customer loop works across devices. Support staff create job cards and generate, send, resend, regenerate or cancel customer links (any support user at the branch can act on the branch's links). The customer form works on any phone and shows a privacy notice with a `/privacy` page. Screens refresh live while staff use them (`NEXT_PUBLIC_POLL_SECONDS`, default 30). The alerts queue is per branch. Still to come in M5: analytics, responses and audit on the server, privacy requests and erasure, daily clean-up, and production. The phase 1 demo (sample data, kept in the browser) is frozen at https://chandra-psf.vercel.app (presenter steps in [docs/DEMO-GUIDE.md](docs/DEMO-GUIDE.md)). Phase 2 design: [docs/LLD-phase2.md](docs/LLD-phase2.md).
 
 ## Architecture
 
@@ -68,7 +68,7 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 with shadcn/
 
 Phase 1 kept data in the browser's local storage. Phase 2 keeps data in Postgres.
 
-Tested on Linux only: CI runs on GitHub Actions, `ubuntu-24.04`, with Node 24 and Node 26. macOS and Windows are not tested.
+CI runs on GitHub Actions, `ubuntu-24.04`, with Node 24 and Node 26. The team also runs the checks on Windows 11 with Git Bash (see [How to test](#how-to-test)). macOS is not tested.
 
 ## Data safety
 
@@ -120,7 +120,10 @@ Every key the server or the build reads is in `.env.example` (placeholders only)
 | `AUTH_HASH_TIMING` | Optional | Set to `1` to log how long password hashing takes at sign-in. Leave unset otherwise | You choose it. Not a secret. Used only for the sign-in timing check on preview; unset it afterwards |
 | `NEXT_PUBLIC_DEALER_PHONE` | Required in any production build | Dealership phone shown on the customer pages | Placeholder `+91 44 0000 0000` until the dealership gives the real number. Set it in Vercel and redeploy |
 
-Other public settings in `.env.example`, placeholders until the dealership supplies them: `NEXT_PUBLIC_COMPANY_NAME` (company name), `NEXT_PUBLIC_PRIVACY_PHONE` and `NEXT_PUBLIC_PRIVACY_EMAIL` (privacy contact on the form), `NEXT_PUBLIC_POLL_SECONDS` (poll interval, `30`; the poller is a placeholder until M4, LLD-phase2 §20).
+Other public settings in `.env.example`:
+
+- `NEXT_PUBLIC_POLL_SECONDS`: live-refresh interval in seconds (default `30`). Missing, non-numeric or zero or negative values fall back to 30. Read by `src/config/env.ts`.
+- `NEXT_PUBLIC_COMPANY_NAME`, `NEXT_PUBLIC_PRIVACY_PHONE`, `NEXT_PUBLIC_PRIVACY_EMAIL`: company name and privacy contact. **Not read yet (T-36).** They are placeholders until the dealership supplies the real values; the app does not use them today.
 
 Set by the platform, do not set them yourself: `NODE_ENV` (Next.js and the test runner) and `VERCEL_ENV` (Vercel).
 
@@ -142,6 +145,14 @@ PORT=8016 scripts/check.sh                # use another port when another server
 ```
 
 The first run needs the Chromium browser for Playwright: `pnpm exec playwright install chromium`. On Arch Linux, prefix it with `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64`.
+
+**Windows:** use Git Bash (the scripts are bash). Before `scripts/check.sh`, run this in the same shell:
+
+```bash
+export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64 NODE_OPTIONS=--max-old-space-size=4096
+```
+
+`scripts/check.sh` otherwise assumes the Ubuntu Playwright browsers, and Vitest can run out of memory without the larger heap. Put gitleaks at `~/.cache/chandra-psf/tools/gitleaks.exe` (or `gitleaks` on the PATH).
 
 CI runs `scripts/check.sh` on every push and pull request (`.github/workflows/ci.yml`).
 

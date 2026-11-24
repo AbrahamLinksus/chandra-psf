@@ -85,9 +85,10 @@ This puts a preview of the phase-2 app on its own Vercel project. It does not to
      - `src/config/env.ts` requires `NEXT_PUBLIC_DEALER_PHONE` in any `NODE_ENV=production` build, Preview included. Without it the build fails.
 4. Push the `wip/...` branch or open a pull request, so that Vercel builds a Preview deployment. That build runs the migrations against `dev`.
    - **Never run `vercel deploy --prod` on the preview project** (the `main` auto-deploy is off). The other `--prod` commands in this file are for the demo project `chandra-psf`.
-5. Open the new deployment in the Vercel dashboard and copy its `https://` address. Set `APP_URL` to that address, then redeploy the preview.
+   - **Warning: build rate limit.** On the free Vercel plan every pushed non-`main` branch starts a Preview build, so frequent `wip/*` checkpoint pushes can hit the daily build rate limit. The GitHub status then links to `upgradeToPro=build-rate-limit`. To save builds, open Settings → Git → Ignored Build Step and build only the branch you are testing, for example `[ "$VERCEL_GIT_COMMIT_REF" != "wip/T-23" ]`. The command exits 0 to skip a build, so every other branch is skipped. A skipped build also skips the migrations in the build command.
+5. Open the new deployment in the Vercel dashboard and copy its **Preview deployment** `https://` address (not the project's production address). Set `APP_URL` to that address, then redeploy the preview.
 6. On your laptop, run `pnpm admin init` with `DATABASE_URL_UNPOOLED` pointing at the **`dev`** direct URL. Never use the `production` URL for this command.
-7. Send the team the preview URL only (just the address, for example `https://<name>.vercel.app`), through the Orchestrator conversation. The verify-preview step then checks the first admin sign-in and password, adds a branch and a support user, the sign-in timing (argon2), `noindex`, the security headers and the not-found page.
+7. Send the team the preview URL only (just the address, for example `https://<name>.vercel.app`), through the Orchestrator conversation. Sign in on a Preview deployment's address for sign-in tests. The project's own address (for example `chandra-psf-preview.vercel.app`) serves a Production deployment; this project has no Production environment variables, so it fails with a server ZodError. The verify-preview step then checks the first admin sign-in and password, adds a branch and a support user, the sign-in timing (argon2), `noindex`, the security headers and the not-found page.
 
 ## Demo (phase 1) — frozen
 
