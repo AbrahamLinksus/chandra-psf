@@ -2,68 +2,68 @@
 
 import { SaveState } from "@/components/shared/SaveState";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAddUser, type AddUserDraft, type FieldErrors } from "./useAddUser";
+import type { User } from "@/domain/types";
+import { RoleBranchPickers } from "./RoleBranchPickers";
+import { TextField } from "./UserFields";
+import { useAddUser } from "./useAddUser";
 
-const FIELDS: { key: keyof AddUserDraft; label: string; type: string; autoComplete: string }[] = [
-  { key: "name", label: "Name", type: "text", autoComplete: "off" },
-  { key: "email", label: "Email", type: "email", autoComplete: "off" },
-  { key: "tempPassword", label: "Temporary password", type: "text", autoComplete: "off" },
-];
-
-function Field(props: {
-  field: (typeof FIELDS)[number];
-  value: string;
-  error: string | undefined;
-  onChange: (v: string) => void;
-}) {
-  const { field, value, error, onChange } = props;
-  const id = `add-user-${field.key}`;
-  return (
-    <div className="grid gap-1.5">
-      <Label htmlFor={id}>{field.label}</Label>
-      <Input
-        id={id}
-        type={field.type}
-        autoComplete={field.autoComplete}
-        value={value}
-        aria-invalid={error !== undefined}
-        aria-describedby={error === undefined ? undefined : `${id}-error`}
-        className="h-12"
-        onChange={(e) => {
-          onChange(e.target.value);
-        }}
-      />
-      {error !== undefined && (
-        <p id={`${id}-error`} role="alert" className="text-sm text-danger">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-export function AddUserForm() {
-  const { draft, setField, fieldErrors, mutation, onSubmit, retry } = useAddUser();
-  const errors: FieldErrors = fieldErrors;
+export function AddUserForm({ me }: { me: User }) {
+  const {
+    draft,
+    setField,
+    fieldErrors: errors,
+    config,
+    mutation,
+    onSubmit,
+    retry,
+  } = useAddUser(me);
   return (
     <form noValidate onSubmit={onSubmit} className="grid gap-4 rounded-xl border p-4">
-      <h2 className="text-lg font-semibold">Add support user</h2>
-      {FIELDS.map((f) => (
-        <Field
-          key={f.key}
-          field={f}
-          value={draft[f.key]}
-          error={errors[f.key]}
-          onChange={(v) => {
-            setField(f.key, v);
-          }}
-        />
-      ))}
+      <h2 className="text-lg font-semibold">Add user</h2>
+      <TextField
+        id="add-user-name"
+        label="Name"
+        type="text"
+        value={draft.name}
+        error={errors.name}
+        onChange={(v) => {
+          setField("name", v);
+        }}
+      />
+      <TextField
+        id="add-user-email"
+        label="Email"
+        type="email"
+        value={draft.email}
+        error={errors.email}
+        onChange={(v) => {
+          setField("email", v);
+        }}
+      />
+      <RoleBranchPickers
+        idPrefix="add-user"
+        draft={draft}
+        errors={errors}
+        config={config}
+        onChange={setField}
+      />
+      <TextField
+        id="add-user-tempPassword"
+        label="Temporary password"
+        type="text"
+        value={draft.tempPassword}
+        error={errors.tempPassword}
+        onChange={(v) => {
+          setField("tempPassword", v);
+        }}
+      />
       <SaveState status={mutation.status} error={mutation.error} onRetry={() => void retry()} />
-      <Button type="submit" className="h-12 sm:w-fit" disabled={mutation.status === "saving"}>
-        Add support user
+      <Button
+        type="submit"
+        className="h-12 sm:w-fit"
+        disabled={mutation.status === "saving" || config.noBranches}
+      >
+        Add user
       </Button>
     </form>
   );

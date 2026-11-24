@@ -6,16 +6,21 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
 import { SaveState } from "@/components/shared/SaveState";
 import { AddUserForm } from "./AddUserForm";
-import { UserRow } from "./UserRow";
+import { UserList } from "./UserList";
 import { useUserList } from "./useUserList";
+
+function ListOrNothing({ l, saving }: { l: ReturnType<typeof useUserList>; saving: boolean }) {
+  if (l.me === undefined || l.users === undefined) return null;
+  return <UserList me={l.me} users={l.users} busy={saving} onToggle={l.request} />;
+}
 
 export function UsersScreen() {
   const l = useUserList();
   const saving = l.mutation.status === "saving";
   return (
     <main className="mx-auto grid max-w-3xl gap-4 p-4 sm:p-6">
-      <h1 className="text-2xl font-semibold">Support users</h1>
-      <AddUserForm />
+      <h1 className="text-2xl font-semibold">Users</h1>
+      {l.me !== undefined && <AddUserForm me={l.me} />}
       {l.isLoading && <PageSkeleton />}
       {l.error !== undefined && (
         <p role="alert" className="text-danger">
@@ -26,17 +31,7 @@ export function UsersScreen() {
         <SaveState status="error" error={l.mutation.error} onRetry={l.retry} />
       )}
       {l.users?.length === 0 && <EmptyState icon={UsersIcon} title="No users yet" />}
-      <ul className="grid gap-2">
-        {l.users?.map((u) => (
-          <UserRow
-            key={u.id}
-            user={u}
-            isSelf={u.id === l.meId}
-            busy={saving}
-            onToggle={l.request}
-          />
-        ))}
-      </ul>
+      <ListOrNothing l={l} saving={saving} />
       <ConfirmDialog
         open={l.pending !== null}
         title={`Deactivate ${l.pending?.user.name ?? "user"}?`}

@@ -161,12 +161,26 @@ export function listBranches(api: AppApi): Promise<{ id: string; name: string }[
   return rpcCall(api, "branches", "listBranches", []);
 }
 
-/** Creates a support user through RPC (users.createSupportUser); the user must set a password at first sign-in. */
+/** Creates a user through RPC (users.createUser); the user must set a password at first sign-in. */
+export function createUser(
+  api: AppApi,
+  input: {
+    name: string;
+    email: string;
+    tempPassword: string;
+    role: "support" | "branch_admin" | "main_admin";
+    branchId: string | null;
+  },
+): Promise<{ id: string }> {
+  return rpcCall(api, "users", "createUser", [input]);
+}
+
+/** Creates a support user in a branch through RPC (users.createUser). */
 export function createSupportUser(
   api: AppApi,
-  input: { name: string; email: string; tempPassword: string; branchId?: string },
+  input: { name: string; email: string; tempPassword: string; branchId: string },
 ): Promise<{ id: string }> {
-  return rpcCall(api, "users", "createSupportUser", [input]);
+  return createUser(api, { ...input, role: "support" });
 }
 
 /**

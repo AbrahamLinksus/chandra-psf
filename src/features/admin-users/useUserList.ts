@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { User } from "@/domain/types";
-import { useRepoMutation } from "@/hooks/useRepoMutation";
+import { useUsersMutation } from "./useUsersMutation";
 import { useRepoQuery } from "@/hooks/useRepoQuery";
 import { useSession } from "@/hooks/useSession";
 
@@ -16,7 +16,7 @@ export function useUserList() {
   const query = useRepoQuery(["users", "list"], (da) => da.users.listUsers());
   const { user: me } = useSession();
   const [pending, setPending] = useState<ActiveChange | null>(null);
-  const mutation = useRepoMutation((da, c: ActiveChange) =>
+  const mutation = useUsersMutation((da, c: ActiveChange) =>
     da.users.setUserActive(c.user.id, c.active),
   );
 
@@ -43,7 +43,7 @@ export function useUserList() {
     users: query.data,
     error: query.error,
     isLoading: query.isLoading,
-    meId: me?.id,
+    me: me ?? undefined,
     pending,
     mutation,
     request,

@@ -7,20 +7,20 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | /home/Jake/learning/chandraProject/chandra-psf (worktrees in /home/Jake/learning/chandraProject/chandra-psf-wt/; start sessions in /home/Jake/learning/chandraProject) |
-| Status | Paused (owner: wind down, continue later) |
+| Status | Active |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (11/13) |
-| Next step | Resume T-10b at fix-e2e-order (tester: apply debugger fix from .results/T-10b/debug-sync-debugger.md to tests/e2e/admin-branches spec + FirstRunCard unit test), then sync and approve (owner already approved: "fix last-admin race, then approve"); then T-05b preview deploy, M3 batched review, M3 milestone card |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (12/13) |
+| Next step | T-05b preview deploy on a new Vercel project (owner step first), then M3 batched review, M3 milestone card |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-23 14:39 +05:30 |
+| Last updated | 2026-11-24 07:45 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |

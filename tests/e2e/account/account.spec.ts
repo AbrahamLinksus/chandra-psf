@@ -5,6 +5,7 @@ import {
   adminApi,
   adminCredentials,
   adminSessionInBrowser,
+  createUser,
   rpcCall,
 } from "../../support/e2e";
 
@@ -84,7 +85,53 @@ test.describe("T-20 lockout, step-up, My account", () => {
     await page.screenshot({ path: `.results/T-20/change-password-errors-${width(page)}.png` });
   });
 
-  // Success ends every other session of the account, which would sign the other workers out of the
-  // shared admin. Needs a throwaway user (users helper, T-10b); the unit tests cover success meanwhile.
-  test.fixme("change password success ends my other sessions (US-28)", () => undefined);
+  test("change password success ends my other sessions (US-28)", async ({
+    page,
+    browser,
+    playwright,
+    baseURL,
+  }) => {
+    const base = String(baseURL);
+    const api = await adminApi(playwright, base);
+    const email = `c${width(page)}.${Date.now().toString(36)}@chandra.in`;
+    const temp = "Temp-Pass-4471";
+    // A main admin needs no branch, so this test never touches the shared branch list.
+    await createUser(api, {
+      name: "Changer",
+      email,
+      tempPassword: temp,
+      role: "main_admin",
+      branchId: null,
+    });
+
+    // The throwaway user signs in twice: this tab (the one that changes the password) and another browser.
+    const first = "First-Own-Pass-2026!";
+    await page.goto("/sign-in");
+    await signInWith(page, email, temp);
+    await expect(page).toHaveURL(/\/set-password$/);
+    await page.getByLabel("New password", { exact: true }).fill(first);
+    await page.getByLabel("Confirm password").fill(first);
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+
+    const other = await browser.newContext({ baseURL: base, viewport: page.viewportSize() });
+    const otherPage = await other.newPage();
+    await otherPage.goto("/sign-in");
+    await signInWith(otherPage, email, first);
+    await expect(otherPage).toHaveURL(/\/admin$/);
+
+    await page.goto("/account");
+    await fillChange(page, first, "Second-Own-Pass-2027!", "Second-Own-Pass-2027!");
+    await expect(
+      page.getByText("Password changed. Your other sessions were signed out."),
+    ).toBeVisible();
+    await page.screenshot({ path: `.results/T-10b/change-password-success-${width(page)}.png` });
+
+    await otherPage.goto("/admin");
+    await expect(otherPage).toHaveURL(/\/sign-in/);
+    await other.close();
+
+    await page.goto("/account");
+    await expect(page.getByRole("heading", { name: "My account" })).toBeVisible();
+  });
 });

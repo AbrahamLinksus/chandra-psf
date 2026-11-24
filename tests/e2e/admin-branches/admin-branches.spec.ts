@@ -22,19 +22,23 @@ test.describe("T-21 branches and advisors (main admin)", () => {
     const velachery = `Velachery ${w}`;
     const chennai = `Chennai ${w}`;
     const api = await adminApi(playwright, String(baseURL));
-    const noBranchesYet = (await listBranches(api)).length === 0;
     await adminSessionInBrowser(page, playwright, String(baseURL));
 
     await page.goto("/admin");
     await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
     const card = page.getByRole("link", { name: "Add your first branch" });
-    if (noBranchesYet) {
-      await expect(card).toBeVisible();
+    // Specs share one database and run in parallel, so decide from the page, not from an earlier API call.
+    const firstRunShown = await card
+      .waitFor({ state: "visible", timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (firstRunShown) {
       await page.screenshot({ path: `.results/T-21/e2e-first-run-${w}.png` });
       await card.click();
       await expect(page).toHaveURL(/\/admin\/branches$/);
     } else {
-      await expect(card).toHaveCount(0);
+      // The card only shows while there are no branches, so another spec must have created one.
+      expect((await listBranches(api)).length).toBeGreaterThan(0);
       await page.goto("/admin/branches");
     }
     await expect(page.getByRole("heading", { name: "Branches" })).toBeVisible();
