@@ -69,7 +69,10 @@ async function run(
   args: unknown[],
 ): Promise<Response> {
   const base = await buildBaseCtx(request);
-  if (entry.access === "public") {
+  // One session lookup serves both the flood-limit exemption and the handler (no cookie: no DB hit).
+  const ctx = await withSession(base, request, entry.kind);
+  // Signed-in staff skip the anonymous flood limit (D-32); everyone else is counted as before.
+  if (entry.access === "public" && !ctx.session) {
     const allowed = await hitIpLimit(base, {
       bucket: PUBLIC_FLOOD_BUCKET,
       limit: PUBLIC_FLOOD_LIMIT_PER_HOUR,
@@ -81,7 +84,6 @@ async function run(
       });
     }
   }
-  const ctx = await withSession(base, request, entry.kind);
   if (entry.access === "staff" && !ctx.session) {
     return reply(err("UNAUTHENTICATED", "Your session has ended. Sign in again."));
   }

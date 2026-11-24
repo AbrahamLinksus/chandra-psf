@@ -477,15 +477,28 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 
 ### T-32 · Lists refresh right after Add branch / Add user
 - Owner: frontend-coder
-- Depends on: T-05b
+- Depends on: T-05b, T-34s
 - Files: src/features/admin-users/**, src/features/admin-branches/**, src/app/admin/users/**, src/app/admin/branches/**, tests/e2e/admin-users/**, tests/e2e/admin-branches/**
 - Context: T-05b verify-preview report (on the real host the new row shows only after a reload; local e2e passes) · LLD-phase2 §23 · files: src/features/admin-users/*, src/features/admin-branches/*
 - Why separate: owner follow-up from T-05b (2026-11-24); likely a cache or revalidation difference on Vercel vs local.
-- Status: Needs you (batch)
+- Status: In progress
 - Acceptance criteria:
   - [ ] After Add branch, Add user, Edit user and Deactivate, the list shows the change without a reload, both locally and on the preview deploy
   - [ ] An e2e test fails on the old behaviour (no reload between add and assert, no stale cache)
 - Result: —
+
+### T-34s · Signed-in staff skip the anonymous flood limit (shared-change)
+- Owner: backend-coder
+- Depends on: T-05b
+- Files: src/server/rpc/handler.ts, src/server/rpc/context.ts, tests/unit/server/rpc/**
+- Context: D-32 · T-32 debug report (.results/T-32/debug-1-debugger.md in the T-32 worktree: the 300/h per-IP public flood limit runs out late in a full e2e run, a refused currentUser shows "Your session has ended") · LLD-phase2 rate limits · files: src/server/rateLimit.ts, src/server/rpc/handler.ts
+- Why separate: owner decision D-32 (2026-11-24); security behaviour change, own card; unblocks T-32's merge.
+- Status: Done
+- Acceptance criteria:
+  - [ ] A request with a valid staff session is not counted against or refused by the anonymous per-IP flood limit; requests with no session or an invalid/expired one are limited exactly as before (unit tests for both, incl. 301st anonymous request refused)
+  - [ ] The per-email sign-in lockout and any per-user limits are unchanged; a forged or expired session cookie does not bypass the flood limit
+  - [ ] Full scripts/check.sh passes twice in a row (the T-32 admin-users "own row" e2e no longer hits RATE_LIMITED)
+- Result: 3/3 goals ✅ · valid staff session skips the anonymous per-IP flood limit; no/forged/expired session limited as before · Opus review 0/0/0 · ≈$0.40 · tester 44% · backend-coder 32% · reviewer 24%
 
 ### T-33s · Raise argon2 parameters (LLD §18.1 trigger) (shared-change)
 - Owner: backend-coder

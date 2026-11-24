@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (15/16) |
-| Next step | M3: T-31s (CSP, debugging), T-32 queued for batch card, then M3 milestone (M3-docs + card) |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (16/17) |
+| Next step | T-32 post-sync fix (owner-approved; one admin-users e2e failed after merging T-31s/T-33s), then M3 milestone: M3-docs + card |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-24 10:55 +05:30 |
+| Last updated | 2026-11-24 11:30 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |

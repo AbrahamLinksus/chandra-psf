@@ -77,10 +77,10 @@ function publicStub(o: CallOpts = {}): Promise<Response> {
   return call("feedback", "getVisitByToken", { ...o, args: ["tok"] });
 }
 
-async function signedIn(): Promise<void> {
+async function signedIn(ageMs = 5 * 60_000): Promise<void> {
   const branchId = await seedBranch(env.db, "Velachery");
   const uid = await seedUser(env.db, { role: "support", branchId });
-  const clock = new MutableClock(new Date(Date.now() - 5 * 60_000));
+  const clock = new MutableClock(new Date(Date.now() - ageMs));
   await createSession({ db: env.db, clock, cookies: env.cookies }, uid);
   state.cookie = must(env.cookies.value);
 }
@@ -186,6 +186,81 @@ describe("per-IP flood limit and HMAC-only storage", () => {
     expect(await res.json()).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
     const other = await publicStub({ ip: "198.51.100.10" });
     expect(await other.json()).toMatchObject({ error: { code: "UNAVAILABLE" } });
+  });
+});
+
+async function seedFlood(ip: string, count: number): Promise<void> {
+  const windowStart = new Date(Math.floor(Date.now() / 3_600_000) * 3_600_000);
+  await env.db
+    .insert(rateLimits)
+    .values({ bucket: PUBLIC_FLOOD_BUCKET, key: hashIp(ip), windowStart, count });
+}
+
+async function floodCount(): Promise<number> {
+  const rows = await env.db.select().from(rateLimits);
+  return rows.reduce((n, r) => n + r.count, 0);
+}
+
+describe("staff skip the anonymous flood limit", () => {
+  const ip = "198.51.100.20";
+
+  it("neither counts nor refuses a valid staff session, even past 300", async () => {
+    await signedIn();
+    await seedFlood(ip, 300);
+    for (let i = 0; i < 3; i++) {
+      expect(await (await publicStub({ ip })).json()).toMatchObject({
+        error: { code: "UNAVAILABLE" },
+      });
+    }
+    expect(await floodCount()).toBe(300);
+  });
+
+  it("still refuses the 301st anonymous request (no cookie) and counts it", async () => {
+    await seedFlood(ip, 300);
+    expect(await (await publicStub({ ip })).json()).toMatchObject({
+      error: { code: "RATE_LIMITED" },
+    });
+  });
+});
+
+describe("anonymous-like sessions are limited as before", () => {
+  const ip = "198.51.100.20";
+
+  it("limits a forged cookie as before", async () => {
+    state.cookie = "forged-token-that-is-not-a-session";
+    await seedFlood(ip, 300);
+    expect(await (await publicStub({ ip })).json()).toMatchObject({
+      error: { code: "RATE_LIMITED" },
+    });
+  });
+
+  it("limits an expired session as before", async () => {
+    await signedIn(400 * 24 * 3_600_000);
+    await seedFlood(ip, 300);
+    expect(await (await publicStub({ ip })).json()).toMatchObject({
+      error: { code: "RATE_LIMITED" },
+    });
+  });
+
+  it("limits a revoked session as before", async () => {
+    await signedIn();
+    await env.db.delete(sessions);
+    await seedFlood(ip, 300);
+    expect(await (await publicStub({ ip })).json()).toMatchObject({
+      error: { code: "RATE_LIMITED" },
+    });
+  });
+
+  it("keeps the per-email sign-in lockout for a signed-in caller", async () => {
+    await signedIn();
+    await seedFlood(ip, 300);
+    const codes: string[] = [];
+    for (let i = 0; i < 6; i++) {
+      const res = await call("auth", "signIn", { args: ["nobody@example.in", "wrong-pass-1"], ip });
+      codes.push(((await res.json()) as { error: { code: string } }).error.code);
+    }
+    expect(codes.slice(0, 5).every((c) => c === "BAD_CREDENTIALS")).toBe(true);
+    expect(codes[5]).toBe("RATE_LIMITED");
   });
 });
 

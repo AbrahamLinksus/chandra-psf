@@ -35,6 +35,8 @@
 | D-29 | 2026-11-24 | argon2 raise (LLD §18.1) | Raise time cost t 2→8 (m 19456, p 1), opt-in server timing log, re-hash on next sign-in; tune after Vercel measurement | ≈80–160 ms hash · if wrong: ~1 h to retune | Raise memory+time; waive rule | T-33s |
 | D-30 | 2026-11-24 | T-33s approval | Approve now, measure on Vercel later | argon2 t=8 live after next deploy · if hash <100 ms or p95 ≥1 s: ~1 h retune (D-29) | Request changes; reject | T-33s |
 | D-31 | 2026-11-24 | T-31s CSP approach | Nonce + strict-dynamic; every page renders per request (no static/CDN pages) | Strong script CSP · a bit more server work per page view; app is mostly signed-in pages anyway | Hash-only CSP keeping static pages | T-31s |
+| D-32 | 2026-11-24 | e2e "own row" flake = anonymous flood limit (300/h per IP) exhausted | Merge T-32 as-is (not its cause); new T-34s: signed-in staff skip the anonymous flood limit | Fixes the flake and protects branches where staff share one connection · anonymous limit unchanged · if wrong: ~1 h to switch to a test-only setting | Same fix inside T-32; raise limit for tests only; trim test requests | T-32 |
+| D-33 | 2026-11-24 | T-34s approval | Approve | Staff never hit the anonymous flood limit; forged cookie = one indexed lookup · low | Request changes; reject | T-34s |
 
 ## Tier 2 — decided by agents (overrule any time)
 | ID | Date | Decision | Chosen | Agent | Task |
