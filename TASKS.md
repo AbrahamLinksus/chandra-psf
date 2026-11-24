@@ -531,16 +531,16 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-03c · Support: generate and send a link, My links / All branch links
 - Owner: backend-coder, frontend-coder
 - Depends on: T-03b
-- Files: src/server/tokens.ts, src/server/repos/visits.ts, src/server/rpc/visits.ts, src/data/access/repos/visits.ts, src/features/support/**, src/app/support/**, tests/unit/server/visits/**, tests/e2e/support-links/**
+- Files: src/server/tokens.ts, src/server/repos/visits.ts, src/server/rpc/visits.ts, src/data/access/repos/visits.ts, src/features/support/**, src/app/support/**, tests/unit/server/visits/**, tests/e2e/support-links/**, src/server/repos/jobCards.ts, src/server/repos/visitRows.ts, tests/unit/minors/minorsFrontend.test.tsx, tests/unit/support/linkActions.test.tsx
 - Context: SPEC US-03, US-04, US-05, F-2 steps 5–7, §5 F-2 WhatsApp row · LLD-phase2 §21 (LinkIssued, VisitRepo list and create, tokens) · files: src/domain/whatsapp.ts, src/features/support/*
 - Why separate: own repo (link secrecy); the customer form needs issued links.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] Generate → `/f/<43-char code>` shown once with Send on WhatsApp (the exact SPEC §5 `wa.me` URL with `APP_URL`) and Copy link ("Copied"); the database holds only the SHA-256; status Created, expires in 7 days (AC-2, D-11, S-01)
-  - [ ] Leaving and reopening the job card shows the link's status but no link and no Copy (G-1, S-17); a current link offers Resend / Regenerate, no duplicate; Completed → "Feedback already received"
-  - [ ] `/support` shows My links by default and an All branch links toggle with created-by, search by job card / reg. no, no answers or ratings; empty → "No feedback links yet. Tap New feedback link to start."; a user moved to Tambaram sees only Tambaram's links (G-8, S-19)
-  - [ ] No mobile number → Send disabled with "Enter a mobile number to send on WhatsApp", Copy works (S-03)
-- Result: —
+  - [x] Generate → `/f/<43-char code>` shown once with Send on WhatsApp (the exact SPEC §5 `wa.me` URL with `APP_URL`) and Copy link ("Copied"); the database holds only the SHA-256; status Created, expires in 7 days (AC-2, D-11, S-01)
+  - [x] Leaving and reopening the job card shows the link's status but no link and no Copy (G-1, S-17); a current link offers Resend / Regenerate, no duplicate; Completed → "Feedback already received"
+  - [x] `/support` shows My links by default and an All branch links toggle with created-by, search by job card / reg. no, no answers or ratings; empty → "No feedback links yet. Tap New feedback link to start."; a user moved to Tambaram sees only Tambaram's links (G-8, S-19)
+  - [x] No mobile number → Send disabled with "Enter a mobile number to send on WhatsApp", Copy works (S-03)
+- Result: approved 2026-11-24 · 4/4 goals · rework per owner (erased-customer check on Resend/Regenerate; any branch support user may act, D-35) · ≈$2.38
 
 ### T-03d · Support: resend, regenerate and cancel any branch link
 - Owner: backend-coder, frontend-coder

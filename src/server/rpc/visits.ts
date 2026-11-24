@@ -5,16 +5,17 @@ import { idArg, textArg } from "./args";
 import type { RpcTable } from "./types";
 
 export const visitsRpc = {
-  listMyVisits: {
+  listVisits: {
     kind: "read",
     access: "staff",
-    input: z.tuple([z.object({ search: textArg.optional() }).optional()]),
+    input: z.tuple([z.object({ scope: z.enum(["mine", "branch"]), search: textArg.optional() })]),
   },
   createVisitLink: {
     kind: "write",
     access: "staff",
-    input: z.tuple([z.object({ jobCardNo: textArg, phone: textArg.nullable() })]),
+    input: z.tuple([z.object({ jobCardId: idArg })]),
   },
+  resendLink: { kind: "write", access: "staff", input: z.tuple([idArg]) },
   regenerateLink: { kind: "write", access: "staff", input: z.tuple([idArg]) },
   cancelLink: { kind: "write", access: "staff", input: z.tuple([idArg]) },
 } satisfies RpcTable<VisitRepo>;

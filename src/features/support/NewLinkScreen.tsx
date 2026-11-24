@@ -14,9 +14,8 @@ import { useNewLink } from "./useNewLink";
 export function NewLinkScreen() {
   const [no, setNo] = useState("");
   const s = useNewLink();
-  const updated = (v: VisitSummary) => {
-    if (v.status === "cancelled") void s.lookup(v.jobCardNo);
-    else s.setLink(v);
+  const cancelled = (v: VisitSummary) => {
+    void s.lookup(v.jobCardNo);
   };
   const openExisting = (n: string) => {
     setNo(n);
@@ -54,7 +53,7 @@ export function NewLinkScreen() {
           onOpenExisting={openExisting}
         />
       )}
-      <FoundCardSection s={s} onUpdated={updated} />
+      <FoundCardSection s={s} onCancelled={cancelled} />
     </main>
   );
 }

@@ -9,13 +9,13 @@ import type { useNewLink } from "./useNewLink";
 
 interface Props {
   s: ReturnType<typeof useNewLink>;
-  onUpdated: (v: VisitSummary) => void;
+  onCancelled: (v: VisitSummary) => void;
 }
 
 /** Details card of the found job card, then Generate link or the current link. */
-export function FoundCardSection({ s, onUpdated }: Props) {
+export function FoundCardSection({ s, onCancelled }: Props) {
   if (s.found === null) return null;
-  const shown = s.link ?? s.found.current;
+  const shown = s.link?.visit ?? s.found.current;
   const canGenerate = shown === null && s.found.jobCard.editable;
   return (
     <>
@@ -43,7 +43,7 @@ export function FoundCardSection({ s, onUpdated }: Props) {
       )}
       {shown !== null && (
         <ul className="grid min-w-0">
-          <LinkCard visit={shown} sendLabel="Send on WhatsApp" onUpdated={onUpdated} />
+          <LinkCard key={shown.id} visit={shown} issued={s.link} onCancelled={onCancelled} />
         </ul>
       )}
     </>

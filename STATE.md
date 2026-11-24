@@ -102,6 +102,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-03b | src/features/support/useJobCardForm.ts:81 | unused `today`; use as date max or drop | ≈1 min |
 | T-03b | src/features/support/FoundCardSection.tsx | takes whole hook return; NO_ADVISORS / "Feedback already received" copy duplicated client+server | ≈4 min |
 | T-10b | src/features/admin-users/UserRow.tsx:24,26 | long emails overflow at 360 px: min-w-0 on grid span, break-all on email | ≈2 min |
+| T-03c | src/features/support/LinkActions.tsx:142 | expired/no-phone link: no button shown and Resend disabled though the URL could be copied | ≈3 min |
 | T-20 | tests/e2e/account change-password success | test.fixme until T-10b can create a throwaway user | ≈5 min |
 | T-02b | src/components/shared/RoleGuard.tsx m6 | usePathname drops the query string, so next= loses it on mid-page session end; add useSearchParams | ≈3 min |
 | T-02b | src/server/auth/password.ts m7 | no import "server-only" (tsx scripts import it); record the exemption | ≈1 min |

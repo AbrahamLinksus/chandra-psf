@@ -69,8 +69,9 @@ describe("copy flash timer (minor 5)", () => {
     vi.useFakeTimers();
     vi.stubGlobal("navigator", { clipboard: { writeText: () => Promise.resolve() } });
     session.user = { id: "u", role: "support" };
-    const visit = { id: "v", url: "http://x", isMine: true } as VisitSummary;
-    const { result, unmount } = renderHook(() => useLinkActions(visit, vi.fn()), {
+    const visit = { id: "v", mine: true } as VisitSummary;
+    const issued = { visit, url: "http://x", whatsappUrl: null };
+    const { result, unmount } = renderHook(() => useLinkActions(visit, issued, vi.fn()), {
       wrapper: wrap({}),
     });
     await act(async () => {

@@ -1,11 +1,9 @@
 import "server-only";
-import { and, desc, eq, isNull } from "drizzle-orm";
-import type { VisitSummary } from "@/data/access";
+import { and, eq, isNull } from "drizzle-orm";
 import type { JobCardInput, JobCardRepo, JobCardView } from "@/data/access/repos/jobCards";
 import { err, ok, type Result } from "@/data/access/result";
 import { normalizeJobCardNo } from "@/domain/jobCard";
 import { istDateOf } from "@/domain/time";
-import { visitStatus } from "@/domain/visitStatus";
 import { writeAudit } from "../audit";
 import { guard, type RequestCtx, type SessionUser } from "../ctx";
 import { advisors, branches, jobCards, visits } from "../db/schema";
@@ -25,45 +23,10 @@ import {
   type JobCardRow,
 } from "./jobCardRules";
 import { unavailable } from "./unavailable";
+import { currentSummary } from "./visitRows";
 
 const NO_CARD = "That job card no longer exists.";
 const PICK_ADVISOR = "Pick an advisor";
-type VisitRow = typeof visits.$inferSelect;
-
-function toSummary(card: JobCardRow, v: VisitRow, now: Date, userId: string): VisitSummary {
-  const status = visitStatus(
-    {
-      id: v.id,
-      jobCardNo: card.jobCardNo,
-      phone: card.phone,
-      token: "",
-      createdBy: v.createdBy,
-      createdAt: v.createdAt.toISOString(),
-      expiresAt: v.expiresAt.toISOString(),
-      openedAt: v.openedAt?.toISOString() ?? null,
-      completedAt: v.completedAt?.toISOString() ?? null,
-      cancelledAt: v.cancelledAt?.toISOString() ?? null,
-      replacedBy: v.replacedBy,
-    },
-    now,
-  );
-  return {
-    id: v.id,
-    jobCardNo: card.jobCardNo,
-    customerName: card.customerName ?? "",
-    regNo: card.regNo ?? "",
-    model: card.model,
-    serviceDate: card.serviceDate,
-    phone: card.phone,
-    status,
-    createdAt: v.createdAt.toISOString(),
-    expiresAt: v.expiresAt.toISOString(),
-    url: "",
-    whatsappUrl: null,
-    isMine: v.createdBy === userId,
-  };
-}
-
 export class ServerJobCardRepo implements JobCardRepo {
   constructor(protected readonly ctx: RequestCtx) {}
 
@@ -86,13 +49,7 @@ export class ServerJobCardRepo implements JobCardRepo {
         .limit(1);
       if (key === "" || !row) return err("NOT_FOUND", notFoundMessage(typed));
       const view = await this.view(row);
-      const [visit] = await this.ctx.db
-        .select()
-        .from(visits)
-        .where(and(eq(visits.jobCardId, row.id), isNull(visits.replacedBy)))
-        .orderBy(desc(visits.createdAt))
-        .limit(1);
-      const current = visit ? toSummary(row, visit, this.ctx.clock.now(), user.id) : null;
+      const current = await currentSummary(this.ctx, row.id, user.id);
       return ok({ jobCard: view, current });
     });
 

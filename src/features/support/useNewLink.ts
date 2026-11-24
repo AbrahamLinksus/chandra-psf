@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import type { DataAccess, Result, VisitSummary } from "@/data/access";
 import type { JobCardView } from "@/data/access/repos/jobCards";
+import type { LinkIssued } from "@/data/access/repos/visits";
 import { useRepoMutation } from "@/hooks/useRepoMutation";
 
 export interface FoundCard {
@@ -19,13 +20,13 @@ const lookupFn = (da: DataAccess, no: string): Promise<Result<FoundCard>> =>
   da.jobCards.getJobCard(no);
 
 /** Saves a corrected phone on the job card (audited), then creates the link. */
-async function generateFn(da: DataAccess, i: GenerateInput): Promise<Result<VisitSummary>> {
+async function generateFn(da: DataAccess, i: GenerateInput): Promise<Result<LinkIssued>> {
   const wanted = i.phone.trim() === "" ? null : i.phone;
   if (i.card.editable && wanted !== i.card.phone) {
     const saved = await da.jobCards.updateJobCard(i.card.id, { phone: wanted });
     if (!saved.ok) return saved;
   }
-  return da.visits.createVisitLink({ jobCardNo: i.card.jobCardNo, phone: wanted });
+  return da.visits.createVisitLink({ jobCardId: i.card.id });
 }
 
 /** Lookup of one job card at my branch: the card, the editable phone, or "not found" / an error. */
@@ -76,7 +77,7 @@ export function useNewLink() {
   const lk = useJobCardLookup();
   const { found, phone, show, find, clear } = lk;
   const [formNo, setFormNo] = useState<string | null>(null);
-  const [link, setLink] = useState<VisitSummary | null>(null);
+  const [link, setLink] = useState<LinkIssued | null>(null);
   const createM = useRepoMutation(generateFn);
 
   const lookup = useCallback(
