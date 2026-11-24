@@ -632,19 +632,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] A laptop tab left idle 15+ min makes no requests (Vercel / Neon logs or a network capture) and refreshes at once on return (G-6, S-23); captures in `.results/T-23/`
 - Result: —
 
-### T-35 · Cloud sessions + preview workflow (owner request 2026-11-24)
-- Owner: env-setup
-- Depends on: —
-- Files: scripts/cloud/**, .claude/settings.json, .github/workflows/preview-e2e.yml, docs/CLOUD.md
-- Context: owner works from a Windows-only PC and wants every build step to run in Claude Code cloud sessions (Ubuntu 24.04, root setup script, Node 22 preinstalled, Limited network) + GitHub Actions (ci.yml already runs check.sh). Plugin dev-team-setup comes from GitHub repo AbrahamLinksus/dev-team-setup and must be added by the owner at claude.ai/customize/plugins (repo settings cannot load it in cloud sessions).
-- Why separate: tooling only; no product code.
-- Status: In progress
-- Acceptance criteria:
-  - [ ] scripts/cloud/setup.sh (paste-in environment setup script, root, < 5 min, idempotent): Node 24 from nodejs.org, pnpm 11.24.0, Playwright Chromium + OS deps for the pinned Playwright, gitleaks v8.30.1 checksum-verified at ~/.cache/chandra-psf/tools/gitleaks; exits 0
-  - [ ] .claude/settings.json SessionStart hook runs scripts/cloud/session-start.sh (pnpm install --frozen-lockfile, git hooksPath) only when CLAUDE_CODE_REMOTE=true; no-op on Windows/local
-  - [ ] .github/workflows/preview-e2e.yml: manual (workflow_dispatch) run of tests/e2e/preview with PREVIEW_URL / PREVIEW_ADMIN_EMAIL / PREVIEW_ADMIN_PASSWORD from repo secrets, uploads .results/T-23 as an artifact, never echoes secrets
-  - [ ] docs/CLOUD.md: owner runbook (create the environment, network allowed domains incl. Playwright hosts, paste the setup script, add the plugin marketplace, set GitHub secrets, start /setup-project resume in a cloud session, Windows-only client notes)
-- Result: —
+### T-35 · Cloud sessions + preview workflow — DROPPED 2026-11-24 (owner: not needed; moving accounts instead)
 
 ## M5 · Admin console, privacy, clean-up, go-live readiness
 
