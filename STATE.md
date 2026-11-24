@@ -36,6 +36,9 @@
 ## Open work
 - Tasks in progress live on `wip/*` branches (see `taskgit.sh list`); their step states are in each branch's TASK_PROGRESS.md.
 
+## Batch queue (low-risk cards waiting for the batch card)
+- T-22 Live refresh · TASK READY, sync ✅ (PORT=8022) · 3/3 goals · review 0 major, 4 minor · ≈$1.25 · card: chandra-psf-wt/T-22/.results/T-22/card.md
+
 ## Open decisions (waiting for the owner)
 - none
 
@@ -90,6 +93,15 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-22s | src/config/env.ts:21 | DEFAULT_POLL_SECONDS belongs in src/domain/constants.ts | ≈2 min |
 | T-22s | src/config/env.ts:26 | accepts fractional poll seconds (0.01); require integer ≥ 1 | ≈2 min |
 | T-22s2 | docs/CONVENTIONS.md §1 l.14, §5 l.50 | still say config env uses zod; reword (D-34) | ≈2 min |
+| T-03b | src/server/repos/jobCards.ts:123, 259-262 | "Feedback already received" check runs outside the update tx; move it inside (review #5) | ≈5 min |
+| T-03b | src/server/repos/jobCards.ts:139 / jobCardRules.ts inputOf | merge re-validates every stored field; legacy null name/reg no blocks edits (review #2) | ≈3 min |
+| T-03b | tests/unit/server/jobCards/jobCardRepo.test.ts:216 | new test doesn't assert the jobcard.update audit row | ≈1 min |
+| T-03b | src/server/repos/jobCardRules.ts:1 | missing `import "server-only"` | ≈1 min |
+| T-03b | src/server/repos/jobCards.ts:~86 getJobCard | main admin: limit(1) picks an arbitrary branch when numbers collide | ≈3 min |
+| T-03b | src/features/support/JobCardForm.tsx msgFor | VALIDATION on an unrendered field shows nowhere; fall back to SaveState | ≈3 min |
+| T-03b | src/features/support/useJobCardForm.ts:81 | unused `today`; use as date max or drop | ≈1 min |
+| T-03b | src/features/support/FoundCardSection.tsx | takes whole hook return; NO_ADVISORS / "Feedback already received" copy duplicated client+server | ≈4 min |
+| T-10b | src/features/admin-users/UserRow.tsx:24,26 | long emails overflow at 360 px: min-w-0 on grid span, break-all on email | ≈2 min |
 | T-20 | tests/e2e/account change-password success | test.fixme until T-10b can create a throwaway user | ≈5 min |
 | T-02b | src/components/shared/RoleGuard.tsx m6 | usePathname drops the query string, so next= loses it on mid-page session end; add useSearchParams | ≈3 min |
 | T-02b | src/server/auth/password.ts m7 | no import "server-only" (tsx scripts import it); record the exemption | ≈1 min |

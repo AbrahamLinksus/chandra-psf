@@ -520,13 +520,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/jobCards.ts, src/server/rpc/jobCards.ts, src/data/access/repos/jobCards.ts, src/features/support/**, src/app/support/new/**, tests/unit/server/jobCards/**, tests/e2e/support-jobcards/**, src/server/repos/jobCardRules.ts
 - Context: SPEC US-02, US-26, F-2 steps 1–4, §5 F-2 rows · LLD-phase2 §22 · files: src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/jobCard.ts, src/domain/phone.ts, src/features/support/*
 - Why separate: own repo (personal data, branch scope); links (T-03c) need a saved job card.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
-  - [ ] SPEC §5 row Ramesh Kumar · 98400 12345 · tn09bx4521 · Activa 6G · Paid service · 14 Nov 2026 · Suresh → details card "+91 98400 12345 · TN 09 BX 4521 · Scooter · Advisor: Suresh"; ` jc241042` finds it (S-02); not found → "No job card JC-24-1042 at this branch yet" + New job card with the number prefilled
-  - [ ] Tambaram support looking up Velachery's `JC-24-1042` → not found (US-29); a duplicate at the same branch → "JC-24-1042 already exists at this branch" + Open it; a retry with the same request id after a lost reply → the saved card (S-29, G-15)
-  - [ ] No advisors → "Ask your admin to add advisors for this branch"; a future date → "Service date can't be in the future"; editing phone or details is audited `jobcard.update` old → new and blocked with "Feedback already received" after completion (S-03, G-05)
-  - [ ] A failed save keeps the form and shows "Couldn't save, try again" (S-13)
-- Result: —
+  - [x] SPEC §5 row Ramesh Kumar · 98400 12345 · tn09bx4521 · Activa 6G · Paid service · 14 Nov 2026 · Suresh → details card "+91 98400 12345 · TN 09 BX 4521 · Scooter · Advisor: Suresh"; ` jc241042` finds it (S-02); not found → "No job card JC-24-1042 at this branch yet" + New job card with the number prefilled
+  - [x] Tambaram support looking up Velachery's `JC-24-1042` → not found (US-29); a duplicate at the same branch → "JC-24-1042 already exists at this branch" + Open it; a retry with the same request id after a lost reply → the saved card (S-29, G-15)
+  - [x] No advisors → "Ask your admin to add advisors for this branch"; a future date → "Service date can't be in the future"; editing phone or details is audited `jobcard.update` old → new and blocked with "Feedback already received" after completion (S-03, G-05)
+  - [x] A failed save keeps the form and shows "Couldn't save, try again" (S-13)
+- Result: approved 2026-11-24 · 4/4 goals (completed-visit block + audit unit-tested until T-03c) · 1 major fixed in review · 8 minors · ≈$3.92
 
 ### T-03c · Support: generate and send a link, My links / All branch links
 - Owner: backend-coder, frontend-coder
