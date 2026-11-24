@@ -14,8 +14,8 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M4 · Support → customer loop across devices (8/9 original + T-22s, T-22s2 done) |
-| Next step | M4: T-07b (alerts queue by branch; deps done) → then T-23 wire-up on the preview → M4-docs. Un-fixme T-03d's 3 e2e tests (T-04b pages now on main) inside T-07b's or T-23's test step. Run full checks one at a time with NODE_OPTIONS=--max-old-space-size=4096. |
+| Milestone | M4 · Support → customer loop across devices (9/9 original + T-22s, T-22s2 done) |
+| Next step | M4: T-23 wire-up on the preview (devops; owner pushes/checks Vercel) → M4-docs (architect as-built LLD sync + docs README) → M4 milestone card. Run full checks one at a time with NODE_OPTIONS=--max-old-space-size=4096. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
@@ -136,7 +136,6 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-03d | src/components/shared/SaveState.tsx | add canRetry prop; drop the ActionStatus wrapper in LinkActions.tsx:51-61 | ≈5 min |
 | T-03d | src/features/support/useLinkActions.ts:80-81 | move reset() inside the try block (tidy) | ≈1 min |
 | T-03d | tests/e2e/admin-users uniq() | Date.now() names collide under --repeat-each (NAME_IN_USE); fix must keep names short (360 px row) | ≈5 min |
-| T-03d | tests/e2e/support-link-actions | 3 test.fixme need T-04b customer pages (newer link, Link not valid); un-fixme after T-04b | ≈5 min |
 | Windows | vitest | V8 out-of-memory in a worker on this machine; run check.sh with NODE_OPTIONS=--max-old-space-size=4096 | ≈0 |
 | T-04b | src/data/access/repos/feedback.ts submitFeedback | submissionId optional only for old tests; make it required (LLD §17.2) | ≈3 min |
 | T-04b | src/features/{feedback-form,privacy}/contact.ts + PrivacyNotice | duplicated (depcruise bans feature→feature); move to a shared module | ≈5 min |
@@ -147,6 +146,11 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-04b | review | 10 minors total; the rest were in the git-ignored review report that approve deleted (Windows) | — |
 | T-04b debug | playwright.config.ts (gate) | `workers: Number(process.env.E2E_WORKERS ?? 8)` to stop CPU starvation in the first wave | ≈2 min |
 | T-04b debug | tests/e2e admin-users.spec.ts:85, admin-branches.spec.ts:39-41 | test.slow() on s15; call listBranches before the 5 s waitFor (keep-alive ECONNRESET) | ≈3 min |
+| T-07b | src/server/repos/alerts.ts:111-126 | no row lock: a response deleted mid-transaction still gets its alert updated (m7) | ≈5 min |
+| T-07b | src/server/repos/alerts.ts LIST_LIMIT | list silently truncated at the 500 newest alerts; move to src/domain/constants.ts and add paging or a "showing 500 newest" note | ≈5 min |
+| T-07b | tests/e2e/admin-alerts | audit alert.status asserted only at unit level; add the e2e check once T-09b's audit.listAudit lands | ≈3 min |
+| T-07b | e2e suite | close to the 300/h anonymous (per-IP) limit; new specs that sign in more may trip it — merge sign-ins or add a test-only limit | ≈10 min |
+| T-07b | src/data/access/repos/alerts.ts | rework rewrote the whole file (diff noise); repo has 321 CRLF files under src — consider a .gitattributes eol policy | ≈5 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.

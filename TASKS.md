@@ -612,12 +612,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/alerts.ts, src/server/rpc/alerts.ts, src/data/access/repos/alerts.ts, src/features/admin-alerts/**, src/app/admin/alerts/**, tests/unit/server/alerts/**, tests/e2e/admin-alerts/**
 - Context: SPEC US-12, US-13, F-4, §5 F-4 row · LLD-phase2 §17.2 (§11 row), §19 · files: src/domain/alertRules.ts, src/features/admin-alerts/*
 - Why separate: own repo and route.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
-  - [ ] The Velachery admin sees only Velachery alerts and badge count; the main admin sees all with a Branch filter and a branch column (US-13, S-30)
-  - [ ] Priya S. → Contacted with note "Called, bike rechecked 22 Nov" → amber row, audit `alert.status` + note (AC-8); a stale version → "Someone else changed this alert. Reload to see the latest." and the typed note is kept (S-13)
-  - [ ] Another branch's alert id → "Not found"; support → FORBIDDEN (US-29, AC-6, G-W2); alerts of deleted responses are hidden; an erased customer shows "Erased customer"
-- Result: —
+  - [x] The Velachery admin sees only Velachery alerts and badge count; the main admin sees all with a Branch filter and a branch column (US-13, S-30)
+  - [x] Priya S. → Contacted with note "Called, bike rechecked 22 Nov" → amber row, audit `alert.status` + note (AC-8); a stale version → "Someone else changed this alert. Reload to see the latest." and the typed note is kept (S-13)
+  - [x] Another branch's alert id → "Not found"; support → FORBIDDEN (US-29, AC-6, G-W2); alerts of deleted responses are hidden; an erased customer shows "Erased customer"
+- Result: approved 2026-11-24 · 3/3 goals · branch-scoped alerts + badge, main-admin Branch filter (card label), atomic version check, audit alert.status/alert.note · review 3 major → fixed + re-reviewed · 14 unit + 10 e2e · cov 96.2% · audit asserted at unit level until T-09b
 
 ### T-23 · Wire-up: support → customer loop across devices on the preview
 - Owner: devops
