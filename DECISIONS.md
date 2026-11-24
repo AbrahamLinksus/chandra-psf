@@ -31,6 +31,7 @@
 | D-25 | 2026-11-22 | Addresses + demo | Production on a new vercel.app address; demo frozen (tag demo-v1, demo branch) and taken offline at launch | — | Take over demo address | CR-1 |
 | D-26 | 2026-11-22 | Phase-2 packages + contracts | drizzle-orm 0.45.4, @neondatabase/serverless 1.2.1, @node-rs/argon2 2.2.2, server-only; dev drizzle-kit 0.31.11, PGlite; exceljs removed; contract changes per LLD-phase2; free-plan backups = test data only | — | Auth.js / Better Auth; nightly encrypted dump | CR-1 |
 | D-27 | 2026-11-23 | T-10b approval | Fix the last-admin race, then approve | Two admins demoting/deactivating at once can no longer leave zero main admins (row lock) · low | Approve as-is | T-10b |
+| D-28 | 2026-11-24 | Slow sign-in on preview (3–4.5 s) | Fix region (sin1) inside T-05b, then approve; add T-31s CSP and T-32 list refresh in M3 | Functions next to Neon Singapore · if wrong: one line in vercel.json | Approve as-is | T-05b |
 
 ## Tier 2 — decided by agents (overrule any time)
 | ID | Date | Decision | Chosen | Agent | Task |

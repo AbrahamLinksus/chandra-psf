@@ -14,8 +14,8 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (12/13) |
-| Next step | T-05b preview deploy on a new Vercel project (owner step first), then M3 batched review, M3 milestone card |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (13/16) |
+| Next step | M3 follow-ups T-31s (CSP), T-32 (list refresh), T-33s (argon2 params), then M3 milestone (M3-docs + card) |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
@@ -50,6 +50,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 ```
 
 ## Known minors
+- Lockout counts failures per email for 15 min and a correct sign-in does not reset them — confirm against SPEC (≈5 min check)
+- DEPLOY.md phase-1 env table still says NEXT_PUBLIC_APP_URL; real key is APP_URL (≈2 min, docs)
 | Task | Where | Fix | Size |
 |---|---|---|---|
 | T-15 | src/server/env.ts | drop runtime DATABASE_URL_UNPOOLED requirement (review m-8; src + test change) | ≈5 min |
@@ -103,6 +105,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 |---|---|---|
 | frontend-coder, backend-coder | <wt>/AGENTS.md + node_modules/next/dist/docs/ (relevant guide) | Next 16.4 has breaking API changes vs training data |
 | architect | <plugin root>/.devteam default scopes.json | needed to decide whether to override scopes |
+| task-runner, devops | (rule) | the hook blocks git push, gh and vercel for agents: the Orchestrator pushes wip/* and checks Vercel builds, then resumes the runner |
 
 ## Notes for the next session
 - PAUSED 2026-11-23 14:39 +05:30. Phase 2 M3: 11/13 done (T-13..T-21, T-01b, T-02b, T-19, T-20, T-21 approved). In flight: T-10b (wip/T-10b) — owner approved "fix last-admin race, then approve"; race fixed + tests done; sync failed on the order-dependent T-21 first-run e2e. The debugger's fix was REVERTED by the scope check (e2e files are tester-owned, not debugger). Restart a fresh tester step `fix-e2e-order` (brief: apply .results/T-10b/debug-sync-debugger.md fix + FirstRunCard unit test, check.sh twice), then `taskgit sync` (PORT=8010), record + approve with no new card. Then T-05b.

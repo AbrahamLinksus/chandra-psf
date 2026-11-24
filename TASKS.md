@@ -454,12 +454,49 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: vercel.json, docs/DEPLOY.md
 - Context: SPEC §8 Hosting, §9 Security · HLD Free now / paid later, Risks · LLD-phase2 §15.5, §16.2, §26 · files: .env.example, package.json
 - Why separate: owner's accounts; the M3 risk checkpoint (first real host + real database; argon2 on Vercel unverified).
+- Status: Done
+- Acceptance criteria:
+  - [x] **Owner step:** the owner creates a NEW Vercel project (not `chandra-psf`) from the repo and sets the Preview env (Neon `dev` pooled + unpooled URLs, `IP_HASH_PEPPER`, `CRON_SECRET`, `APP_URL`, public placeholders); the team never sees secrets; production deploys stay off until T-28 (`git.deploymentEnabled` for main = false) (G-04)
+  - [x] The build runs `pnpm db:migrate && next build` against Neon `dev`; **owner step:** the maintainer runs `pnpm admin init` against `dev` from their laptop
+  - [x] On the preview over HTTPS: the first admin signs in → sets a password → adds a branch and a support user who signs in (360 px captures in `.results/T-05b/`); argon2 hash time measured on Vercel (p95 logged; under 100 ms → parameters raised per LLD §18.1)
+  - [x] `robots` noindex, security headers present, an unknown path → the not-found page with no stack trace (G-W7); `docs/DEPLOY.md` has the new-project and Neon setup steps
+- Result: 4/4 goals ✅ (⚠️ no CSP → T-31s; argon2 under 100 ms → T-33s) · preview chandra-psf-preview (sin1) · sign-in p95 4.5 s → 0.27 s after region fix · ≈$1.41 · tester 57% · docs 25% · devops 12% · reviewer 5%
+
+### T-31s · Content-Security-Policy header (shared-change)
+- Owner: frontend-coder
+- Depends on: T-05b
+- Files: next.config.ts, src/proxy.ts, tests/e2e/foundation/**
+- Context: SPEC §9 (Security & privacy) · LLD-phase2 §16.2, §26 · T-05b verify-preview report (no CSP header on the preview) · files: next.config.ts, src/proxy.ts, src/app/layout.tsx, /AGENTS.md + node_modules/next/dist/docs/ (CSP guide)
+- Why separate: owner follow-up from T-05b (2026-11-24); next.config.ts and src/proxy.ts are frozen shared files.
 - Status: Backlog
 - Acceptance criteria:
-  - [ ] **Owner step:** the owner creates a NEW Vercel project (not `chandra-psf`) from the repo and sets the Preview env (Neon `dev` pooled + unpooled URLs, `IP_HASH_PEPPER`, `CRON_SECRET`, `APP_URL`, public placeholders); the team never sees secrets; production deploys stay off until T-28 (`git.deploymentEnabled` for main = false) (G-04)
-  - [ ] The build runs `pnpm db:migrate && next build` against Neon `dev`; **owner step:** the maintainer runs `pnpm admin init` against `dev` from their laptop
-  - [ ] On the preview over HTTPS: the first admin signs in → sets a password → adds a branch and a support user who signs in (360 px captures in `.results/T-05b/`); argon2 hash time measured on Vercel (p95 logged; under 100 ms → parameters raised per LLD §18.1)
-  - [ ] `robots` noindex, security headers present, an unknown path → the not-found page with no stack trace (G-W7); `docs/DEPLOY.md` has the new-project and Neon setup steps
+  - [ ] Every HTML response carries a Content-Security-Policy that allows only the app's own origin for scripts, styles, images, fonts and connections, plus `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`, `object-src 'none'` (nonce-based scripts if Next 16 supports it without breaking static pages; otherwise documented why not)
+  - [ ] No CSP violations in the browser console across sign-in, admin pages, support pages and the customer feedback form (e2e asserts the header and no `securitypolicyviolation` events)
+  - [ ] Dev mode (`pnpm dev`) still works (HMR allowed in development only)
+- Result: —
+
+### T-32 · Lists refresh right after Add branch / Add user
+- Owner: frontend-coder
+- Depends on: T-05b
+- Files: src/features/admin-users/**, src/features/admin-branches/**, src/app/admin/users/**, src/app/admin/branches/**, tests/e2e/admin-users/**, tests/e2e/admin-branches/**
+- Context: T-05b verify-preview report (on the real host the new row shows only after a reload; local e2e passes) · LLD-phase2 §23 · files: src/features/admin-users/*, src/features/admin-branches/*
+- Why separate: owner follow-up from T-05b (2026-11-24); likely a cache or revalidation difference on Vercel vs local.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] After Add branch, Add user, Edit user and Deactivate, the list shows the change without a reload, both locally and on the preview deploy
+  - [ ] An e2e test fails on the old behaviour (no reload between add and assert, no stale cache)
+- Result: —
+
+### T-33s · Raise argon2 parameters (LLD §18.1 trigger) (shared-change)
+- Owner: backend-coder
+- Depends on: T-05b
+- Files: src/server/auth/password.ts, src/server/auth/**, tests/unit/server/auth/**
+- Context: LLD-phase2 §18.1 · T-05b retime report (.results/T-05b/argon2-timing-sin1.txt: real-hash minus one-query baseline ≈ 21–38 ms on Vercel sin1) · files: src/server/auth/*
+- Why separate: T-05b criterion "under 100 ms → parameters raised per LLD §18.1"; src/server/auth/** is frozen.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] argon2 parameters raised per LLD §18.1 so the hash takes ≥100 ms on Vercel sin1 (measured with a server-side timing log, not network round-trips), p95 sign-in still under 1 s
+  - [ ] Existing hashes still verify and are re-hashed with the new parameters on the next successful sign-in (if LLD §18.1 says so)
 - Result: —
 
 ## M4 · Support → customer loop across devices
