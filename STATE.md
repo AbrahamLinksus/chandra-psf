@@ -7,20 +7,20 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | C:/Users/Jake/chandraProject (Windows 11, Git Bash; worktrees in C:/Users/Jake/chandraProject-wt/; start sessions in C:/Users/Jake/chandraProject) |
-| Status | In progress |
+| Status | Paused |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M4 · Support → customer loop across devices (9/9 original + T-22s, T-22s2 done) |
-| Next step | M4: (a) M4-docs on wip/M4-docs — architect as-built sync of docs/LLD-phase2.md running (restart that step fresh if interrupted), then docs README pass, sync, card; (b) T-23 on wip/T-23 — preview suite written, waiting for the owner to run it on the preview (tests/e2e/preview/README.md), then review + sync + card; then the M4 milestone card → M5 |
+| Milestone | M4 · Support → customer loop across devices (9/9 original + T-22s, T-22s2 done; M4-docs approved; only T-23 left) |
+| Next step | M4: T-23 on wip/T-23 — preview suite written (tests/e2e/preview/, README there). Blocked on (1) Vercel free-plan build rate limit (wip/T-23 build failed 'build-rate-limit'; Redeploy it after the daily reset, optionally set Ignored Build Step to build only wip/T-23) and (2) owner sign-in on the wip/T-23 PREVIEW deployment address (not chandra-psf-preview.vercel.app, which is a Production deployment with no Production env → ZodError). Then owner runs the suite → review → sync (PORT=8023) → card → M4 milestone card → M5 (start with T-36). |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-24 (paused to move to another Claude account; Windows) |
+| Last updated | 2026-11-24 evening (Windows; end of day) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -89,7 +89,6 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-20 | src/features/account/AccountDetails.tsx:3 | ROLE_LABELS duplicates admin-users/userForm.ts (m7) | ≈2 min |
 | T-19 | tests/support/e2e.ts:108-128 | stale-OTP retry loop can lock the shared admin if marker write fails (m8) | ≈3 min |
 | T-21 | src/server/repos/advisors.ts | writes audit `advisor.rename`; AuditAction/auditFormat only know `advisor.update` (M3 as-built) | ≈3 min |
-| M3-docs | README.md env section | lists NEXT_PUBLIC_COMPANY_NAME / PRIVACY_PHONE / PRIVACY_EMAIL / POLL_SECONDS, which no code reads; drop or mark future | ≈2 min |
 | T-22s | src/config/env.ts:21 | DEFAULT_POLL_SECONDS belongs in src/domain/constants.ts | ≈2 min |
 | T-22s | src/config/env.ts:26 | accepts fractional poll seconds (0.01); require integer ≥ 1 | ≈2 min |
 | T-22s2 | docs/CONVENTIONS.md §1 l.14, §5 l.50 | still say config env uses zod; reword (D-34) | ≈2 min |
@@ -170,6 +169,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | task-runner, devops | (rule) | the hook blocks git push, gh and vercel for agents: the Orchestrator pushes wip/* and checks Vercel builds, then resumes the runner |
 
 ## Notes for the next session
+- END OF DAY 2026-11-24: M4-docs approved (as-built LLD-phase2 incl. §17.4 alerts, README/DEPLOY pass, D-40 architect write grant fixed in .devteam/scopes.json). Owner's Neon dev connection string was pasted in chat — owner advised to reset the neondb_owner password and update Vercel Preview DATABASE_URL/_UNPOOLED; confirm with the owner. pnpm admin needs BOTH $env:DATABASE_URL and $env:DATABASE_URL_UNPOOLED set to the dev direct URL (no quotes in Read-Host). vercel.json already disables main deploys; only wip/* pushes build previews (each checkpoint push uses build quota).
 - PAUSED 2026-11-24: owner moving to another Claude account (still Windows, Git Bash, not WSL). M4: T-22, T-03d, T-04b, T-07b approved; open: wip/T-23 only (implement ✅ by tester after devops lacked tests/** scope; owner run pending). T-35 (cloud scripts) dropped by owner — keep things simple. Windows setup that worked: clone to C:/Users/<you>/chandraProject; npm i -g pnpm@11.24.0; pnpm install; git config core.hooksPath .githooks; set PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64 and pnpm exec playwright install chromium; gitleaks 8.30.1 windows_x64 → ~/.cache/chandra-psf/tools/gitleaks.exe (checksum from the release's checksums.txt); ~/bin/python3 shim → a real Python (the WindowsApps python3 is a Store stub; the plugin's scope guard needs python3); run sync/approve with PORT=<task port>, PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64, NODE_OPTIONS=--max-old-space-size=4096, one full check at a time.
 - 2026-11-24 Windows lessons: (1) if the pre-commit hook blocks a checkpoint, the next agent's `taskgit scope` reverts the previous agent's uncommitted files — get each step committed (fix lint first) before the next agent runs; never run scope while two agents' work is uncommitted. (2) `taskgit approve` deletes the worktree incl. .results (cards/reports gone) and leaves locked node_modules/.next folders in C:/Users/Jake/chandraProject-wt/<id> — copy anything needed before approving; delete leftovers when no server runs. (3) Agents can't set PORT; the Orchestrator runs sync/approve with PORT, PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64 and NODE_OPTIONS=--max-old-space-size=4096.
 - RESUMED 2026-11-24 on Windows 11 (Git Bash, not WSL; owner's choice). Setup: pnpm 11.24.0 via npm -g, gitleaks.exe 8.30.1 in ~/.cache/chandra-psf/tools/, ~/bin/python3 shim → Anaconda python (the WindowsApps python3 is a Store stub; taskgit scope + the scope-guard hook need python3). main 40d207c made the spawned-CLI tests Windows-safe. check.sh still defaults PLAYWRIGHT_HOST_PLATFORM_OVERRIDE to ubuntu24.04-x64, so on Windows run it with `export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64` (agents may need the Orchestrator to run it). T-04b/T-03d merged main with TASKGIT_SKIP_CHECK=1 so their testers get both fixes.
