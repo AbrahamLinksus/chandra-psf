@@ -599,12 +599,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/data/remote/activity.ts, src/data/remote/poller.ts, src/app/providers.tsx, tests/unit/remote/poller/**
 - Context: SPEC US-05, §4 Rules (Shared data on every device), DoD G-6 item · LLD-phase2 §20 · files: src/data/remote/*
 - Why separate: client-only refresh engine with no repo (free-plan budget).
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
-  - [ ] A visible tab used in the last 15 min → all staff topics refresh every `POLL_SECONDS`; hidden, or idle > 15 min → no requests (fake timers, request counter) (S-23, G-6)
-  - [ ] Returning to the tab, or the first input after idle → one refresh at once; `x-psf-active: 1` only within 60 s of input
-  - [ ] No polling on `/f/*`, `/privacy`, `/sign-in` or without a staff session; the form query never refetches
-- Result: —
+  - [x] A visible tab used in the last 15 min → all staff topics refresh every `POLL_SECONDS`; hidden, or idle > 15 min → no requests (fake timers, request counter) (S-23, G-6)
+  - [x] Returning to the tab, or the first input after idle → one refresh at once; `x-psf-active: 1` only within 60 s of input
+  - [x] No polling on `/f/*`, `/privacy`, `/sign-in` or without a staff session; the form query never refetches
+- Result: approved 2026-11-24 · 3/3 goals · polling only while a staff tab is visible and used in the last 15 min · review 0 major, 4 minor (details were in the git-ignored card on the old machine) · ≈$1.25
 
 ### T-07b · Alerts queue on the server, by branch
 - Owner: backend-coder, frontend-coder

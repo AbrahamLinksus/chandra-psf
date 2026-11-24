@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M4 · Support → customer loop across devices (5/9 original + T-22s, T-22s2 done) |
-| Next step | Resume M4: T-22 card (batch, approve with PORT=8022), restart T-04b (backend-coder partial) and T-03d (frontend step) with fresh runners; then T-07b, T-23, M4-docs |
+| Milestone | M4 · Support → customer loop across devices (6/9 original + T-22s, T-22s2 done) |
+| Next step | M4: T-04b frontend-coder step running, T-03d frontend-coder step running; then test+review + sync for both; then T-07b, T-23, M4-docs |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-24 14:48 +05:30 |
+| Last updated | 2026-11-24 (Windows resume) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -37,7 +37,7 @@
 - Tasks in progress live on `wip/*` branches (see `taskgit.sh list`); their step states are in each branch's TASK_PROGRESS.md.
 
 ## Batch queue (low-risk cards waiting for the batch card)
-- T-22 Live refresh · TASK READY, sync ✅ (PORT=8022) · 3/3 goals · review 0 major, 4 minor · ≈$1.25 · card: chandra-psf-wt/T-22/.results/T-22/card.md
+- empty
 
 ## Open decisions (waiting for the owner)
 - none
