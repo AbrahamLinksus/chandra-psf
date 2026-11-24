@@ -581,6 +581,18 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [x] `.env.example` lists `NEXT_PUBLIC_POLL_SECONDS=` with a one-line comment; the foundation config test still passes (updated only for the new key)
 - Result: approved 2026-11-24 · 2/2 goals · NEXT_PUBLIC_POLL_SECONDS (default 30) · ≈$0.24
 
+### T-22s2 · Make src/config/env.ts zod-free for client pages (shared-change)
+- Owner: frontend-coder
+- Depends on: T-22s
+- Files: src/config/env.ts, tests/unit/foundation/config.test.ts
+- Context: LLD-phase2 §15.5, §18.5 (CSP), §20 · files: src/config/env.ts, tests/unit/foundation/config.test.ts, tests/e2e/foundation/csp.spec.ts
+- Why separate: env.ts is frozen; T-22's providers.tsx imports POLL_SECONDS on every page and zod's Function("") probe breaks the strict CSP (owner decision D-34).
+- Status: Done
+- Acceptance criteria:
+  - [x] src/config/env.ts has no zod import; NEXT_PUBLIC_DEALER_PHONE keeps its behaviour (dev fallback outside production; missing/empty in production → throws with a clear message); POLL_SECONDS unchanged (default 30); still the only client process.env reader
+  - [x] Foundation config tests pass (updated only where they asserted zod specifics); scripts/check.sh passes on its own branch
+- Result: approved 2026-11-24 · 2/2 goals · env.ts zod-free (D-34) · ≈$0.52
+
 ### T-22 · Live refresh only while staff use the screen
 - Owner: frontend-coder
 - Depends on: T-01b

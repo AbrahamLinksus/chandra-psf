@@ -87,8 +87,28 @@ describe("env fallback", () => {
     expect(env.NEXT_PUBLIC_DEALER_PHONE).toBe("+91 44 0000 0000");
   });
 
-  it("stays strict in production", async () => {
-    await expect(load("production")).rejects.toThrow();
+  it("stays strict in production: missing value throws a clear message", async () => {
+    await expect(load("production")).rejects.toThrow(/NEXT_PUBLIC_DEALER_PHONE is required/);
+  });
+
+  it("production with an empty value throws a clear message", async () => {
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_DEALER_PHONE", "");
+    await expect(import("@/config/env")).rejects.toThrow(/NEXT_PUBLIC_DEALER_PHONE is required/);
+  });
+
+  it("production with a value uses it", async () => {
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_DEALER_PHONE", "+91 99 1111 2222");
+    const { env } = await import("@/config/env");
+    expect(env.NEXT_PUBLIC_DEALER_PHONE).toBe("+91 99 1111 2222");
+  });
+
+  it("src/config/env.ts does not import zod", () => {
+    const src = readFileSync(join("src", "config", "env.ts"), "utf8");
+    expect(src).not.toMatch(/from\s+["']zod|require\(\s*["']zod|import\(\s*["']zod/);
   });
 });
 
