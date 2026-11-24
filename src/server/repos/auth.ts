@@ -5,7 +5,7 @@ import { err, ok, type Result } from "@/data/access/result";
 import { MIN_PASSWORD_LENGTH } from "@/domain/constants";
 import { passwordProblem } from "@/domain/passwordPolicy";
 import type { User } from "@/domain/types";
-import { DUMMY_HASH, hashPassword, verifyPassword } from "../auth/password";
+import { DUMMY_HASH, hashPassword, needsRehash, verifyPassword } from "../auth/password";
 import { verifyStepUp } from "../auth/stepUp";
 import { deleteSessionByToken, endSession, endUserSessions, insertSession } from "../auth/session";
 import { writeAudit } from "../audit";
@@ -161,6 +161,22 @@ export class ServerAuthRepo implements AuthRepo {
     return expired ? err("OTP_EXPIRED", OTP_EXPIRED) : null;
   }
 
+  /** Upgrades a hash made with older argon2 params (D-29); a failure here never fails the sign-in. */
+  private async rehashIfStale(user: UserRow, password: string): Promise<void> {
+    if (!needsRehash(user.passwordHash)) return;
+    try {
+      const passwordHash = await hashPassword(password);
+      // Conditional on the hash we verified: if it changed meanwhile (reset, new password), write nothing.
+      await this.ctx.db
+        .update(users)
+        .set({ passwordHash })
+        .where(and(eq(users.id, user.id), eq(users.passwordHash, user.passwordHash)));
+    } catch (e) {
+      // keep the old hash; it still verifies and is retried on the next sign-in
+      this.ctx.log.error("auth.rehash", e instanceof Error ? e.name : "unknown");
+    }
+  }
+
   private async doSignIn(email: string, password: string): Promise<Result<User>> {
     const emailKey = email.trim().toLowerCase();
     const found = await this.find(eq(sql`lower(${users.email})`, emailKey));
@@ -190,6 +206,7 @@ export class ServerAuthRepo implements AuthRepo {
       });
       return fresh;
     });
+    await this.rehashIfStale(user, password);
     this.ctx.cookies.set(token);
     return ok(toUser({ ...user, lastSignInAt: now }, found.branchName));
   }

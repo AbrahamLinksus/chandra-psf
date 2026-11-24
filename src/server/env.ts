@@ -64,3 +64,8 @@ export function getServerEnv(): ServerEnv {
   cached ??= parseServerEnv(process.env);
   return cached;
 }
+
+/** Opt-in hash timing log flag (AUTH_HASH_TIMING=1); read live on every call, deliberately not cached or in the schema. */
+export function isHashTimingEnabled(): boolean {
+  return process.env["AUTH_HASH_TIMING"] === "1";
+}

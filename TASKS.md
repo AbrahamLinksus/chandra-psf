@@ -465,10 +465,10 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-31s · Content-Security-Policy header (shared-change)
 - Owner: frontend-coder
 - Depends on: T-05b
-- Files: next.config.ts, src/proxy.ts, tests/e2e/foundation/**
+- Files: next.config.ts, src/proxy.ts, src/app/layout.tsx, src/config/env.ts, tests/e2e/foundation/**
 - Context: SPEC §9 (Security & privacy) · LLD-phase2 §16.2, §26 · T-05b verify-preview report (no CSP header on the preview) · files: next.config.ts, src/proxy.ts, src/app/layout.tsx, /AGENTS.md + node_modules/next/dist/docs/ (CSP guide)
 - Why separate: owner follow-up from T-05b (2026-11-24); next.config.ts and src/proxy.ts are frozen shared files.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Every HTML response carries a Content-Security-Policy that allows only the app's own origin for scripts, styles, images, fonts and connections, plus `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`, `object-src 'none'` (nonce-based scripts if Next 16 supports it without breaking static pages; otherwise documented why not)
   - [ ] No CSP violations in the browser console across sign-in, admin pages, support pages and the customer feedback form (e2e asserts the header and no `securitypolicyviolation` events)
@@ -481,7 +481,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/features/admin-users/**, src/features/admin-branches/**, src/app/admin/users/**, src/app/admin/branches/**, tests/e2e/admin-users/**, tests/e2e/admin-branches/**
 - Context: T-05b verify-preview report (on the real host the new row shows only after a reload; local e2e passes) · LLD-phase2 §23 · files: src/features/admin-users/*, src/features/admin-branches/*
 - Why separate: owner follow-up from T-05b (2026-11-24); likely a cache or revalidation difference on Vercel vs local.
-- Status: Backlog
+- Status: Needs you (batch)
 - Acceptance criteria:
   - [ ] After Add branch, Add user, Edit user and Deactivate, the list shows the change without a reload, both locally and on the preview deploy
   - [ ] An e2e test fails on the old behaviour (no reload between add and assert, no stale cache)
@@ -490,14 +490,14 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-33s · Raise argon2 parameters (LLD §18.1 trigger) (shared-change)
 - Owner: backend-coder
 - Depends on: T-05b
-- Files: src/server/auth/password.ts, src/server/auth/**, tests/unit/server/auth/**
+- Files: src/server/auth/password.ts, src/server/auth/**, src/server/repos/auth.ts, src/server/env.ts, scripts/admin.ts, tests/unit/server/auth/**, tests/e2e/auth/auth.spec.ts, tests/support/e2e.ts
 - Context: LLD-phase2 §18.1 · T-05b retime report (.results/T-05b/argon2-timing-sin1.txt: real-hash minus one-query baseline ≈ 21–38 ms on Vercel sin1) · files: src/server/auth/*
 - Why separate: T-05b criterion "under 100 ms → parameters raised per LLD §18.1"; src/server/auth/** is frozen.
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] argon2 parameters raised per LLD §18.1 so the hash takes ≥100 ms on Vercel sin1 (measured with a server-side timing log, not network round-trips), p95 sign-in still under 1 s
   - [ ] Existing hashes still verify and are re-hashed with the new parameters on the next successful sign-in (if LLD §18.1 says so)
-- Result: —
+- Result: 1.5/2 goals ✅ (⚠️ ≥100 ms hash + p95 <1 s on Vercel sin1 to be measured by the owner with AUTH_HASH_TIMING=1) · t 2→8, guarded re-hash on sign-in · Opus review 0/0 after 1 Major fixed · ≈$1.35 · tester 60% · backend-coder 22% · reviewer 18%
 
 ## M4 · Support → customer loop across devices
 

@@ -128,6 +128,26 @@ async function ensureOwnPassword(api: AppApi): Promise<void> {
   }
 }
 
+const SIGN_IN_TRIES = 12;
+
+/**
+ * Every worker signs in as the same admin, and a sign-in counts as an attempt while its (slow)
+ * argon2 check runs, so 5+ concurrent ones trip RATE_LIMITED. That is a collision between our own
+ * workers, not a real lock: wait a moment and retry. Any other error, or a wrong password, throws at once.
+ */
+async function signInAdminApi(api: AppApi): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await rpcCall(api, "auth", "signIn", [adminCredentials().email, E2E_ADMIN_NEW_PASSWORD]);
+      return;
+    } catch (err) {
+      const limited = err instanceof Error && err.message.includes("RATE_LIMITED");
+      if (!limited || attempt >= SIGN_IN_TRIES) throw err;
+      await new Promise((r) => setTimeout(r, 200 + Math.random() * 600));
+    }
+  }
+}
+
 /** A signed-in main-admin client: own password replaced once per run, then the session cookie. */
 export async function adminApi(
   playwright: PlaywrightWorkerArgs["playwright"],
@@ -136,7 +156,7 @@ export async function adminApi(
   const request = await playwright.request.newContext({ baseURL });
   const api: AppApi = { request, origin: new URL(baseURL).origin };
   await ensureOwnPassword(api);
-  await rpcCall(api, "auth", "signIn", [adminCredentials().email, E2E_ADMIN_NEW_PASSWORD]);
+  await signInAdminApi(api);
   return api;
 }
 

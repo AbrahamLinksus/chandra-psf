@@ -19,6 +19,26 @@ async function signInWith(page: Page, email: string, password: string): Promise<
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
 
+/**
+ * Signs in as the shared e2e admin. Other workers sign in as the same admin at the same time and an
+ * in-flight attempt counts toward the lock, so a "Too many attempts" alert here is a collision between
+ * our own workers: wait and submit again. Anything else (wrong password, a page change) is not retried.
+ */
+async function signInAsAdmin(page: Page): Promise<void> {
+  const limited = page.getByText("Too many attempts. Try again in 15 minutes.");
+  for (let attempt = 1; attempt <= 12; attempt++) {
+    await signInWith(page, adminCredentials().email, E2E_ADMIN_NEW_PASSWORD);
+    const outcome = await Promise.race([
+      limited.waitFor({ timeout: 8000 }).then(() => "limited" as const),
+      page
+        .waitForURL((u) => !u.pathname.startsWith("/sign-in"), { timeout: 8000 })
+        .then(() => "in" as const),
+    ]).catch(() => "other" as const);
+    if (outcome !== "limited") return;
+    await page.waitForTimeout(300 + Math.random() * 700);
+  }
+}
+
 /** Opens the admin "More" sheet on phones; on desktop the actions live in the sidebar. */
 async function adminSignOut(page: Page): Promise<void> {
   if (!isDesktop(page)) await page.getByRole("button", { name: "More" }).click();
@@ -90,7 +110,7 @@ test.describe("T-02b staff sign-in, set password, sign-out on the server", () =>
   }) => {
     await adminApi(playwright, String(baseURL));
     await page.goto("/sign-in");
-    await signInWith(page, adminCredentials().email, E2E_ADMIN_NEW_PASSWORD);
+    await signInAsAdmin(page);
     await expect(page).toHaveURL(/\/admin$/);
 
     const cookies = await page.context().cookies();
@@ -135,7 +155,7 @@ test.describe("T-02b staff sign-in, set password, sign-out on the server", () =>
     await expect(page.getByText("Your session has ended. Sign in again.")).toBeVisible();
     await page.screenshot({ path: `.results/T-02b/sign-in-ended-${width(page)}.png` });
 
-    await signInWith(page, adminCredentials().email, E2E_ADMIN_NEW_PASSWORD);
+    await signInAsAdmin(page);
     await expect(page).toHaveURL(/\/admin\/users$/);
   });
 

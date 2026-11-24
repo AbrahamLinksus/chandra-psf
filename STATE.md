@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M3 · Empty system you can sign into, on a preview deploy (13/16) |
-| Next step | M3 follow-ups T-31s (CSP), T-32 (list refresh), T-33s (argon2 params), then M3 milestone (M3-docs + card) |
+| Milestone | M3 · Empty system you can sign into, on a preview deploy (14/16) |
+| Next step | M3: T-31s (CSP, debugging), T-32 queued for batch card, then M3 milestone (M3-docs + card) |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-24 07:45 +05:30 |
+| Last updated | 2026-11-24 10:33 +05:30 |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -93,10 +93,17 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-17 | src/server/{ctx,scope,audit}.ts, auth/{session,cookies}.ts | add `import "server-only"` (CONVENTIONS §2) or an exemption comment like log.ts | ≈2 min |
 | T-16 | docs/LLD-phase2.md §25 | retention cut-off says `<`; code + SPEC use inclusive `<=` (12 Feb 2027 example) | ≈1 min |
 | T-16 | src/domain/commonPasswords.ts | ~900 hand-built entries, not a real top-1000 list | ≈5 min |
+| T-33s | .env.example + LLD-phase2 §15.5 | AUTH_HASH_TIMING missing; add the LLD row first (config.test.ts reads it), then .env.example → M3 docs pass | ≈3 min |
+| T-33s | tests/support/e2e.ts | RATE_LIMITED-only retry for shared-admin sign-in under parallel workers; watch for masking real lockout regressions | ≈2 min |
+| T-32 | src/features/admin-*/use{Branch,User}List.ts | use the exported list-key constants (review minor) | ≈2 min |
+| T-32 | useRefreshingMutation.ts / useUsersMutation.ts | near-duplicate hooks; merge (optional) | ≈10 min |
+| T-32 | tests/e2e/admin-users/sharedAdmin.ts | one shared admin session per run to stay under the 5-per-email sign-in limit; little headroom left → flake risk | ≈5 min |
+| T-32 | tests/unit/server/{auth-limits/parallelLimits,auth/signInTransaction}.test.ts | two unused eslint-disable warnings | ≈1 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
 - Set the real dealer phone on Vercel (NEXT_PUBLIC_DEALER_PHONE, Production + Preview) and redeploy — see docs/DEPLOY.md.
+- T-33s (D-30): after the next preview deploy, set AUTH_HASH_TIMING=1 on Vercel Preview, sign in ~20×, check the log: hash ≥100 ms and p95 sign-in <1 s; then unset it. Below 100 ms or p95 ≥1 s → retune task.
 - Redeploy to Vercel to publish M2 (the live site is still the T-05 build).
 
 ## Context additions
