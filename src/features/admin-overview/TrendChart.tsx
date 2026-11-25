@@ -11,12 +11,12 @@ import type { OverviewData } from "@/domain/types";
 import { BlockCard, NoData } from "./BlockCard";
 
 const CONFIG: ChartConfig = {
-  avgQ12: { label: "Avg Q12 (out of 5)", color: "var(--chart-1)" },
+  avgSatisfaction: { label: "Avg overall satisfaction (out of 5)", color: "var(--chart-1)" },
   recommendRate: { label: "Recommend rate (%)", color: "var(--chart-2)" },
 };
 
 export function TrendChart({ trend }: { trend: OverviewData["trend"] }) {
-  const hasData = trend.points.some((p) => p.avgQ12 !== null || p.recommendRate !== null);
+  const hasData = trend.points.some((p) => p.avgSatisfaction !== null || p.recommendRate !== null);
   return (
     <BlockCard title={`Trend (per ${trend.granularity})`} className="lg:col-span-2">
       {hasData ? (
@@ -24,10 +24,15 @@ export function TrendChart({ trend }: { trend: OverviewData["trend"] }) {
           <LineChart data={trend.points}>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="bucketStart" tickMargin={8} />
-            <YAxis yAxisId="q12" domain={[1, 5]} width={28} />
+            <YAxis yAxisId="sat" domain={[1, 5]} width={28} />
             <YAxis yAxisId="rate" orientation="right" domain={[0, 100]} width={36} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Line yAxisId="q12" dataKey="avgQ12" stroke="var(--color-avgQ12)" connectNulls />
+            <Line
+              yAxisId="sat"
+              dataKey="avgSatisfaction"
+              stroke="var(--color-avgSatisfaction)"
+              connectNulls
+            />
             <Line
               yAxisId="rate"
               dataKey="recommendRate"

@@ -6,7 +6,7 @@ import { actAs, makeCard, newBranch, type Staff } from "../support-links/helpers
 
 type Playwright = PlaywrightWorkerArgs["playwright"];
 type Cookies = Awaited<ReturnType<AppApi["request"]["storageState"]>>["cookies"];
-const SHOT = ".results/T-06b";
+const SHOT = ".results/T-39";
 const TEMP = "Temp-Pass-4471";
 const OWN = "My-Own-Pass-2026!";
 const width = (page: Page): string => String(page.viewportSize()?.width);
@@ -71,7 +71,8 @@ async function scene(
   return { branchName, advisorName, staff, bossCookies: (await request.storageState()).cookies };
 }
 
-const tile = (page: Page, label: string) => page.getByTestId("kpi-tile").filter({ hasText: label });
+const tile = (page: Page, label: string) =>
+  page.locator(`[data-testid="kpi-tile"][data-label="${label}"]`);
 
 async function openAs(page: Page, s: Scene, query = ""): Promise<void> {
   await page.context().clearCookies();
@@ -80,7 +81,7 @@ async function openAs(page: Page, s: Scene, query = ""): Promise<void> {
   await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
 }
 
-test.describe("T-06b overview analytics on the server", () => {
+test.describe("T-39 overview analytics on v2", () => {
   test("S-30 the branch admin sees their branch's rate; the main admin filters by branch", async ({
     page,
     playwright,
@@ -92,7 +93,7 @@ test.describe("T-06b overview analytics on the server", () => {
 
     await openAs(page, vel);
     await expect(tile(page, "Response rate")).toContainText("75%");
-    await expect(tile(page, "Responses received")).toContainText("3");
+    await expect(tile(page, "Responses")).toContainText("3");
     await expect(page.getByRole("combobox", { name: "Branch" })).toHaveCount(0);
     await page.getByRole("combobox", { name: "Advisor" }).click();
     await expect(page.getByRole("option", { name: vel.advisorName })).toBeVisible();
@@ -106,7 +107,7 @@ test.describe("T-06b overview analytics on the server", () => {
     await page.getByRole("combobox", { name: "Branch" }).click();
     await page.getByRole("option", { name: tam.branchName, exact: true }).click();
     await expect(tile(page, "Response rate")).toContainText("50%");
-    await expect(tile(page, "Responses received")).toContainText("1");
+    await expect(tile(page, "Responses")).toContainText("1");
     await page.getByRole("combobox", { name: "Advisor" }).click();
     await expect(page.getByRole("option", { name: tam.advisorName })).toBeVisible();
     await expect(page.getByRole("option", { name: vel.advisorName })).toHaveCount(0);
@@ -129,7 +130,7 @@ test.describe("T-06b overview analytics on the server", () => {
     const s = await scene(playwright, String(baseURL), "Launch", 0, 0);
     await openAs(page, s);
     await expect(page.getByText("No responses for these filters")).toBeVisible();
-    for (const label of ["Responses received", "Response rate", "Recommend rate"]) {
+    for (const label of ["Responses", "Response rate", "Recommend rate", "Callbacks requested"]) {
       await expect(tile(page, label)).toContainText("—");
     }
     await expect(tile(page, "Avg overall satisfaction")).toContainText("—");
@@ -138,14 +139,52 @@ test.describe("T-06b overview analytics on the server", () => {
     await page.screenshot({ path: `${SHOT}/launch-day-${width(page)}.png` });
   });
 
+  test("S-10 / T-39 a branch with 3 happy responses: v2 tiles, expandable categories, advisor score", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const s = await scene(playwright, String(baseURL), "Happy", 3, 3);
+    await openAs(page, s);
+    await expect(tile(page, "Avg overall satisfaction")).toContainText("5.0");
+    await expect(tile(page, "Recommend rate")).toContainText("100%");
+    await expect(tile(page, "Callbacks requested")).toContainText("0");
+    await expect(page.getByTestId("category-row")).toHaveCount(5);
+    await expect(page.getByTestId("category-score").first()).toContainText("100");
+    await expect(page.getByTestId("category-question")).toHaveCount(0);
+    await page.getByTestId("category-row").first().getByRole("button").click();
+    await expect(page.getByTestId("category-question")).toHaveCount(3);
+    await expect(page.getByTestId("follow-up").first()).toBeVisible();
+    await expect(page.getByText("Rating 5").first()).toBeVisible();
+    for (const gone of ["Problem breakdown", "Question detail", "Recent comments"]) {
+      await expect(page.getByText(gone)).toHaveCount(0);
+    }
+    const score = page.getByTestId(
+      page.viewportSize()?.width === 360 ? "advisor-card" : "advisor-row",
+    );
+    await expect(score.first()).toContainText("100");
+    await expect(page.getByTestId("advisor-score").first()).toHaveText("100 /100");
+    await page.screenshot({ path: `${SHOT}/overview-expanded-${width(page)}.png`, fullPage: true });
+  });
+
+  test("an advisor with under 3 responses has no score, only a dash", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const s = await scene(playwright, String(baseURL), "Few", 2, 2);
+    await openAs(page, s);
+    await expect(page.getByTestId("advisor-score").first()).toHaveText("—");
+  });
+
   test("S-11 the date range follows the service date", async ({ page, playwright, baseURL }) => {
     const s = await scene(playwright, String(baseURL), "Dated", 2, 2);
     await openAs(page, s);
-    await expect(tile(page, "Responses received")).toContainText("2");
+    await expect(tile(page, "Responses")).toContainText("2");
     // a range that ended before the cards' service date holds nothing, however recent the feedback
     await openAs(page, s, "?from=2020-01-01&to=2020-01-31");
     await expect(page.getByText("No responses for these filters")).toBeVisible();
-    await expect(tile(page, "Responses received")).toContainText("—");
+    await expect(tile(page, "Responses")).toContainText("—");
   });
 
   test("AC-6 (G-W2) Support is refused: not allowed on /admin and FORBIDDEN from the API", async ({

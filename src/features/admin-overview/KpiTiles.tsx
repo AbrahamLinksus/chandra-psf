@@ -42,7 +42,11 @@ function Tile(props: {
   delta?: number | null;
 }) {
   return (
-    <div className="grid gap-1 rounded-2xl border bg-card p-4 shadow-sm" data-testid="kpi-tile">
+    <div
+      className="grid gap-1 rounded-2xl border bg-card p-4 shadow-sm"
+      data-testid="kpi-tile"
+      data-label={props.label}
+    >
       <p className="text-sm text-muted-foreground">{props.label}</p>
       <p className="text-3xl font-semibold">
         <MetricValue value={props.value} format={props.format} />
@@ -58,11 +62,12 @@ function fromMetric(label: string, m: Metric, format: MetricFormat) {
 
 export function KpiTiles({ kpis }: { kpis: OverviewData["kpis"] }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      {fromMetric("Responses received", kpis.responses, "count")}
-      {fromMetric("Response rate", kpis.responseRate, "percent")}
-      {fromMetric("Avg overall satisfaction (Q12)", kpis.avgQ12, "score")}
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      {fromMetric("Avg overall satisfaction", kpis.avgSatisfaction, "score")}
       {fromMetric("Recommend rate", kpis.recommendRate, "percent")}
+      {fromMetric("Responses", kpis.responses, "count")}
+      {fromMetric("Response rate", kpis.responseRate, "percent")}
+      {fromMetric("Callbacks requested", kpis.callbacks, "count")}
       <Tile label="Open alerts" value={kpis.openAlerts} format="count" />
     </div>
   );

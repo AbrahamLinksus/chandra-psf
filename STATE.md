@@ -212,6 +212,10 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-40 | src/data/access ResponseListRow.q12 | field still named q12 (holds Q1, shown as "Overall") — rename to q1 | ≈5 min |
 | T-40 | src/server/repos/customers.ts CSV | rating cells are numbers 1–5, not words | ≈5 min |
 | T-40 | alert reconcile | Q10 No→Yes edit on an already Resolved alert keeps it Resolved (updated reasons) — existing rule; confirm with owner | ≈2 min |
+| T-39 | src/domain/metrics weighted score | re-normalises weights over answered questions; SPEC (D-47) says plain weighted mean — same when all answered; align SPEC or code | ≈5 min |
+| T-39 | src/features/admin-overview tiles | tile says "Responses", SPEC says "Responses received" | ≈1 min |
+| T-39 | src/domain/constants.ts | RECENT_COMMENTS constant now unused — remove | ≈1 min |
+| T-39 | docs/SPEC.md §3 US-14, US-15 | still describe the old blocks (problem breakdown selector, recent comments) — update to D-47 | ≈3 min |
 
 ## Owner actions (outside the repo)
 - DONE 2026-11-26 (D-48) on the preview (Neon dev): 7 branches (Head Office, RS Puram, Vadavalli, Thondamuthur, PN Palayam, TVS Nagar, Thudiyalur; city Coimbatore) and 14 advisors entered through the app. Thondamuthur has no advisor yet (support can't create job cards there until one is added). Test branch "Velachery (test)" left as is. Staff accounts: add when emails exist. Production: same entries before launch.

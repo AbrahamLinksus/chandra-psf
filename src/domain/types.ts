@@ -155,38 +155,69 @@ export interface Metric {
   previous: number | null;
   delta: number | null;
 }
+/** One answer option with how many responses chose it. */
+export interface AnswerCount {
+  answer: string;
+  count: number;
+}
+
+/** A follow-up question's option breakdown, merged under its parent question (D-47). */
+export interface FollowUpBreakdown {
+  code: QuestionCode;
+  text: string;
+  options: { option: string; count: number }[];
+}
+
+/** One question inside an expandable category row: answer bars plus its follow-up breakdown. */
+export interface CategoryQuestion {
+  code: QuestionCode;
+  text: string;
+  /** Rating 1-5 counts ("1".."5") or Yes / Partially / No counts; every option listed. */
+  answers: AnswerCount[];
+  followUp: FollowUpBreakdown | null;
+}
+
 export interface OverviewData {
   kpis: {
     responses: Metric;
     responseRate: Metric;
-    avgQ12: Metric;
+    /** Average of Q1 (overall satisfaction). */
+    avgSatisfaction: Metric;
+    /** % of Q9 = Yes. */
     recommendRate: Metric;
+    /** Count of Q10 = Yes; null with no responses in the period. */
+    callbacks: Metric;
     openAlerts: number;
   };
-  categoryScores: { step: number; title: string; score: number | null }[];
+  /** Steps 1-5; `questions` is empty when there are no responses in scope. */
+  categoryScores: {
+    step: number;
+    title: string;
+    score: number | null;
+    questions: CategoryQuestion[];
+  }[];
   trend: {
     granularity: "week" | "month";
-    points: { bucketStart: ISODate; avgQ12: number | null; recommendRate: number | null }[];
+    points: {
+      bucketStart: ISODate;
+      avgSatisfaction: number | null;
+      recommendRate: number | null;
+    }[];
   };
+  /** Sorted by score high to low, unscored (under 3 responses) last, then by name. */
   advisors: {
     advisorId: string;
     name: string;
+    /** Display name of the advisor's branch; null when unknown. */
+    branchName: string | null;
     responses: number;
-    avgQ6: number | null;
-    q4Yes: number | null;
-    q7Yes: number | null;
-    avgQ12: number | null;
-  }[];
-  problems: Record<
-    "Q1a" | "Q3a" | "Q6a" | "Q7a" | "Q9a" | "Q11a",
-    { option: string; count: number }[]
-  >;
-  questionDetail: { code: QuestionCode; split: { answer: string; count: number }[] }[];
-  comments: {
-    responseId: string;
-    serviceDate: ISODate;
-    source: QuestionCode;
-    text: string;
-    q12: number;
+    /** Weighted score /100 (whole number); null under 3 responses. */
+    score: number | null;
+    /** Average Q4 (advisor behaviour). */
+    avgBehaviour: number | null;
+    /** % Q5 = Yes (delivered on time). */
+    onTimePercent: number | null;
+    /** Average Q1 (overall satisfaction). */
+    avgSatisfaction: number | null;
   }[];
 }

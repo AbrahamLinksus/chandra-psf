@@ -59,11 +59,11 @@ export class ServerAnalyticsRepo implements AnalyticsRepo {
         lte(jobCards.serviceDate, f.to),
         branchFilter(jobCards.branchId, scope, f.branchId),
       );
-      const [input, names] = await Promise.all([
+      const [input, who] = await Promise.all([
         this.load(range, scope, f.branchId),
-        this.advisorNames(scope, f.branchId),
+        this.advisorLabels(scope, f.branchId),
       ]);
-      return ok(computeOverview(input, f, names));
+      return ok(computeOverview(input, f, who.names, who.branches));
     });
 
   getFilterOptions: AnalyticsRepo["getFilterOptions"] = (f) =>
@@ -103,12 +103,20 @@ export class ServerAnalyticsRepo implements AnalyticsRepo {
       return ok({ ...base, branches: all });
     });
 
-  private async advisorNames(scope: Scope, wanted?: string): Promise<Record<string, string>> {
+  /** Advisor id to display name and to branch name, inside the caller's branch scope. */
+  private async advisorLabels(
+    scope: Scope,
+    wanted?: string,
+  ): Promise<{ names: Record<string, string>; branches: Record<string, string> }> {
     const rows = await this.ctx.db
-      .select({ id: advisors.id, name: advisors.name })
+      .select({ id: advisors.id, name: advisors.name, branch: branches.name })
       .from(advisors)
+      .innerJoin(branches, eq(branches.id, advisors.branchId))
       .where(branchFilter(advisors.branchId, scope, wanted));
-    return Object.fromEntries(rows.map((r) => [r.id, r.name]));
+    return {
+      names: Object.fromEntries(rows.map((r) => [r.id, r.name])),
+      branches: Object.fromEntries(rows.map((r) => [r.id, r.branch])),
+    };
   }
 
   /** Alerts of deleted responses are not open alerts (S-09). */

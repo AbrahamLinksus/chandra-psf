@@ -36,7 +36,10 @@ function OverviewContent() {
       )}
       <FilterBar value={filters} onChange={setFilters} options={options} />
       <KpiTiles kpis={data.kpis} />
-      <OverviewBlocks data={data} />
+      <OverviewBlocks
+        data={data}
+        showBranch={options.branches !== undefined && branchId === undefined}
+      />
     </div>
   );
 }

@@ -42,8 +42,8 @@ export function buildTrend(rows: DatedAnswers[], f: Filters): Trend {
     const list = groups.get(b) ?? [];
     points.push({
       bucketStart: b,
-      avgQ12: avgRating(list, "Q12"),
-      recommendRate: yesPercent(list, "Q13"),
+      avgSatisfaction: avgRating(list, "Q1"),
+      recommendRate: yesPercent(list, "Q9"),
     });
   }
   return { granularity, points };

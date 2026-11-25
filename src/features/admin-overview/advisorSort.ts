@@ -1,7 +1,14 @@
 import type { OverviewData } from "@/domain/types";
 
 export type AdvisorRow = OverviewData["advisors"][number];
-export type AdvisorSortKey = "name" | "responses" | "avgQ6" | "q4Yes" | "q7Yes" | "avgQ12";
+export type AdvisorSortKey =
+  | "name"
+  | "branchName"
+  | "responses"
+  | "score"
+  | "avgBehaviour"
+  | "onTimePercent"
+  | "avgSatisfaction";
 export type SortDir = "asc" | "desc";
 
 /** Sorted copy; empty values (null) always go last. */

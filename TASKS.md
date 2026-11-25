@@ -833,15 +833,15 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/domain/metrics/**, src/domain/types.ts, src/server/repos/analytics.ts, src/data/access/repos/analytics.ts, src/features/admin-overview/**, tests/unit/admin-overview/**, tests/unit/server/analytics/**, tests/e2e/admin-overview/**, docs/SPEC.md
 - Context: SPEC CR-2 note, US-14, US-15, F-5, §5 F-5 rows · LLD-phase2 §17.2 (§10 row), §19 · files: src/domain/metrics/*, src/domain/questionnaire.ts, src/features/admin-overview/*
 - Why separate: its own screen and repo; runs side by side with T-40 after the foundation.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] KPI tiles show "Avg overall satisfaction" from Q1 and "Recommend rate" from Q9; Q1 ratings 4, 5, 3 → 4.0 (SPEC §5 F-5)
   - [ ] Category scores use the v2 membership (Q10 and follow-ups excluded); Trend uses Q1 and Q9; launch day (no responses) still shows "—" in every block (S-10)
   - [ ] The advisor table shows responses, avg advisor behaviour (Q4), % on time (Q5) and avg overall (Q1), with no "% explained the work" column, and every column sorts
-  - [ ] The problem breakdown selector lists Q1a, Q3a, Q4a, Q5a, Q6a, Q8a and Q9a with their v2 options; Question detail shows Q2, Q3, Q5, Q6, Q7, Q9 and Q10; Recent comments shows only follow-up text (Q2a and "Tell us more") with the Q1 rating
+  - [ ] (superseded by D-47) The problem breakdown selector lists Q1a, Q3a, Q4a, Q5a, Q6a, Q8a and Q9a with their v2 options; Question detail shows Q2, Q3, Q5, Q6, Q7, Q9 and Q10; Recent comments shows only follow-up text (Q2a and "Tell us more") with the Q1 rating
   - [ ] D-47 Overview restructure: expandable category rows each opening their questions with answer bars + merged follow-up breakdown (no separate Problem breakdown / Question-level detail); labels in words (no Q numbers) on tiles, categories and advisor columns; "Callbacks requested" tile; Recent comments removed
   - [ ] D-47 Advisor performance: weighted score /100 per advisor (weights and 0–100 mapping per D-47; affordability excluded; "—" under 3 responses), sortable; unit tests prove the formula on a fixed fixture; 360 px and 1440 px screenshots
-- Result: —
+- Result: Done 2026-11-26 · 6/6 goals (D-47 Overview, weighted advisor score) · review 0/0/0 · sync ✅ · approved under D-49 (owner asleep)
 
 ### T-40 · Responses, alerts and customer download on v2
 - Owner: backend-coder, frontend-coder

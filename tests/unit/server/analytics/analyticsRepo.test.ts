@@ -94,7 +94,7 @@ async function seedVisits(
         .values({
           visitId: must(v).id,
           questionsVersion: 2,
-          answers: o.answers ?? { Q12: 4, Q13: "Yes" },
+          answers: o.answers ?? { Q1: 4, Q9: "Yes", Q10: "Yes" },
           submissionId: crypto.randomUUID(),
         })
         .returning();
@@ -159,12 +159,17 @@ describe("analytics repo (T-06b)", () => {
     const r = await repo().getAnalytics(RANGE);
     if (!r.ok) throw new Error("expected ok");
     const k = r.value.kpis;
-    for (const m of [k.responses, k.responseRate, k.avgQ12, k.recommendRate]) {
+    for (const m of [
+      k.responses,
+      k.responseRate,
+      k.avgSatisfaction,
+      k.recommendRate,
+      k.callbacks,
+    ]) {
       expect(m).toEqual({ value: null, previous: null, delta: null });
     }
     expect(k.openAlerts).toBe(0);
     expect(r.value.advisors).toEqual([]);
-    expect(r.value.comments).toEqual([]);
     expect(r.value.categoryScores.every((c) => c.score === null)).toBe(true);
   });
 
@@ -218,13 +223,43 @@ describe("analytics repo (T-06b)", () => {
     });
   });
 
-  it("anonymised responses (comments gone) are still counted", async () => {
+  it("anonymised responses (empty answers) are still counted", async () => {
     const vel = await newBranch("Velachery");
     await seedVisits(vel, { total: 4, done: 4, tag: "N", answers: {} });
     await asBranchAdmin(vel);
     const r = await repo().getAnalytics(RANGE);
     expect(r.ok && r.value.kpis.responses.value).toBe(4);
     expect(r.ok && r.value.kpis.responseRate.value).toBe(100);
-    expect(r.ok && r.value.comments).toEqual([]);
+  });
+  it("S-30 / no cross-branch leakage: answers, advisors and callbacks stay inside the branch", async () => {
+    const vel = await newBranch("Velachery");
+    const tam = await newBranch("Tambaram");
+    await seedVisits(vel, {
+      total: 3,
+      done: 3,
+      tag: "V",
+      answers: { Q1: 5, Q9: "Yes", Q10: "Yes" },
+    });
+    await seedVisits(tam, { total: 2, done: 2, tag: "T", answers: { Q1: 1, Q9: "No", Q10: "No" } });
+
+    await asBranchAdmin(vel);
+    const mine = await repo().getAnalytics({ ...RANGE, branchId: tam.id });
+    if (!mine.ok) throw new Error("expected ok");
+    const k = mine.value.kpis;
+    expect([k.responses.value, k.avgSatisfaction.value, k.recommendRate.value]).toEqual([
+      3, 5, 100,
+    ]);
+    expect(k.callbacks.value).toBe(3);
+    expect(mine.value.advisors.map((a) => a.advisorId)).toEqual([vel.advisorId]);
+    expect(mine.value.advisors[0]?.branchName).toBe("Velachery");
+
+    await asMain();
+    const other = await repo().getAnalytics({ ...RANGE, branchId: tam.id });
+    if (!other.ok) throw new Error("expected ok");
+    expect([other.value.kpis.responses.value, other.value.kpis.avgSatisfaction.value]).toEqual([
+      2, 1,
+    ]);
+    expect(other.value.kpis.callbacks.value).toBe(0);
+    expect(other.value.advisors.map((a) => a.advisorId)).toEqual([tam.advisorId]);
   });
 });

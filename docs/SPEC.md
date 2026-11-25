@@ -181,15 +181,17 @@ Dropped from v1 (CR-2): Q1 quality of work (and Q1a), Q4 advisor explained the w
 ### F-5 · Analytics (US-14 – US-16)
 Filter bar (Overview and Responses): date range · **branch (main admins only)** · vehicle type · model · advisor. Single column on mobile, 2–3 column grid on laptop. Branch admins' numbers are always their branch; main admins default to "All branches".
 
+**Overview blocks (D-47, top to bottom).** Every label is in words; no Q numbers are shown to admins.
 | # | Block | Shows | Chart |
 |---|---|---|---|
-| 1 | KPI tiles | Responses received · Response rate · Avg overall satisfaction (**Q1**, was Q12) · Recommend rate (**Q9** % Yes, was Q13) · Open alerts — each with change vs previous period | Number tiles |
-| 2 | Category scores | Score /100 for each of the 5 categories (v2 members: 1 = Q1–Q3, 2 = Q4, 3 = Q5–Q6, 4 = Q7–Q8, 5 = Q9) | Horizontal bar |
-| 3 | Trend | Avg overall satisfaction (Q1) and recommend rate (Q9) per week/month | Line |
-| 4 | Advisor performance | Per advisor: responses, avg advisor behaviour (**Q4**, was Q6), % on time (**Q5** Yes, was Q7), avg overall (**Q1**, was Q12) (main admins on "All branches": advisor name with branch). The v1 column "% explained the work" (v1 Q4) is removed (question dropped) | Sortable table |
-| 5 | Problem breakdown | Counts per follow-up option (v2: Q1a, Q3a, Q4a, Q6a, Q8a; single-pick splits Q5a lateness and Q9a reason) | Bar, with follow-up selector |
-| 6 | Question-level detail | Yes/No (Yes/Partially/No) split for Q2, Q3, Q5, Q6, Q7, Q9, Q10 (v1: Q2–Q5, Q7–Q10, Q13, Q15) | Small stacked bars |
-| 7 | Recent comments | Latest follow-up text (Q2a and every "Tell us more" text), with the Q1 overall rating beside each; no Q14 any more (CR-2) | List |
+| 1 | Headline tiles | Responses received · Response rate · Avg overall satisfaction (Q1) · Recommend rate (Q9 % Yes) · Open alerts · **Callbacks requested** (responses with Q10 = Yes in the period) — each with change vs previous period (Open alerts: none, it ignores dates) | Number tiles |
+| 2 | Trend | Avg overall satisfaction (Q1) and recommend rate (Q9) per week/month | Line |
+| 3 | Category rows | One expandable row per category with its score /100: Service Quality & Complaint Resolution (Q1, Q2, Q3) · Customer Interaction (Q4) · Timelines & Delivery (Q5, Q6) · Pricing & Value (Q7, Q8) · Overall Satisfaction & Loyalty (Q9). Opening a row shows each of its questions (by wording) with answer bars (rating 1–5 counts, or Yes / Partially / No counts), and under each the breakdown of its follow-up options (Q1a, Q3a, Q4a, Q5a, Q6a, Q8a, Q9a counts per option) merged in. Q2a is free text and has no breakdown *(assumed)* | Score bar per row; answer bars and option bars inside |
+| 4 | Advisor performance | Per advisor (main admins on "All branches": name with branch): Responses · **Score /100** (below) · Advisor behaviour (avg Q4) · On time % (Q5 Yes) · Overall satisfaction (avg Q1); column headings in words; sortable by any column, default Score high → low *(assumed)* | Sortable table |
+
+Removed by D-47: the separate Problem breakdown, Question-level detail and Recent comments blocks. **Layout:** works at 360 px (category rows start collapsed; advisor rows stack as cards *(assumed)*) and 1440 px.
+
+**Advisor score /100 (D-47):** each answer → 0–100: rating 1–5 → 0 / 25 / 50 / 75 / 100; Yes 100 / No 0; Partially 50; issues after delivery (Q3) inverted, No = 100. Score = weighted mean of the advisor's question averages with weights **advisor behaviour Q4 30 · overall Q1 20 · complaints rectified Q2 15 · charges explained Q7 10 · on time Q5 10 · good condition Q6 10 · recommend Q9 5** (sum 100), shown as a whole number. Affordability (Q8) is excluded; Q3 has no weight in the list, so it counts only in its category row *(assumed)*. Fewer than 3 responses in the filters → "—" (sorted last *(assumed)*).
 
 **Metric definitions (owner §10, exact):**
 - **Filter date (S-11):** the visit's **service date** drives every block, the KPI tiles, the trend and the Responses table.
@@ -202,7 +204,7 @@ Filter bar (Overview and Responses): date range · **branch (main admins only)**
 - Default date range: last 30 days; trend weekly for ranges ≤ 90 days, monthly beyond.
 - "Open alerts" tile counts Open alerts in the user's scope (and chosen branch) regardless of date filter.
 - **No data (S-10):** a block or tile with no matching responses shows "—" and "No responses for these filters" (never 0 %, NaN or ∞); the change arrow is hidden when the previous period has no data. This is the normal launch-day state.
-- Anonymised (erased or retention-cleaned) responses still count in every number; their comments are gone, so they drop out of Recent comments.
+- Anonymised (erased or retention-cleaned) responses still count in every number; their free text is gone (no comments list since D-47).
 - **Questionnaire version (CR-2):** analytics, alerts, the Responses detail/edit and the customer download read only v2 responses; no v1 response exists after the CR-2 data clear, so there is no v1/v2 mixing or mapping of old answers.
 
 ### F-6 · Responses, edits and audit (US-17 – US-19, US-21)
@@ -275,6 +277,10 @@ Examples use fictional people and branches *(assumed: "Velachery" and "Tambaram"
 | F-5 | Q1 (overall) ratings 4, 5, 3 | Scores 75, 100, 50; Avg overall satisfaction tile 4.0 |
 | F-5 | Q2 answers Yes, Partially, No | Scores 100, 50, 0 |
 | F-5 | Velachery 40 visits, 30 completed; Tambaram 10 visits, 5 completed | Velachery admin: response rate 75%; main admin "All branches": 70%; main admin "Tambaram": 50% |
+| F-5 | 10 responses in the period, 3 with Q10 = Yes | Tile "Callbacks requested 3" |
+| F-5 | Tap "Timelines & Delivery" (10 responses: on time Yes 8, No 2; lateness 2–4 Hours 1, 1 Day 1) | Row opens: "Was your vehicle delivered on the promised time?" bars Yes 8 · No 2, with "2–4 Hours 1 · 1 Day 1" under it; "Delivered in good condition" below |
+| F-5 | Suresh, 3 responses each: advisor behaviour 5, overall 4, complaints Partially, charges explained Yes, on time No, good condition Yes, recommend Yes | Score 30 + 15 + 7.5 + 10 + 0 + 10 + 5 = 77.5 → **78** |
+| F-5 | Arun has 2 responses in the filters | Score "—", sorted below scored advisors |
 | F-6 | Change Q4 from 2 → 4, password correct | Q4a removed; audit `response.edit` old `{Q4:2,Q4a:{options:["Not Attentive"]}}` new `{Q4:4}` (D-16) |
 | F-6 | Edit Q1 1 → 4 on a response whose only alert reason was "Q1 rated 1" | Alert Resolved; audit `response.edit` and `alert.status · open → resolved` "Auto-resolved: no alert reason after edit" (S-08) |
 | F-6 | Delete a response on 1 Dec 2026 | In Recently deleted with "Removed for good on 31 Dec 2026"; on 31 Dec it is gone and the audit shows a system clean-up entry |
