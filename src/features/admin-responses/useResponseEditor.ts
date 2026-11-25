@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ResponseDetail } from "@/data/access/repos/responses";
 import type { AnswerMap, AnswerValue, QuestionCode } from "@/domain/types";
 import { pruneHidden, validateSubmission } from "@/domain/visibility";
@@ -11,14 +12,28 @@ interface EditInput {
   password: string;
 }
 
+/** Saves an edit; on success the detail shows the saved answers and new version, and lists refetch. */
+function useEditMutation(id: string, version: number) {
+  const queryClient = useQueryClient();
+  return useRepoMutation(async (da, i: EditInput) => {
+    const result = await da.responses.editResponse(id, i.answers, version, {
+      password: i.password,
+    });
+    if (result.ok) {
+      queryClient.setQueryData(["responses", "detail", id], result);
+      void queryClient.invalidateQueries({ queryKey: ["responses"] });
+    }
+    return result;
+  });
+}
+
 /** Draft answers for an edit; they stay in place when a save fails (S-13). */
 export function useResponseEditor(detail: ResponseDetail) {
-  const { id, answers: saved } = detail.response;
+  const { id, answers: saved } = detail.response,
+    { version } = detail;
   const [draft, setDraft] = useState<AnswerMap | null>(null);
   const [askPassword, setAskPassword] = useState(false);
-  const mutation = useRepoMutation((da, i: EditInput) =>
-    da.responses.editResponse(id, i.answers, { password: i.password }),
-  );
+  const mutation = useEditMutation(id, version);
 
   const start = () => {
     mutation.reset();

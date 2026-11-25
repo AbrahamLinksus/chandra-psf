@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { err } from "@/data/access";
 import { useRepoMutation } from "@/hooks/useRepoMutation";
 import { useRepoQuery } from "@/hooks/useRepoQuery";
@@ -12,6 +13,12 @@ export function useDeleted() {
   const mutation = useRepoMutation((da, i: { id: string; password: string }) =>
     da.responses.restoreResponse(i.id, { password: i.password }),
   );
+  const queryClient = useQueryClient();
+  const restore = async (id: string, password: string) => {
+    const result = await mutation.run({ id, password });
+    if (result.ok) void queryClient.invalidateQueries({ queryKey: ["responses"] });
+    return result;
+  };
   return {
     rows: query.data,
     error: query.error,
@@ -25,6 +32,6 @@ export function useDeleted() {
     restore: (password: string) =>
       restoring === null
         ? Promise.resolve(err("SAVE_FAILED", "Couldn't restore"))
-        : mutation.run({ id: restoring, password }),
+        : restore(restoring, password),
   };
 }

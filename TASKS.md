@@ -643,7 +643,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-36 · Contact details from env keys (D-37)
 - Owner: frontend-coder
 - Depends on: —
-- Files: src/config/env.ts, src/features/feedback-form/contact.ts, src/features/privacy/contact.ts, src/features/feedback-form/PrivacyNotice.tsx, src/features/privacy/**, tests/unit/foundation/**, tests/e2e/feedback-form/feedback-form.spec.ts
+- Files: src/config/env.ts, src/features/feedback-form/contact.ts, src/features/privacy/contact.ts, src/features/feedback-form/PrivacyNotice.tsx, src/features/privacy/**, tests/unit/foundation/**, tests/e2e/feedback-form/feedback-form.spec.ts, README.md
 - Context: LLD-phase2 §15.5 · SPEC §9 · D-37
 - Why separate: small config wiring; removes the duplicated constants from T-04b.
 - Status: In progress
@@ -671,13 +671,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/responses.ts, src/server/rpc/responses.ts, src/data/access/repos/responses.ts, src/features/admin-responses/**, src/app/admin/responses/**, tests/unit/server/responses/**, tests/e2e/admin-responses/**
 - Context: SPEC US-17, US-18, US-21, F-6, F-4 step 4, §5 F-6 rows · LLD-phase2 §17.2 (§12 row), §18.4 · files: src/domain/alertRules.ts, src/domain/visibility.ts, src/server/auth/stepUp.ts
 - Why separate: own repo and routes (data changes behind step-up).
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] Edit Q6 2 → 4 with the right password (checked on the server) → Q6a removed, audit old `{Q6:2,Q6a:{options:["Rude"]}}` new `{Q6:4}`; wrong → "Password incorrect" and nothing saved; a stale version → "Someone else changed this. Reload to see the latest." (AC-9, G-01)
   - [ ] Edit Q12 1 → 4 on an only-reason alert → Resolved "Auto-resolved: no alert reason after edit"; Q15 No → Yes → a new Open alert (S-08)
   - [ ] Delete on 1 Dec 2026 → Recently deleted shows "Removed for good on 31 Dec 2026"; Restore brings the answers and the alert back; both audited (US-21, S-09, G-03)
   - [ ] The Tambaram admin opening a Velachery response URL → "Not found", no data (US-29); a failed edit keeps the edited answers and shows "Couldn't save, try again" (S-13)
-- Result: —
+- Result: Done 2026-11-26 · 4/4 goals · sync ✅ · 0 major after 1 debug round · cost not measured
 
 ### T-09b · Audit log on the server: scoped, branch column, paging
 - Owner: backend-coder, frontend-coder

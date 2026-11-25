@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (T-09b, T-06b approved; next: sync T-08b then T-24; T-36 in test+review) |
+| Last updated | 2026-11-26 (T-09b, T-06b, T-08b approved; T-24 sync running; T-36 TASK READY, sync next; D-41 recorded) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -164,10 +164,14 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-06b | src/server/rateLimit.ts | catches a missing getPublicFloodLimitOverride (test mocks); cleaner: add it to the vi.mock factories in handler.test.ts and ipLimit.test.ts, drop the catch | ≈5 min |
 | T-06b | playwright.config.ts | redundant `?? "100000"` for PUBLIC_FLOOD_LIMIT_OVERRIDE | ≈1 min |
 | T-06b | src/components/ui/chart.tsx | nonce undefined on server render; works only while the chart mounts on the client (true today) | ≈5 min |
+| T-08b | src/server/repos/responses.ts lists | capped at 500 rows; add paging or a "showing 500 newest" note | ≈15 min |
+| T-08b | src/server/repos/alerts reevaluate | narrow alert-version race on edit | ≈10 min |
+| T-08b | tests/e2e/admin-responses/rework.spec.ts | still test.fixme | ≈20 min |
+| T-08b | review | 5 minors total; rest in the git-ignored review report (deleted on approve) | — |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
-- Set the real dealer phone on Vercel (NEXT_PUBLIC_DEALER_PHONE, Production + Preview) and redeploy — see docs/DEPLOY.md.
+- Set the real dealer phone on Vercel (NEXT_PUBLIC_DEALER_PHONE, Production + Preview) and redeploy — see docs/DEPLOY.md. After T-36 also set NEXT_PUBLIC_COMPANY_NAME, NEXT_PUBLIC_PRIVACY_PHONE, NEXT_PUBLIC_PRIVACY_EMAIL (D-41: unset shows "Your Company Name" and placeholder contacts).
 - T-33s (D-30): after the next preview deploy, set AUTH_HASH_TIMING=1 on Vercel Preview, sign in ~20×, check the log: hash ≥100 ms and p95 sign-in <1 s; then unset it. Below 100 ms or p95 ≥1 s → retune task.
 - Redeploy to Vercel to publish M2 (the live site is still the T-05 build).
 

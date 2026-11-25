@@ -35,7 +35,8 @@ export function DeletedScreen() {
               <span className="font-medium break-words">{r.customerName}</span>
               <span className="text-sm text-muted-foreground">
                 Service {formatISTDate(r.serviceDate, { year: true })} · Deleted{" "}
-                {formatIST(r.deletedAt)}
+                {formatIST(r.deletedAt)} · Removed for good on{" "}
+                {formatISTDate(r.purgeOn, { year: true })}
               </span>
             </span>
             <Button

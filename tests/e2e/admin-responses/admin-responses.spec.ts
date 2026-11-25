@@ -1,46 +1,115 @@
-/* eslint-disable max-lines-per-function, max-lines -- one describe groups many tests; skipped until T-08b */
-import { expect, test, type Page } from "@playwright/test";
-import { signInAs } from "../../support/e2e";
+/* eslint-disable max-lines-per-function -- each test plays one scenario end to end */
+import { expect, test, type Browser, type Page, type PlaywrightWorkerArgs } from "@playwright/test";
+import { createUser, rpcCall, type AppApi } from "../../support/e2e";
+import { sharedAdminApi } from "../admin-users/sharedAdmin";
+import { newBranch } from "../support-links/helpers";
 
-const PASSWORD = "Demo@2026";
-const ALL = "/admin/responses?from=2000-01-01&to=2100-01-01";
+type Playwright = PlaywrightWorkerArgs["playwright"];
+type Cookies = Awaited<ReturnType<AppApi["request"]["storageState"]>>["cookies"];
+const SHOT = ".results/T-08b";
+const TEMP = "Temp-Pass-4471";
+const OWN = "My-Own-Pass-2026!";
+const STALE = "Someone else changed this. Reload to see the latest.";
 const Q6 = "Were you satisfied with the behaviour of the Service Advisor?";
 const Q12 = "Were you satisfied with the overall service experience?";
 const Q15 = "Would you like someone from our service team to call you?";
-const width = (page: Page): number => page.viewportSize()?.width ?? 0;
-const shot = async (page: Page, name: string): Promise<void> => {
-  await page.screenshot({ path: `.results/T-08/${name}-${String(width(page))}.png` });
+const width = (page: Page): string => String(page.viewportSize()?.width);
+const uniq = (): string => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+
+const BASE_ANSWERS = {
+  Q1: 5,
+  Q2: "Yes",
+  Q3: "No",
+  Q4: "Yes",
+  Q5: "Yes",
+  Q6: 5,
+  Q7: "Yes",
+  Q8: "Yes",
+  Q9: "Yes",
+  Q10: "Yes",
+  Q11: 5,
+  Q12: 4,
+  Q13: "Yes",
+  Q15: "No",
 };
 
-async function openAdmin(page: Page, path: string): Promise<void> {
-  await signInAs(page, "admin");
-  await page.goto(path);
-}
-
-async function stored<T>(page: Page, key: string): Promise<T> {
-  return page.evaluate(
-    (k) => JSON.parse(window.localStorage.getItem(`psf:v1:${k}`) ?? "null") as T,
-    key,
-  );
-}
-
-interface Resp {
+interface Scene {
+  branchId: string;
   id: string;
-  answers: Record<string, unknown>;
-  deletedAt: string | null;
-}
-interface Audit {
-  action: string;
-  entityId: string;
-  oldValue: unknown;
-  newValue: unknown;
-  note?: string;
+  customer: string;
+  boss: AppApi;
+  cookies: Cookies;
 }
 
-const responseOf = async (page: Page, id: string): Promise<Resp | undefined> =>
-  (await stored<Resp[]>(page, "responses")).find((r) => r.id === id);
-const auditOf = async (page: Page, action: string): Promise<Audit[]> =>
-  (await stored<Audit[]>(page, "audit")).filter((a) => a.action === action);
+async function bossFor(
+  playwright: Playwright,
+  base: string,
+  branchId: string,
+): Promise<{ boss: AppApi; cookies: Cookies }> {
+  const admin = await sharedAdminApi(playwright, base);
+  const email = `bos${uniq()}@ch.in`;
+  await createUser(admin, {
+    name: "Meena",
+    email,
+    tempPassword: TEMP,
+    role: "branch_admin",
+    branchId,
+  });
+  const request = await playwright.request.newContext({ baseURL: base });
+  const boss = { request, origin: new URL(base).origin };
+  await rpcCall(boss, "auth", "signIn", [email, TEMP]);
+  await rpcCall(boss, "auth", "setOwnPassword", [OWN]);
+  return { boss, cookies: (await request.storageState()).cookies };
+}
+
+/** A new branch with one response (the given answers) and a branch admin of that branch. */
+async function scene(
+  playwright: Playwright,
+  base: string,
+  answers: Record<string, unknown>,
+): Promise<Scene> {
+  const { branchId, advisorId, staff } = await newBranch(playwright, base, {
+    label: "Velachery",
+    name: "Priya",
+  });
+  const customer = `Kavitha ${uniq()}`;
+  const card = await rpcCall<{ id: string }>(staff.api, "jobCards", "createJobCard", [
+    {
+      requestId: crypto.randomUUID(),
+      jobCardNo: `JC-24-${String(1000 + Math.floor(Math.random() * 8999))}`,
+      customerName: customer,
+      phone: "98400 12345",
+      regNo: "tn09bx4521",
+      model: "Activa 6G",
+      serviceType: "Paid service",
+      serviceDate: new Date().toISOString().slice(0, 10),
+      advisorId,
+    },
+  ]);
+  const out = await rpcCall<{ url: string }>(staff.api, "visits", "createVisitLink", [
+    { jobCardId: card.id },
+  ]);
+  const code = new URL(out.url).pathname.replace("/f/", "");
+  await rpcCall(staff.api, "feedback", "submitResponse", [code, answers]);
+  const { boss, cookies } = await bossFor(playwright, base, branchId);
+  const rows = await rpcCall<{ id: string }[]>(boss, "responses", "listResponses", [
+    { from: "2000-01-01", to: "2100-01-01" },
+  ]);
+  return { branchId, id: rows[0]?.id ?? "", customer, boss, cookies };
+}
+
+async function asBoss(browser: Browser, page: Page, s: Scene, base: string): Promise<Page> {
+  const context = await browser.newContext({ baseURL: base, viewport: page.viewportSize() });
+  await context.addCookies(s.cookies);
+  return context.newPage();
+}
+
+const detail = (api: AppApi, id: string) =>
+  rpcCall<{
+    version: number;
+    response: { answers: Record<string, unknown> };
+    alert: { status: string; reasons: unknown[] } | null;
+  }>(api, "responses", "getResponse", [id]);
 
 async function pick(page: Page, group: string, value: string): Promise<void> {
   await page
@@ -54,271 +123,176 @@ async function confirmPassword(page: Page, password: string): Promise<void> {
   await page.getByRole("button", { name: "Confirm", exact: true }).click();
 }
 
-async function editAndSave(page: Page, edits: [string, string][]): Promise<void> {
+async function startEdit(page: Page, edits: [string, string][]): Promise<void> {
   await page.getByRole("button", { name: "Edit", exact: true }).click();
   for (const [q, v] of edits) await pick(page, q, v);
   await page.getByRole("button", { name: "Save changes" }).click();
-  await confirmPassword(page, PASSWORD);
-  await expect(page.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
 }
 
-async function openCount(page: Page): Promise<number | null> {
-  if (width(page) < 768) return null;
-  const badge = page.getByLabel(/\d+ open/).first();
-  return (await badge.count()) === 0 ? 0 : Number((await badge.innerText()).trim());
-}
+const Q6_LOW = { ...BASE_ANSWERS, Q6: 2, Q6a: { options: ["Rude"] } };
 
-test.fixme(true, "rebuilt by T-08b");
-test.describe("T-08 admin responses", () => {
-  test("S-11 AC-10 filters by service date, vehicle type, model and advisor; row opens detail", async ({
+test.describe("T-08b responses on the server", () => {
+  test("AC-9 G-01 edit Q6 2 -> 4: wrong password saves nothing, right one removes Q6a", async ({
+    browser,
     page,
+    playwright,
+    baseURL,
   }) => {
-    await openAdmin(page, ALL);
-    await expect(page.getByRole("heading", { name: "Responses" })).toBeVisible();
-    const rows = page.locator("tr[data-response-id]");
-    await expect(rows.first()).toBeVisible();
-    const total = await rows.count();
-    expect(total).toBeGreaterThan(5);
-    await shot(page, "list");
-    const advisor = (await rows.first().locator("td").nth(3).innerText()).trim();
-    await page.getByRole("combobox", { name: "Advisor" }).click();
-    await page.getByRole("option", { name: advisor, exact: true }).click();
-    await expect(page).toHaveURL(/advisorId=/);
-    await expect.poll(async () => rows.count()).toBeLessThan(total);
-    for (const a of await rows.locator("td:nth-child(4)").allInnerTexts()) {
-      expect(a.trim()).toBe(advisor);
-    }
-    await page.goto(ALL);
-    await expect(rows.first()).toBeVisible();
-    const model = (await rows.first().locator("td").nth(2).innerText()).trim();
-    await page.getByRole("combobox", { name: "Model" }).click();
-    await page.getByRole("option", { name: model, exact: true }).click();
-    await expect(page).toHaveURL(/model=/);
-    await expect.poll(async () => rows.count()).toBeLessThanOrEqual(total);
-    for (const m of await rows.locator("td:nth-child(3)").allInnerTexts()) {
-      expect(m.trim()).toBe(model);
-    }
-    await page.goto(ALL);
-    await expect(rows.first()).toBeVisible();
-    await page.getByRole("combobox", { name: "Vehicle type" }).click();
-    await page.getByRole("option", { name: "scooter", exact: true }).click();
-    await expect(page).toHaveURL(/vehicleType=scooter/);
-    await expect(page.getByRole("heading", { name: "Responses" })).toBeVisible();
-    await expect.poll(async () => rows.count()).toBeGreaterThan(0);
-    const scooters = await rows.count();
-    await page.goto(`${ALL}&vehicleType=motorcycle`);
-    await expect(page.getByRole("heading", { name: "Responses" })).toBeVisible();
-    await expect.poll(async () => (await rows.count()) + scooters).toBe(total);
-    await page.goto("/admin/responses?from=2100-01-01&to=2100-01-02");
-    await expect(page.getByText("No responses match these filters")).toBeVisible();
-    await page.goto(ALL);
-    const first = rows.first();
-    const customer = (await first.locator("td").nth(1).innerText()).trim();
-    const id = (await first.getAttribute("data-response-id")) ?? "";
-    await first.click();
-    await expect(page).toHaveURL(new RegExp(`/admin/responses/${id}$`));
-    await expect(page.getByText(customer).first()).toBeVisible();
+    const base = String(baseURL);
+    const s = await scene(playwright, base, Q6_LOW);
+    const boss = await asBoss(browser, page, s, base);
+    await boss.goto(`/admin/responses/${s.id}`);
+    await expect(boss.locator('[data-question="Q6a"]')).toContainText("Rude");
+    await startEdit(boss, [[Q6, "4"]]);
+    await expect(boss.locator('[data-question="Q6a"]')).toHaveCount(0);
+    await confirmPassword(boss, "wrong-password");
+    await expect(boss.getByText("Password incorrect")).toBeVisible();
+    await boss.screenshot({ path: `${SHOT}/wrong-password-${width(page)}.png` });
+    expect((await detail(s.boss, s.id)).response.answers["Q6"]).toBe(2);
+    await confirmPassword(boss, OWN);
+    await expect(boss.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
+    const after = await detail(s.boss, s.id);
+    expect(after.response.answers["Q6"]).toBe(4);
+    expect(after.response.answers["Q6a"]).toBeUndefined();
+    await boss.context().close();
   });
 
-  test("detail shows every answer with follow-ups plus visit and vehicle info", async ({
+  test("a stale second window gets the exact message and the saved answers stay", async ({
+    browser,
     page,
+    playwright,
+    baseURL,
   }) => {
-    await openAdmin(page, "/admin/responses/r-s020");
-    await expect(page.getByRole("heading", { name: "Response" })).toBeVisible();
-    const labels = ["Customer", "Job card", "Registration", "Vehicle", "Service date"];
-    for (const label of [...labels, "Advisor", "Phone", "Submitted"]) {
-      await expect(page.getByText(label, { exact: true })).toBeVisible();
+    const base = String(baseURL);
+    const s = await scene(playwright, base, Q6_LOW);
+    const one = await asBoss(browser, page, s, base);
+    const two = await asBoss(browser, page, s, base);
+    for (const p of [one, two]) {
+      await p.goto(`/admin/responses/${s.id}`);
+      await expect(p.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
     }
-    await expect(page.locator('[data-question="Q6a"]')).toContainText("Didn't answer queries");
-    expect(await page.locator("[data-question]").count()).toBeGreaterThanOrEqual(15);
-    await expect(page.getByTestId("response-alert")).toContainText("Callback requested");
+    await startEdit(one, [[Q6, "4"]]);
+    await confirmPassword(one, OWN);
+    await expect(one.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
+    await startEdit(two, [[Q6, "3"]]);
+    await confirmPassword(two, OWN);
+    await expect(two.getByRole("alert").filter({ hasText: STALE })).toBeVisible();
+    await two.screenshot({ path: `${SHOT}/stale-${width(page)}.png` });
+    expect((await detail(s.boss, s.id)).response.answers["Q6"]).toBe(4);
+    await one.context().close();
+    await two.context().close();
   });
 
-  test("G-W3 long text is truncated in the list, full on detail; <script> shows as plain text", async ({
+  test("S-08 Q12 1 -> 4 auto-resolves the only-reason alert; Q15 No -> Yes opens a new one", async ({
+    browser,
     page,
+    playwright,
+    baseURL,
   }) => {
-    const longName = "Venkatachalapathi ".repeat(8).trim();
-    const script = "<script>window.__pwned=1</script>";
-    await openAdmin(page, "/admin/responses");
-    await expect(page.getByRole("heading", { name: "Responses" })).toBeVisible();
-    await page.evaluate(
-      ([name, text]) => {
-        type Row = Record<string, unknown>;
-        const read = (k: string) =>
-          JSON.parse(window.localStorage.getItem(`psf:v1:${k}`) ?? "[]") as Row[];
-        const write = (k: string, v: unknown) => {
-          window.localStorage.setItem(`psf:v1:${k}`, JSON.stringify(v));
-        };
-        const responses = read("responses");
-        const resp = responses.find((r) => r["id"] === "r-s001") as {
-          visitId: string;
-          answers: Row;
-        };
-        resp.answers["Q14"] = text;
-        write("responses", responses);
-        const visit = read("visits").find((v) => v["id"] === resp.visitId);
-        const cards = read("jobCards");
-        const card = cards.find((c) => c["jobCardNo"] === visit?.["jobCardNo"]);
-        if (card) card["customerName"] = name;
-        write("jobCards", cards);
-      },
-      [longName, script],
-    );
-    await page.goto(ALL);
-    const cell = page.locator('tr[data-response-id="r-s001"] td').nth(1);
-    await expect(cell).toBeVisible();
-    const clipped = await cell.evaluate((el) => {
-      const s = getComputedStyle(el);
-      return s.textOverflow === "ellipsis" && el.scrollWidth > el.clientWidth;
-    });
-    expect(clipped).toBe(true);
-    await page.goto("/admin/responses/r-s001");
-    await expect(page.getByText(longName).first()).toBeVisible();
-    await expect(page.locator('[data-question="Q14"]')).toContainText(script);
-    expect(await page.evaluate(() => "__pwned" in window)).toBe(false);
-    await expect(page.locator("main script")).toHaveCount(0);
-    await shot(page, "script-text");
+    const base = String(baseURL);
+    const s = await scene(playwright, base, { ...BASE_ANSWERS, Q12: 1 });
+    const boss = await asBoss(browser, page, s, base);
+    await boss.goto(`/admin/responses/${s.id}`);
+    await expect(boss.getByTestId("response-alert")).toContainText("Q12 rated 1");
+    await startEdit(boss, [[Q12, "4"]]);
+    await confirmPassword(boss, OWN);
+    await expect(boss.getByTestId("response-alert")).toContainText("Resolved");
+    expect((await detail(s.boss, s.id)).alert?.status).toBe("resolved");
+    await boss.screenshot({ path: `${SHOT}/auto-resolved-${width(page)}.png` });
+
+    const t = await scene(playwright, base, BASE_ANSWERS);
+    const other = await asBoss(browser, page, t, base);
+    await other.goto(`/admin/responses/${t.id}`);
+    await expect(other.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
+    await expect(other.getByTestId("response-alert")).toHaveCount(0);
+    await startEdit(other, [[Q15, "Yes"]]);
+    await confirmPassword(other, OWN);
+    await expect(other.getByTestId("response-alert")).toContainText("Callback requested");
+    await expect(other.getByTestId("response-alert")).toContainText("Open");
+    expect((await detail(t.boss, t.id)).alert?.status).toBe("open");
+    await boss.context().close();
+    await other.context().close();
   });
 
-  test("AC-9 G-01 edit Q6 2 → 4: Q6a disappears live; wrong password saves nothing; correct password audits", async ({
+  test("US-21 S-09 G-03 delete then restore keeps the answers; Recently deleted shows when it goes for good", async ({
+    browser,
     page,
+    playwright,
+    baseURL,
   }) => {
-    await openAdmin(page, "/admin/responses/r-s020");
-    await expect(page.locator('[data-question="Q6a"]')).toBeVisible();
-    await page.getByRole("button", { name: "Edit", exact: true }).click();
-    await pick(page, Q6, "4");
-    await expect(page.locator('[data-question="Q6a"]')).toHaveCount(0);
-    await page.getByRole("button", { name: "Save changes" }).click();
-    await confirmPassword(page, "wrong-password");
-    await expect(page.getByText("Password incorrect")).toBeVisible();
-    expect((await responseOf(page, "r-s020"))?.answers["Q6"]).toBe(2);
-    expect(await auditOf(page, "response.edit")).toHaveLength(0);
-    await shot(page, "wrong-password");
-    await confirmPassword(page, PASSWORD);
-    await expect(page.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
-    const saved = await responseOf(page, "r-s020");
-    expect(saved?.answers["Q6"]).toBe(4);
-    expect(saved?.answers["Q6a"]).toBeUndefined();
-    const [entry] = await auditOf(page, "response.edit");
-    expect(entry?.oldValue).toEqual({ Q6: 2, Q6a: { options: ["Didn't answer queries"] } });
-    expect(entry?.newValue).toEqual({ Q6: 4 });
-  });
-
-  test("S-08 Q12 1 → 4 auto-resolves the only-reason alert; Q15 No → Yes opens 'Callback requested' (+1 badge)", async ({
-    page,
-  }) => {
-    await openAdmin(page, "/admin/responses/r-s001");
-    await expect(page.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
-    const start = await openCount(page);
-    await editAndSave(page, [[Q12, "1"]]);
-    await expect(page.getByTestId("response-alert")).toContainText("Q12 rated 1");
-    await expect(page.getByTestId("response-alert")).toContainText("Open");
-    if (start !== null) {
-      await expect(page.getByLabel(/\d+ open/).first()).toHaveText(String(start + 1));
-    }
-
-    await editAndSave(page, [[Q12, "4"]]);
-    await expect(page.getByTestId("response-alert")).toContainText("Resolved");
-    if (start !== null && start > 0) {
-      await expect(page.getByLabel(/\d+ open/).first()).toHaveText(String(start));
-    }
-    const resolved = (await auditOf(page, "alert.status")).at(-1);
-    expect(resolved?.newValue).toBe("resolved");
-    expect(resolved?.note).toBe("Auto-resolved: no alert reason after edit");
-    await shot(page, "auto-resolved");
-
-    await page.goto("/admin/responses/r-s002");
-    await expect(page.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
-    const before = await openCount(page);
-    await expect(page.getByTestId("response-alert")).toHaveCount(0);
-    await editAndSave(page, [[Q15, "Yes"]]);
-    await expect(page.getByTestId("response-alert")).toContainText("Callback requested");
-    await expect(page.getByTestId("response-alert")).toContainText("Open");
-    if (before !== null) {
-      await expect(page.getByLabel(/\d+ open/).first()).toHaveText(String(before + 1));
-    }
-    expect(await auditOf(page, "alert.create")).toHaveLength(2);
-    await shot(page, "callback-alert");
-  });
-
-  test("US-21 G-03 delete (confirm + password) then restore (password) keeps answers and alert status", async ({
-    page,
-  }) => {
-    await openAdmin(page, "/admin/responses/deleted");
-    await expect(page.getByText("Nothing deleted")).toBeVisible();
-
-    const answers = JSON.stringify((await responseOf(page, "r-s020"))?.answers);
-    await page.goto("/admin/responses/r-s020");
-    await page.getByRole("button", { name: "Delete", exact: true }).click();
-    await expect(page.getByText("Delete this response?")).toBeVisible();
-    await page
+    const base = String(baseURL);
+    const s = await scene(playwright, base, { ...BASE_ANSWERS, Q12: 1 });
+    const before = JSON.stringify((await detail(s.boss, s.id)).response.answers);
+    const boss = await asBoss(browser, page, s, base);
+    await boss.goto(`/admin/responses/${s.id}`);
+    await boss.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(boss.getByText("Delete this response?")).toBeVisible();
+    await boss
       .getByRole("alertdialog")
       .getByRole("button", { name: "Delete", exact: true })
       .click();
-    await confirmPassword(page, "wrong-password");
-    await expect(page.getByText("Password incorrect")).toBeVisible();
-    expect((await responseOf(page, "r-s020"))?.deletedAt).toBeNull();
-    await confirmPassword(page, PASSWORD);
-    await expect(page).toHaveURL(/\/admin\/responses$/);
-    await expect(page.locator('tr[data-response-id="r-s020"]')).toHaveCount(0);
+    await confirmPassword(boss, "wrong-password");
+    await expect(boss.getByText("Password incorrect")).toBeVisible();
+    await confirmPassword(boss, OWN);
+    await expect(boss).toHaveURL(/\/admin\/responses$/);
 
-    await page
-      .getByRole("main")
-      .getByRole("link", { name: /Recently deleted/ })
-      .click();
-    const row = page.locator('li[data-response-id="r-s020"]');
-    await expect(row).toBeVisible();
-    await shot(page, "recently-deleted");
+    await boss.goto("/admin/responses/deleted");
+    const row = boss.locator(`li[data-response-id="${s.id}"]`);
+    await expect(row).toContainText(s.customer);
+    await expect(row).toContainText(/Removed for good on \d{1,2} \w{3} \d{4}/);
+    await boss.screenshot({ path: `${SHOT}/recently-deleted-${width(page)}.png` });
     await row.getByRole("button", { name: "Restore" }).click();
-    await confirmPassword(page, "wrong-password");
-    await expect(page.getByText("Password incorrect")).toBeVisible();
-    await confirmPassword(page, PASSWORD);
-    await expect(page.getByText("Nothing deleted")).toBeVisible();
+    await confirmPassword(boss, OWN);
+    await expect(boss.getByText("Nothing deleted")).toBeVisible();
 
-    expect(JSON.stringify((await responseOf(page, "r-s020"))?.answers)).toBe(answers);
-    await page.goto(ALL);
-    await expect(page.locator('tr[data-response-id="r-s020"]')).toBeVisible();
-    await page.goto("/admin/responses/r-s020");
-    await expect(page.getByTestId("response-alert")).toContainText("Contacted");
-    const actions = (await stored<Audit[]>(page, "audit"))
-      .map((a) => a.action)
-      .filter((a) => a.startsWith("response."));
-    expect(actions).toEqual(["response.delete", "response.restore"]);
+    const back = await detail(s.boss, s.id);
+    expect(JSON.stringify(back.response.answers)).toBe(before);
+    expect(back.alert?.status).toBe("open");
+    await boss.context().close();
+  });
+
+  test("US-29 another branch's admin opening the response URL sees Not found and no data", async ({
+    browser,
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const base = String(baseURL);
+    const mine = await scene(playwright, base, Q6_LOW);
+    const theirs = await scene(playwright, base, Q6_LOW);
+    const boss = await asBoss(browser, page, mine, base);
+    await boss.goto(`/admin/responses/${theirs.id}`);
+    await expect(boss.getByText("Not found")).toBeVisible();
+    await expect(boss.getByText(theirs.customer)).toHaveCount(0);
+    await expect(boss.locator("[data-question]")).toHaveCount(0);
+    await boss.screenshot({ path: `${SHOT}/not-found-${width(page)}.png` });
+    await boss.context().close();
   });
 
   test("S-13 a failed edit keeps the edited answers and shows 'Couldn't save, try again'", async ({
+    browser,
     page,
+    playwright,
+    baseURL,
   }) => {
-    await openAdmin(page, "/admin/responses/r-s020?demoFail=1");
-    await expect(page.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Edit", exact: true }).click();
-    await pick(page, Q6, "4");
-    await page.getByRole("button", { name: "Save changes" }).click();
-    await confirmPassword(page, PASSWORD);
-    await expect(page.getByText("Couldn't save, try again").first()).toBeVisible();
-    await shot(page, "save-failed");
-    expect((await responseOf(page, "r-s020"))?.answers["Q6"]).toBe(2);
-    expect(await auditOf(page, "response.edit")).toHaveLength(0);
-    const cancel = page.getByRole("dialog").getByRole("button", { name: "Cancel" });
-    if (await cancel.isVisible()) await cancel.click();
+    const base = String(baseURL);
+    const s = await scene(playwright, base, Q6_LOW);
+    const boss = await asBoss(browser, page, s, base);
+    await boss.goto(`/admin/responses/${s.id}`);
+    await expect(boss.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
+    await boss.route("**/api/rpc/responses/editResponse", (r) => r.abort());
+    await startEdit(boss, [[Q6, "4"]]);
+    await confirmPassword(boss, OWN);
+    await expect(boss.getByText("Couldn't save, try again").first()).toBeVisible();
+    await boss.screenshot({ path: `${SHOT}/save-failed-${width(page)}.png` });
+    await boss.getByRole("button", { name: "Cancel", exact: true }).click();
     await expect(
-      page.getByRole("group", { name: Q6 }).getByRole("button", { name: "4", exact: true }),
+      boss.getByRole("group", { name: Q6 }).getByRole("button", { name: "4", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
-    await page.getByRole("button", { name: "Retry" }).click();
-    await confirmPassword(page, PASSWORD);
-    await expect.poll(async () => (await responseOf(page, "r-s020"))?.answers["Q6"]).toBe(4);
-  });
-
-  test("D-15 G-W2 a support user opening /admin/responses lands on /not-allowed with no data", async ({
-    page,
-  }) => {
-    await signInAs(page, "support1");
-    await page.goto(ALL);
-    await expect(page).toHaveURL(/\/not-allowed$/);
-    await expect(page.getByText("You don't have access to this page")).toBeVisible();
-    await expect(page.locator("tr[data-response-id]")).toHaveCount(0);
-    await page.goto("/admin/responses/r-s020");
-    await expect(page).toHaveURL(/\/not-allowed$/);
-    await expect(page.locator("[data-question]")).toHaveCount(0);
+    await boss.unroute("**/api/rpc/responses/editResponse");
+    await boss.getByRole("button", { name: "Retry" }).click();
+    await confirmPassword(boss, OWN);
+    await expect.poll(async () => (await detail(s.boss, s.id)).response.answers["Q6"]).toBe(4);
+    await boss.context().close();
   });
 });

@@ -9,6 +9,7 @@ export interface ResponseListRow {
   customerName: string;
   model: string;
   advisorName: string;
+  branchName: string;
   q12: number;
   hasAlert: boolean;
 }
@@ -19,6 +20,9 @@ export interface ResponseDetail {
   jobCard: JobCard & { advisorName: string };
   questionnaire: Questionnaire;
   alert: Alert | null;
+  branchName: string;
+  /** send this back with an edit; a stale one gets CONFLICT */
+  version: number;
 }
 
 export interface DeletedRow {
@@ -26,12 +30,24 @@ export interface DeletedRow {
   customerName: string;
   serviceDate: ISODate;
   deletedAt: ISOTime;
+  branchName: string;
+  /** IST date the daily clean-up removes it for good */
+  purgeOn: ISODate;
 }
 
+/** `branchId` narrows only for the main admin; a branch admin always gets their own branch. */
+export type ResponseFilters = Filters & { branchId?: string };
+
 export interface ResponseRepo {
-  listResponses(f: Filters): Promise<Result<ResponseListRow[]>>;
+  listResponses(f: ResponseFilters): Promise<Result<ResponseListRow[]>>;
   getResponse(id: string): Promise<Result<ResponseDetail>>;
-  editResponse(id: string, answers: AnswerMap, s: StepUp): Promise<Result<ResponseDetail>>;
+  /** step-up password; CONFLICT "Someone else changed this. Reload to see the latest." on a stale version */
+  editResponse(
+    id: string,
+    answers: AnswerMap,
+    version: number,
+    s: StepUp,
+  ): Promise<Result<ResponseDetail>>;
   deleteResponse(id: string, s: StepUp): Promise<Result<void>>;
   restoreResponse(id: string, s: StepUp): Promise<Result<void>>;
   listDeleted(): Promise<Result<DeletedRow[]>>;

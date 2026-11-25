@@ -11,7 +11,7 @@ function Body({ id }: { id: string }) {
   if (error !== undefined) {
     return (
       <p role="alert" className="text-danger">
-        {error.code === "NOT_FOUND" ? "Response not found" : error.message}
+        {error.code === "NOT_FOUND" ? "Not found" : error.message}
       </p>
     );
   }

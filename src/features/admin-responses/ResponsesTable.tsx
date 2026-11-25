@@ -43,6 +43,9 @@ function Row({ row }: { row: ResponseListRow }) {
       <TableCell className="max-w-32 truncate" title={row.advisorName}>
         {row.advisorName}
       </TableCell>
+      <TableCell className="max-w-32 truncate" title={row.branchName}>
+        {row.branchName}
+      </TableCell>
       <TableCell>{row.q12} / 5</TableCell>
       <TableCell>{row.hasAlert && <Badge variant="destructive">Alert</Badge>}</TableCell>
     </TableRow>
@@ -59,6 +62,7 @@ export function ResponsesTable({ rows }: { rows: ResponseListRow[] }) {
             <TableHead>Customer</TableHead>
             <TableHead>Model</TableHead>
             <TableHead>Advisor</TableHead>
+            <TableHead>Branch</TableHead>
             <TableHead>Overall</TableHead>
             <TableHead>Alert</TableHead>
           </TableRow>
