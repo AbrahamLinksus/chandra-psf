@@ -776,7 +776,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: scripts/golive-check.ts, docs/PRODUCTION.md, docs/DEPLOY.md (gate section), tests/unit/golive/**
 - Context: SPEC §12.1, §9 Security · HLD Go-live gate · LLD-phase2 §26 (`golive-check`) · files: docs/PRODUCTION.md, .env.example
 - Why separate: the gate the owner ticks before the first real customer link.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] `pnpm golive:check` fails on any placeholder company name / phone / email / dealer phone, a non-production `APP_URL`, or a production database holding more than the questionnaire + main admins before launch, and passes when they're real (S-25)
   - [ ] `docs/PRODUCTION.md` phase-2 rows are each marked done with their task or `N/A (reason)`; an owner checklist for the six SPEC §12.1 items with plain steps (Vercel Pro, Neon paid + 7-day history, restore rehearsal, company details, legal check, demo project offline) (S-28)
