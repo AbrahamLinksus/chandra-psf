@@ -863,7 +863,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: tests/e2e/walkthrough/**, tests/e2e/preview/**, docs/DEPLOY.md, docs/DEMO-SCRIPT.md, docs/WALKTHROUGH.md, docs/LLD-phase2.md, README.md
 - Context: SPEC CR-2 note, §5 F-3 rows, F-9, §12 DoD · files: tests/e2e/walkthrough/*, tests/e2e/preview/*, docs/DEPLOY.md, docs/DEMO-SCRIPT.md
 - Why separate: the whole-app check after the v2 slices; no feature edits (fixes raise `Needs file:` on the owning slice).
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] The full walkthrough e2e (init → job card → link → v2 form at 360 px → alert with the callback slot → Overview with Q1 / Q9 tiles) passes on PGlite (DoD 3–8)
   - [ ] **Maintainer step:** after the v2 build is on the preview, `admin clear-feedback` runs there once; the preview suite then passes against it (S-12)

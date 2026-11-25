@@ -15,7 +15,7 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M5 · 12/12 done (T-23 via owner manual check D-44) |
-| Next step | M6: T-38, T-39, T-40 done. T-42 (models) in its test sweep; then T-41 (wire-up, preview data clear, docs; shares tests/e2e with T-42 so it waits), then handover. D-49 autopilot overnight. |
+| Next step | M6: T-38, T-39, T-40, T-42 done; T-41 (wire-up, docs) running; then handover. D-49 autopilot overnight. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | autopilot overnight per D-49 (Recommended option at every card; approve on goals met + sync ✅) |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
