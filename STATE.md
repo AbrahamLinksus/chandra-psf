@@ -15,12 +15,12 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M5 · 12/12 done (T-23 via owner manual check D-44) |
-| Next step | Phase 2 (M5) build COMPLETE 2026-11-26. Owner, tomorrow: Vercel builds resume (rate limit hit 2026-11-26 ~15:00); set Production env + admin init + cron check; demo manual check (Owner actions). After the demo: batched review + Known minors pass (exit speed mode), then the stage-8 handover card. |
+| Next step | Owner 2026-11-26: "review only, then handover" — batched M5 review running (read-only, .results/M5-review), Major findings → fix tasks; then stage-8 handover card. Push main only (wip/* builds burn the Vercel limit): avoid task branches where possible. Known minors stay listed. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5 complete; T-30 handover approved) |
+| Last updated | 2026-11-26 (post-M5: batched review running; then handover) |
 
 ## Team
 | Agent | Model | Why on this project |
