@@ -15,12 +15,12 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M5 · 12/12 done (T-23 via owner manual check D-44) |
-| Next step | CR-2 NOT yet merged (its sync check failed; fixing) (D-46; owner confirmed alerts on rating 1, Q2a on Partially+No). M6: T-37r (review fixes, sync running) → T-38 foundation → T-39 ∥ T-40 → T-41. Then handover. Demo fallback: current wip/T-30 preview (v1). |
+| Next step | M6 (CR-2, D-46): T-37r done → T-38 foundation running → T-39 ∥ T-40 → T-41. Then handover. Demo fallback: wip/T-30 preview (v1). |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (CR-2 approved by owner, merge pending: sync check failed) |
+| Last updated | 2026-11-26 (CR-2 merged 58767b8; T-37r approved; T-38 starting) |
 
 ## Team
 | Agent | Model | Why on this project |

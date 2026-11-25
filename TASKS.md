@@ -801,12 +801,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/jobs/cleanup.ts, src/server/erasure.ts, scripts/admin.ts, tests/unit/server/cleanup/**, tests/unit/server/erasure/**, tests/unit/server/admin-script/**, docs/PRODUCTION.md, OWNER.md
 - Context: M5 batched review (Orchestrator notes) · LLD-phase2 §24–§26 · D-44, D-45
 - Why separate: Major findings from the M5 batched review; personal data and the recovery path.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] M1: when the daily clean-up purges a deleted response (and its alerts), the audit rows for those ids are redacted in the same transaction (no Q14 free text, no alert note text); a test edits → deletes → purges → erases and finds no customer text in audit_log
   - [ ] M2: `pnpm admin reapply-erasures` works in chunks (~500 ids per transaction), takes an optional `--since <date>`, and logs each id's real source (request / retention); a test covers more than one chunk
   - [ ] M3 (D-45): OWNER.md and docs/PRODUCTION.md say the pre-demo check and any test data happen on the preview (Neon dev) only; production holds no customer data before `pnpm golive:check`; one consistent answer for who runs the check (the developer)
-- Result: —
+- Result: Done 2026-11-26 · 3/3 goals (M1 purge redacts audit, M2 chunked re-apply + --since + real source, M3 preview-only test data D-45) · sync ✅ · speed mode
 
 ## M6 · Questionnaire v2 (CR-2)
 

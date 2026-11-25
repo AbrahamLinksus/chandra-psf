@@ -38,7 +38,8 @@ async function eraseAlerts(tx: Tx, responseIds: string[]): Promise<string[]> {
   return rows.map((a) => a.id);
 }
 
-async function redactAudit(tx: Tx, scopes: [string, string[]][]): Promise<void> {
+/** Blanks old/new values and notes of the audit rows of the given (entity type, ids) scopes. */
+export async function redactAudit(tx: Tx, scopes: [string, string[]][]): Promise<void> {
   const parts = scopes
     .filter(([, ids]) => ids.length > 0)
     .map(([type, ids]) => and(eq(auditLog.entityType, type), inArray(auditLog.entityId, ids)));

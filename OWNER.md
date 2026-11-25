@@ -16,9 +16,9 @@
 
 **How to start it:** Open the app's web address in any browser. To run a copy on your own computer, ask the developer; the start command is `pnpm dev`.
 
-**Before the demo (manual check):** On the live site, sign in as support, make a link, open it on a real phone, and submit with "Yes" to the callback question. The support screen should show Opened, then Completed, without a reload, and the branch admin should see the alert.
+**Before the demo (manual check, on the test site only):** Do this on the test (preview) site the developer gives you, never on the real (production) site. Sign in as support, make a link, open it on a real phone, and submit with "Yes" to the callback question. The support screen should show Opened, then Completed, without a reload, and the branch admin should see the alert.
 
-**Before the first real customer link (go-live gate):** Work through the owner checklist in `docs/PRODUCTION.md`. Then the developer runs `pnpm golive:check`, which must pass. Until then, use staff test data only.
+**Before the first real customer link (go-live gate):** Work through the owner checklist in `docs/PRODUCTION.md`, then tell the developer. The developer runs the final go-live check (`pnpm golive:check`), which must pass; you do not run it yourself. Until it passes, the real site holds no customer data at all: all testing and practice data stays on the test site.
 
 **What it can't do (yet):** Send WhatsApp messages itself (support opens WhatsApp with the message). Send emails. Work offline. The company name and contact details stay placeholders until they are set on Vercel.
 

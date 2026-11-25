@@ -3,12 +3,12 @@
 // Passwords are printed once by the CLI and never logged or audited.
 import { randomInt } from "node:crypto";
 import { parseArgs } from "node:util";
-import { count, eq, sql } from "drizzle-orm";
+import { count, eq, gt, sql } from "drizzle-orm";
 import { QUESTIONNAIRE_V1 } from "../src/domain/questionnaire";
 import { hashPassword } from "../src/server/auth/password";
 import { writeAudit } from "../src/server/audit";
 import type { Db, Tx } from "../src/server/db/client";
-import { eraseJobCards, logErasure } from "../src/server/erasure";
+import { eraseJobCards, logErasure, type ErasureSource } from "../src/server/erasure";
 import {
   erasureJournal,
   loginAttempts,
@@ -23,6 +23,7 @@ export const OTP_TTL_HOURS = 72;
 const MS_PER_HOUR = 3_600_000;
 // Arbitrary constant key: serialises concurrent `init` runs (transaction-scoped advisory lock).
 const INIT_LOCK_KEY = 7_319_001;
+const REAPPLY_CHUNK_SIZE = 500;
 const PGLITE_PREFIX_LENGTH = "pglite:".length;
 // No look-alike characters (0/O, 1/l/I): the password is read off a terminal.
 const OTP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
@@ -196,14 +197,35 @@ async function openDb(): Promise<Handle> {
  * After a restore (LLD section 26): re-erases every job card in the source database's erasure
  * journal that is not erased here. A second run finds nothing left, so nothing changes.
  */
-export async function reapplyErasures(deps: AdminDeps, source: Db): Promise<{ erased: number }> {
-  const journal = await source.select({ id: erasureJournal.jobCardId }).from(erasureJournal);
-  if (journal.length === 0) return { erased: 0 };
+export async function reapplyErasures(
+  deps: AdminDeps,
+  source: Db,
+  options: { since?: Date; chunkSize?: number } = {},
+): Promise<{ erased: number }> {
+  const { since, chunkSize = REAPPLY_CHUNK_SIZE } = options;
+  const journal = await source
+    .select({ id: erasureJournal.jobCardId, source: erasureJournal.source })
+    .from(erasureJournal)
+    .where(since ? gt(erasureJournal.erasedAt, since) : undefined)
+    .orderBy(erasureJournal.jobCardId);
   const now = stamp(deps).clock.now();
-  const ids = journal.map((j) => j.id);
-  const done = await deps.db.transaction((tx) => eraseJobCards(tx, ids, "request", now));
-  logErasure("request", done);
-  return { erased: done.length };
+  let erased = 0;
+  for (let i = 0; i < journal.length; i += chunkSize) {
+    const chunk = journal.slice(i, i + chunkSize);
+    const done = await deps.db.transaction(async (tx) => {
+      const results: { source: ErasureSource; ids: string[] }[] = [];
+      for (const src of ["request", "retention"] as const) {
+        const ids = chunk.filter((j) => j.source === src).map((j) => j.id);
+        results.push({ source: src, ids: await eraseJobCards(tx, ids, src, now) });
+      }
+      return results;
+    });
+    for (const r of done) {
+      logErasure(r.source, r.ids);
+      erased += r.ids.length;
+    }
+  }
+  return { erased };
 }
 
 async function openUrl(url: string): Promise<Handle> {
@@ -232,7 +254,19 @@ function printOtp(r: OtpResult): void {
 }
 
 const USAGE =
-  "usage: admin init --name <n> --email <e> | reissue --email <e> | recover --email <e> --no-admin-can-sign-in | reapply-erasures --from <url>";
+  "usage: admin init --name <n> --email <e> | reissue --email <e> | recover --email <e> --no-admin-can-sign-in | reapply-erasures --from <url> [--since <date>]";
+
+async function runReapply(db: Db, from: string, sinceText: string | undefined): Promise<void> {
+  const since = sinceText ? new Date(sinceText) : undefined;
+  if (since && Number.isNaN(since.getTime())) throw new AdminError("--since is not a valid date");
+  const source = await openUrl(from);
+  try {
+    const r = await reapplyErasures({ db }, source.db, since ? { since } : {});
+    console.log(`Re-erased ${String(r.erased)} job card(s).`);
+  } finally {
+    await source.close();
+  }
+}
 
 async function run(db: Db, argv: string[]): Promise<void> {
   const { values, positionals } = parseArgs({
@@ -242,19 +276,14 @@ async function run(db: Db, argv: string[]): Promise<void> {
       name: { type: "string" },
       email: { type: "string" },
       from: { type: "string" },
+      since: { type: "string" },
       "no-admin-can-sign-in": { type: "boolean", default: false },
     },
   });
   const [command] = positionals;
   const { name, email } = values;
   if (command === "reapply-erasures" && values.from) {
-    const source = await openUrl(values.from);
-    try {
-      const r = await reapplyErasures({ db }, source.db);
-      console.log(`Re-erased ${String(r.erased)} job card(s).`);
-    } finally {
-      await source.close();
-    }
+    await runReapply(db, values.from, values.since);
     return;
   }
   if (!email) throw new AdminError(USAGE);

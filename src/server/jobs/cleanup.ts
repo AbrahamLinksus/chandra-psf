@@ -20,7 +20,7 @@ import {
 } from "../db/schema";
 import { writeAudit } from "../audit";
 import type { Clock } from "../ctx";
-import { eraseJobCards, logErasure } from "../erasure";
+import { eraseJobCards, logErasure, redactAudit } from "../erasure";
 
 /** Batches stop here so the run ends inside the 300 s function limit; the next run continues (LLD §25). */
 export const CLEANUP_BUDGET_MS = 240_000;
@@ -87,6 +87,14 @@ async function eraseDue(
 }
 
 async function purgeBatch(tx: Tx, ids: string[], clock: Clock): Promise<void> {
+  const alertIds = (
+    await tx.select({ id: alerts.id }).from(alerts).where(inArray(alerts.responseId, ids))
+  ).map((a) => a.id);
+  // Edit/note audit rows hold customer text; once the response is gone erasure can't find them.
+  await redactAudit(tx, [
+    ["response", ids],
+    ["alert", alertIds],
+  ]);
   await tx.delete(alerts).where(inArray(alerts.responseId, ids));
   await tx.delete(responses).where(inArray(responses.id, ids));
   for (const id of ids) {

@@ -43,7 +43,7 @@ The rows below are the SPEC CR-1 gap items G-1 to G-15 (`docs/SPEC.md`, "Team de
 | G-3 | Emailed password-reset links | — | — | N/A (falls away with G-2: no email or SMS sending at launch, SPEC §8) |
 | G-4 | Customer search, download and erase are main-admin only, across all branches | T-24 "Not allowed / FORBIDDEN (G-4, G-W2)" criterion; T-25 erase criteria (S-21) | T-24, T-25 | Built + tested (T-24, T-25) |
 | G-5 | Erasures are logged so they can be re-applied after a restore; partial restore by default, full rollback only with the owner's go-ahead | T-25 `reapply-erasures` criterion (S-24); restore steps in DEPLOY.md sections 9 and 10 | T-25, T-28 | Built + tested (T-25 unit and e2e; restore steps in DEPLOY.md). The restore rehearsal is owner checklist step 3 |
-| G-6 | Staff screens refresh only while in use (visible tab, used in the last 15 min) | T-22 polling criteria (S-23, G-6) | T-22 | Built + tested (T-22). The live capture on the preview is T-23, still Backlog |
+| G-6 | Staff screens refresh only while in use (visible tab, used in the last 15 min) | T-22 polling criteria (S-23, G-6) | T-22 | Built + tested (T-22). The live capture on the preview (T-23) is closed by D-44 |
 | G-7 | Form limits per link (30 opens, 5 submits per hour) and a generous per-address flood limit | T-04b "6th submit on one link" criterion (S-22, G-7) | T-04b | Built + tested (T-04b) |
 | G-8 | Links belong to the branch; My links and All branch links | T-03c "All branch links" criterion; T-27 branch matrix (218 of 218) | T-03c, T-03d, T-27 | Built + tested (T-03c, T-27) |
 | G-9 | Main admin edits name, email, role and branch; branch admin edits name and email of support users | T-10b criterion 2 (S-20, G-9) | T-10b | Built + tested (T-10b) |
@@ -67,13 +67,13 @@ No real customer link is sent until every step below is done and the go-live che
 
 Also required by SPEC §12.1: the first main admin is created on production and has set their own password (DEPLOY.md section 6).
 
-7. **Run the go-live check.** In a new PowerShell window in the project folder, set these for this window only, with the same values as Vercel Production: `DATABASE_URL` (the production pooled address), `APP_URL` (the `https://` address), and the four `NEXT_PUBLIC_` values from step 4. Then run:
+7. **Go-live check (the developer runs it, D-45).** Until this check passes, production holds no customer data. The pre-demo check and all test data (test job cards, test links, test answers) happen on the **preview** only, which uses the Neon development database, never on production. When steps 1 to 6 are done, tell the developer; you do not run the check yourself. The developer, in a new PowerShell window in the project folder, sets these for that window only, with the same values as Vercel Production: `DATABASE_URL` (the production pooled address), `APP_URL` (the `https://` address), and the four `NEXT_PUBLIC_` values from step 4. Then runs:
 ```powershell
 pnpm golive:check
 ```
 - Expect `golive:check PASSED`.
-- A `FAIL` line names one setting or one table, with a count only. Fix a setting in Vercel, redeploy and run the check again.
-- A table count means the production database holds rows that the gate does not allow before launch. Stop and ask the developer. Do not delete rows yourself.
-- Close the PowerShell window when done.
+- A `FAIL` line names one setting or one table, with a count only. A setting is fixed in Vercel (by you, if it is one of your step 4 values), Production is redeployed, and the developer runs the check again.
+- A table count means the production database holds rows the gate does not allow before launch, for example test data made on production by mistake. The developer decides how to clear it; nobody deletes rows by hand without that decision.
+- The developer closes the PowerShell window when done, so the production address is not left set.
 
 Only when the check passes, and steps 1 to 6 are done, may the first real customer link be sent.
