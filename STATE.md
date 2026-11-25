@@ -15,12 +15,12 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M5 · 12/12 done (T-23 via owner manual check D-44) |
-| Next step | M5 batched review done (0 critical, 3 major → T-37r, 9 minors listed). T-37r running; then stage-8 handover card. Push main only where possible. |
+| Next step | CR-2 open (new questionnaire v2, D-46): planner updating SPEC + task impact on wip/CR-2 → "what changes" card → re-plan → merge → build T-38... T-37r (review fixes) running; its approval is held until CR-2 merges. Then handover. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (post-M5: batched review running; then handover) |
+| Last updated | 2026-11-26 (CR-2 open; T-37r running) |
 
 ## Team
 | Agent | Model | Why on this project |
