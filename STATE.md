@@ -7,7 +7,7 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | C:/Users/Jake/chandraProject (Windows 11, Git Bash; worktrees in C:/Users/Jake/chandraProject-wt/; start sessions in C:/Users/Jake/chandraProject) |
-| Status | In progress |
+| Status | Paused |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
@@ -15,12 +15,12 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M4 · Support → customer loop across devices (9/9 original + T-22s, T-22s2 done; M4-docs approved; only T-23 left) |
-| Next step | DEADLINE MODE (owner 2026-11-25): working model first; fix only what breaks the app, loses data or leaks personal data, rest → Known minors. T-06b, T-08b, T-09b in progress in parallel (backend steps); T-23 preview suite being hardened (no traces/credentials in output), owner has signed in on the wip/T-23 Preview (build limit cleared) and runs it next. Then T-24 → T-25 → T-26, T-36, T-27, T-11b, T-28. One full check at a time. |
+| Next step | DEADLINE MODE: T-09b → T-06b → T-08b (one at a time; admin screens for a working model), then T-28 production deploy needs T-26 (T-24 → T-25 → T-26); T-36, T-27, T-11b, T-29, T-30 after. T-23 (wip/T-23, not reviewed/synced): wait for the owner's preview run, or approve later; it does not block M5 tasks. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-24 evening (Windows; end of day) |
+| Last updated | 2026-11-25 (paused: owner's weekly usage nearly out) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -169,6 +169,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | task-runner, devops | (rule) | the hook blocks git push, gh and vercel for agents: the Orchestrator pushes wip/* and checks Vercel builds, then resumes the runner |
 
 ## Notes for the next session
+- PAUSED 2026-11-25: weekly usage ~10% left. DEADLINE MODE (owner): working model first; fix only what breaks the app, loses data or leaks personal data; everything else → Known minors. Save usage: one task at a time, short briefs, no agent re-reads of whole docs, batch pushes (each wip/* push is a Vercel build). wip/T-23: suite hardened (trace/video off, sentinel test 0 hits; never run on the preview). Its local full check was skipped on the 2026-11-25 merge, so the sync must run it. Owner can sign in at https://chandra-psf-preview-git-wip-t-23-abrahamlinksus-projects.vercel.app (Vercel limit cleared). Neon dev password reset still unconfirmed. T-06b/T-08b/T-09b branches were opened and closed the same day with no code.
+- As of 2026-11-25 the PREVIEW works for sign-in, job cards, links, customer form, live refresh and alerts; Overview, Responses, Audit log and Customers (privacy) server methods are not built (RPC answers UNAVAILABLE).
 - END OF DAY 2026-11-24: M4-docs approved (as-built LLD-phase2 incl. §17.4 alerts, README/DEPLOY pass, D-40 architect write grant fixed in .devteam/scopes.json). Owner's Neon dev connection string was pasted in chat — owner advised to reset the neondb_owner password and update Vercel Preview DATABASE_URL/_UNPOOLED; confirm with the owner. pnpm admin needs BOTH $env:DATABASE_URL and $env:DATABASE_URL_UNPOOLED set to the dev direct URL (no quotes in Read-Host). vercel.json already disables main deploys; only wip/* pushes build previews (each checkpoint push uses build quota).
 - PAUSED 2026-11-24: owner moving to another Claude account (still Windows, Git Bash, not WSL). M4: T-22, T-03d, T-04b, T-07b approved; open: wip/T-23 only (implement ✅ by tester after devops lacked tests/** scope; owner run pending). T-35 (cloud scripts) dropped by owner — keep things simple. Windows setup that worked: clone to C:/Users/<you>/chandraProject; npm i -g pnpm@11.24.0; pnpm install; git config core.hooksPath .githooks; set PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64 and pnpm exec playwright install chromium; gitleaks 8.30.1 windows_x64 → ~/.cache/chandra-psf/tools/gitleaks.exe (checksum from the release's checksums.txt); ~/bin/python3 shim → a real Python (the WindowsApps python3 is a Store stub; the plugin's scope guard needs python3); run sync/approve with PORT=<task port>, PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64, NODE_OPTIONS=--max-old-space-size=4096, one full check at a time.
 - 2026-11-24 Windows lessons: (1) if the pre-commit hook blocks a checkpoint, the next agent's `taskgit scope` reverts the previous agent's uncommitted files — get each step committed (fix lint first) before the next agent runs; never run scope while two agents' work is uncommitted. (2) `taskgit approve` deletes the worktree incl. .results (cards/reports gone) and leaves locked node_modules/.next folders in C:/Users/Jake/chandraProject-wt/<id> — copy anything needed before approving; delete leftovers when no server runs. (3) Agents can't set PORT; the Orchestrator runs sync/approve with PORT, PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=win64 and NODE_OPTIONS=--max-old-space-size=4096.
