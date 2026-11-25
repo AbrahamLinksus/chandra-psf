@@ -625,12 +625,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: tests/e2e/preview/**
 - Context: SPEC DoD items 3–6, §5 F-3 rows · HLD Live refresh · files: docs/DEPLOY.md
 - Why separate: the M4 risk checkpoint on the real host + Neon; no feature edits (fixes raise `Needs file:` on the owning slice).
-- Status: Backlog
+- Status: Done
 - Acceptance criteria:
   - [ ] On the preview: a support laptop generates a link; a different phone (360 px) opens it → the laptop shows Opened within 30 s, then Completed after submit, with no reload (DoD 5, US-05, S-12)
   - [ ] Q15 = Yes creates the alert for that branch; Velachery's admin sees it, Tambaram's does not (S-30)
   - [ ] A laptop tab left idle 15+ min makes no requests (Vercel / Neon logs or a network capture) and refreshes at once on return (G-6, S-23); captures in `.results/T-23/`
-- Result: —
+- Result: Done 2026-11-26 by owner decision D-44: manual check instead of the scripted preview run; idle-tab check not measured live; suite + runbook merged for later
 
 ### T-35 · Cloud sessions + preview workflow — DROPPED 2026-11-24 (owner: not needed; moving accounts instead)
 - Owner: docs
