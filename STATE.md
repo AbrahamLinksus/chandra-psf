@@ -8,19 +8,19 @@
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | C:/Users/Jake/chandraProject (Windows 11, Git Bash; worktrees in C:/Users/Jake/chandraProject-wt/; start sessions in C:/Users/Jake/chandraProject) |
 | Status | Active |
-| Stage | 7 Build (phase 2) |
+| Stage | 8 Handover (phase 2 + CR-2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M5 · 12/12 done (T-23 via owner manual check D-44) |
-| Next step | M6 code done (T-38..T-42); T-43r (clear-feedback database-host guard, D-50) running; then the stage-8 handover card. Owner (morning): clear-feedback on the preview after the v2 build deploys; Vercel production setup. |
+| Milestone | M5 done · M6 (CR-2 questionnaire v2) done: T-37r, T-38..T-42, T-43r |
+| Next step | Handover running (wip/handover): as-built ARCHITECTURE + WALKTHROUGH, fresh-clone README run, screenshots, production gate. Handover CARD waits for the owner: 143 small Known minors → Fix (one task) or Waive; open gate items. Owner (morning): clear-feedback on the preview with --database-host; Vercel production setup. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | autopilot overnight per D-49 (Recommended option at every card; approve on goals met + sync ✅) |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 night (D-49 autopilot; T-38 in test+review; branches/advisors entry waits for owner sign-in on the preview) |
+| Last updated | 2026-11-26 night (M6 complete; handover running) |
 
 ## Team
 | Agent | Model | Why on this project |
