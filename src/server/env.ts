@@ -69,3 +69,16 @@ export function getServerEnv(): ServerEnv {
 export function isHashTimingEnabled(): boolean {
   return process.env["AUTH_HASH_TIMING"] === "1";
 }
+
+/**
+ * E2E-only override of the public flood limit (PUBLIC_FLOOD_LIMIT_OVERRIDE); read live, not cached or in the schema.
+ * Returns undefined (use the default) when unset or not a positive integer, when VERCEL_ENV=production,
+ * or when NODE_ENV=production on a non-pglite database.
+ */
+export function getPublicFloodLimitOverride(): number | undefined {
+  const override = Number(process.env["PUBLIC_FLOOD_LIMIT_OVERRIDE"]);
+  if (!Number.isInteger(override) || override <= 0) return undefined;
+  if (process.env["VERCEL_ENV"] === "production") return undefined;
+  const e2eServer = isPgliteUrl(process.env["DATABASE_URL"] ?? "");
+  return process.env["NODE_ENV"] !== "production" || e2eServer ? override : undefined;
+}

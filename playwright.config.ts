@@ -34,7 +34,11 @@ export default defineConfig({
     command: `pnpm exec next start -p ${port}`,
     url: `http://localhost:${port}`,
     reuseExistingServer: true,
-    env: { ...exampleEnv(), ...(process.env as Record<string, string>) },
+    env: {
+      ...exampleEnv(),
+      PUBLIC_FLOOD_LIMIT_OVERRIDE: process.env["PUBLIC_FLOOD_LIMIT_OVERRIDE"] ?? "100000",
+      ...(process.env as Record<string, string>),
+    },
     timeout: 60_000,
   },
 });

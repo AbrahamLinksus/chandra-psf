@@ -89,8 +89,12 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
+  // CSP: the request nonce set by the csp-style-nonce script in src/app/layout.tsx (undefined on the server).
+  const nonce = (globalThis as { __webpack_nonce__?: string }).__webpack_nonce__
+
   return (
     <style
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(

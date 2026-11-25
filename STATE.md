@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (T-06b: owner OK one more fix — env read moved to src/server/env.ts, then sync; T-08b + T-24 TASK READY, syncs wait for T-06b on main (rate-limit fix); frozen files chart.tsx, rateLimit.ts, env.ts, playwright.config.ts granted to T-06b) |
+| Last updated | 2026-11-26 (T-09b, T-06b approved; next: sync T-08b then T-24; T-36 in test+review) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -156,6 +156,14 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-09b | tests/e2e/admin-audit | Load more (>100 rows) not e2e-tested; alert.status audit asserted in unit only | ≈10 min |
 | T-09b | src/data/access/index.ts | audit types not re-exported (shared file); imported from repos/audit directly | ≈2 min |
 | T-09b | check output | pre-existing "admin failed: refused" line | ≈5 min |
+| T-06b | src/server/rpc/analytics.ts | ISO-date check for from/to (rpc/args.ts) and uuid check for branchId | ≈5 min |
+| T-06b | src/server/repos/analytics.ts | no row limit on the loaded period | ≈30 min |
+| T-06b | src/features/admin-overview | advisors carry no branch name; useOverview duplicates setFilters; skeleton hides the filter bar while loading | ≈25 min |
+| T-06b | src/data/access/index.ts | AnalyticsFilters not re-exported (shared file) | ≈2 min |
+| T-06b | tests/e2e/admin-overview | "All branches" 70 % not asserted in e2e (shared DB; unit covers it) | ≈5 min |
+| T-06b | src/server/rateLimit.ts | catches a missing getPublicFloodLimitOverride (test mocks); cleaner: add it to the vi.mock factories in handler.test.ts and ipLimit.test.ts, drop the catch | ≈5 min |
+| T-06b | playwright.config.ts | redundant `?? "100000"` for PUBLIC_FLOOD_LIMIT_OVERRIDE | ≈1 min |
+| T-06b | src/components/ui/chart.tsx | nonce undefined on server render; works only while the chart mounts on the client (true today) | ≈5 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.

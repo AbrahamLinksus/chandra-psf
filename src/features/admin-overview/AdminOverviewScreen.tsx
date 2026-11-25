@@ -3,13 +3,24 @@
 import { Suspense } from "react";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { PageSkeleton } from "@/components/shared/PageSkeleton";
+import { BranchFilter } from "./BranchFilter";
 import { FirstRunCard } from "./FirstRunCard";
 import { KpiTiles } from "./KpiTiles";
 import { OverviewBlocks } from "./OverviewBlocks";
 import { useOverview } from "./useOverview";
 
 function OverviewContent() {
-  const { filters, setFilters, data, options, errorCode, errorMessage, isLoading } = useOverview();
+  const {
+    filters,
+    branchId,
+    setBranchId,
+    setFilters,
+    data,
+    options,
+    errorCode,
+    errorMessage,
+    isLoading,
+  } = useOverview();
   if (errorCode !== undefined) {
     return (
       <p role="alert" className="text-danger">
@@ -20,6 +31,9 @@ function OverviewContent() {
   if (isLoading || data === undefined || options === undefined) return <PageSkeleton />;
   return (
     <div className="grid min-w-0 grid-cols-1 gap-4">
+      {options.branches && (
+        <BranchFilter branches={options.branches} value={branchId} onChange={setBranchId} />
+      )}
       <FilterBar value={filters} onChange={setFilters} options={options} />
       <KpiTiles kpis={data.kpis} />
       <OverviewBlocks data={data} />

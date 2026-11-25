@@ -643,7 +643,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-36 · Contact details from env keys (D-37)
 - Owner: frontend-coder
 - Depends on: —
-- Files: src/config/env.ts, src/features/feedback-form/contact.ts, src/features/privacy/contact.ts, src/features/feedback-form/PrivacyNotice.tsx, src/features/privacy/**, tests/unit/foundation/**
+- Files: src/config/env.ts, src/features/feedback-form/contact.ts, src/features/privacy/contact.ts, src/features/feedback-form/PrivacyNotice.tsx, src/features/privacy/**, tests/unit/foundation/**, tests/e2e/feedback-form/feedback-form.spec.ts
 - Context: LLD-phase2 §15.5 · SPEC §9 · D-37
 - Why separate: small config wiring; removes the duplicated constants from T-04b.
 - Status: In progress
@@ -658,12 +658,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/analytics.ts, src/server/rpc/analytics.ts, src/data/access/repos/analytics.ts, src/features/admin-overview/**, src/app/admin/page.tsx, tests/unit/server/analytics/**, tests/e2e/admin-overview/**, src/components/ui/chart.tsx, src/server/rateLimit.ts, playwright.config.ts, tests/unit/server/rate-limit/**, src/server/env.ts
 - Context: SPEC US-14 to US-16, F-5, §5 F-5 rows · LLD-phase2 §17.2 (§10 row), §19 · files: src/domain/metrics/*, src/features/admin-overview/*
 - Why separate: own repo and route (scope leaks in numbers).
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] Velachery 40 visits / 30 completed and Tambaram 10 / 5 → the Velachery admin sees 75 %, the main admin "All branches" 70 % and "Tambaram" 50 % (S-30); the Branch filter is shown only to main admins; the advisor list follows the branch
   - [ ] Launch day (no responses) → every block "—" / "No responses for these filters", no arrows (S-10); Open alerts excludes alerts of deleted responses (T-06r regression, S-09); all blocks filter on the service date (S-11)
   - [ ] Support → FORBIDDEN from `getAnalytics` (403 in logs) and "Not allowed" on `/admin` (AC-6, G-W2); anonymised responses are still counted
-- Result: —
+- Result: Done 2026-11-26 · 3/3 goals · sync ✅ after 3 fix rounds (chart CSP nonce, test-only flood override, env read) · 0 major · cost not measured
 
 ### T-08b · Responses on the server: browse, edit, delete, restore
 - Owner: backend-coder, frontend-coder

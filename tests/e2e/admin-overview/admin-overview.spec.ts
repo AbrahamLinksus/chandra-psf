@@ -1,169 +1,171 @@
-/* eslint-disable max-lines-per-function -- describe blocks group several specs */
-import { expect, test, type Page } from "@playwright/test";
-import { signInAs } from "../../support/e2e";
+/* eslint-disable max-lines-per-function -- each test plays one scenario end to end */
+import { expect, test, type Page, type PlaywrightWorkerArgs } from "@playwright/test";
+import { createAdvisor, createUser, listBranches, rpcCall, type AppApi } from "../../support/e2e";
+import { sharedAdminApi, sharedAdminInBrowser } from "../admin-users/sharedAdmin";
+import { actAs, makeCard, newBranch, type Staff } from "../support-links/helpers";
 
-const BLOCKS = [
-  "Category scores",
-  "Trend",
-  "Advisor performance",
-  "Problem breakdown",
-  "Question-level detail",
-  "Recent comments",
-];
-const isDesktop = (page: Page): boolean => (page.viewportSize()?.width ?? 0) >= 1024;
-const shot = (page: Page, name: string): Promise<Buffer> =>
-  page.screenshot({
-    path: `.results/T-06/${name}-${String(page.viewportSize()?.width)}.png`,
-    fullPage: true,
+type Playwright = PlaywrightWorkerArgs["playwright"];
+type Cookies = Awaited<ReturnType<AppApi["request"]["storageState"]>>["cookies"];
+const SHOT = ".results/T-06b";
+const TEMP = "Temp-Pass-4471";
+const OWN = "My-Own-Pass-2026!";
+const width = (page: Page): string => String(page.viewportSize()?.width);
+const uniq = (): string => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+
+// Happy answers: no alert is raised.
+const ANSWERS = {
+  Q1: 5,
+  Q2: "Yes",
+  Q3: "No",
+  Q4: "Yes",
+  Q5: "Yes",
+  Q6: 5,
+  Q7: "Yes",
+  Q8: "Yes",
+  Q9: "Yes",
+  Q10: "Yes",
+  Q11: 5,
+  Q12: 5,
+  Q13: "Yes",
+  Q15: "No",
+};
+
+interface Scene {
+  branchName: string;
+  advisorName: string;
+  staff: Staff;
+  bossCookies: Cookies;
+}
+
+/** A new branch with a branch admin, a uniquely named advisor, and `total` visits (`done` answered). */
+async function scene(
+  playwright: Playwright,
+  base: string,
+  label: string,
+  total: number,
+  done: number,
+): Promise<Scene> {
+  const { branchId, staff } = await newBranch(playwright, base, { label, name: "Priya" });
+  const admin = await sharedAdminApi(playwright, base);
+  const advisorName = `Adv${uniq()}`;
+  await createAdvisor(admin, { branchId, name: advisorName });
+  for (let i = 0; i < total; i++) {
+    const card = await makeCard(staff);
+    const out = await rpcCall<{ url: string }>(staff.api, "visits", "createVisitLink", [
+      { jobCardId: card.id },
+    ]);
+    if (i >= done) continue;
+    const code = new URL(out.url).pathname.replace("/f/", "");
+    await rpcCall(staff.api, "feedback", "submitResponse", [code, ANSWERS]);
+  }
+  const email = `bos${uniq()}@ch.in`;
+  await createUser(admin, {
+    name: "Meena",
+    email,
+    tempPassword: TEMP,
+    role: "branch_admin",
+    branchId,
   });
+  const request = await playwright.request.newContext({ baseURL: base });
+  const api = { request, origin: new URL(base).origin };
+  await rpcCall(api, "auth", "signIn", [email, TEMP]);
+  await rpcCall(api, "auth", "setOwnPassword", [OWN]);
+  const branchName = (await listBranches(admin)).find((b) => b.id === branchId)?.name ?? "";
+  return { branchName, advisorName, staff, bossCookies: (await request.storageState()).cookies };
+}
 
-async function openOverview(page: Page, query = ""): Promise<void> {
-  await signInAs(page, "admin");
+const tile = (page: Page, label: string) => page.getByTestId("kpi-tile").filter({ hasText: label });
+
+async function openAs(page: Page, s: Scene, query = ""): Promise<void> {
+  await page.context().clearCookies();
+  await page.context().addCookies(s.bossCookies);
   await page.goto(`/admin${query}`);
   await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
 }
 
-async function pick(page: Page, label: string, option: string): Promise<void> {
-  await page.getByRole("combobox", { name: label }).click();
-  await page.getByRole("option", { name: option, exact: true }).click();
-}
-
-/** Text of two blocks besides the tile, so a filter must change more than "Responses". */
-const blockText = (page: Page): Promise<string[]> =>
-  Promise.all(
-    ["Category scores", "Recent comments"].map((h) =>
-      page.locator("section").filter({ hasText: h }).first().innerText(),
-    ),
-  );
-
-const responses = (page: Page) =>
-  page.getByTestId("kpi-tile").filter({ hasText: "Responses received" });
-
-// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-06b.
-test.fixme(true, "rebuilt by T-06b");
-
-test.describe("T-06 admin overview", () => {
-  test("AC-10 (S-07) / default last 30 days: 5 KPI tiles with arrows and all 7 blocks filled", async ({
+test.describe("T-06b overview analytics on the server", () => {
+  test("S-30 the branch admin sees their branch's rate; the main admin filters by branch", async ({
     page,
+    playwright,
+    baseURL,
   }) => {
-    await openOverview(page);
-    await expect(page.getByTestId("kpi-tile")).toHaveCount(5);
-    await expect(page.getByTestId("delta").first()).toBeVisible();
-    await expect(page.locator('[data-direction="up"]').first()).toHaveClass(/text-success/);
-    await expect(page.locator('[data-direction="down"]').first()).toHaveClass(/text-danger/);
-    for (const b of BLOCKS) await expect(page.getByRole("heading", { name: b })).toBeVisible();
-    await expect(page.getByTestId("advisor-row").first()).toBeVisible();
-    await expect(page.getByTestId("comment").first()).toBeVisible();
-    await shot(page, "overview");
+    const base = String(baseURL);
+    const vel = await scene(playwright, base, "Velachery", 4, 3);
+    const tam = await scene(playwright, base, "Tambaram", 2, 1);
+
+    await openAs(page, vel);
+    await expect(tile(page, "Response rate")).toContainText("75%");
+    await expect(tile(page, "Responses received")).toContainText("3");
+    await expect(page.getByRole("combobox", { name: "Branch" })).toHaveCount(0);
+    await page.getByRole("combobox", { name: "Advisor" }).click();
+    await expect(page.getByRole("option", { name: vel.advisorName })).toBeVisible();
+    await expect(page.getByRole("option", { name: tam.advisorName })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await page.screenshot({ path: `${SHOT}/branch-admin-${width(page)}.png` });
+
+    await sharedAdminInBrowser(page, playwright, base);
+    await page.goto("/admin");
+    await expect(page.getByRole("combobox", { name: "Branch" })).toBeVisible();
+    await page.getByRole("combobox", { name: "Branch" }).click();
+    await page.getByRole("option", { name: tam.branchName, exact: true }).click();
+    await expect(tile(page, "Response rate")).toContainText("50%");
+    await expect(tile(page, "Responses received")).toContainText("1");
+    await page.getByRole("combobox", { name: "Advisor" }).click();
+    await expect(page.getByRole("option", { name: tam.advisorName })).toBeVisible();
+    await expect(page.getByRole("option", { name: vel.advisorName })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await page.screenshot({ path: `${SHOT}/main-admin-tambaram-${width(page)}.png` });
+
+    await page.getByRole("combobox", { name: "Branch" }).click();
+    await page.getByRole("option", { name: vel.branchName, exact: true }).click();
+    await expect(tile(page, "Response rate")).toContainText("75%");
+    await page.getByRole("combobox", { name: "Branch" }).click();
+    await page.getByRole("option", { name: "All branches" }).click();
+    await expect(page.getByRole("combobox", { name: "Branch" })).toContainText("All branches");
   });
 
-  test("AC-10 / advisor table sorts by a clicked column", async ({ page }) => {
-    await openOverview(page);
-    const names = () => page.getByTestId("advisor-row").locator("td:first-child").allInnerTexts();
-    const head = page.getByRole("button", { name: "Advisor", exact: true });
-    await head.click();
-    const desc = await names();
-    expect(desc).toEqual([...desc].sort((a, b) => b.localeCompare(a)));
-    await head.click();
-    expect(await names()).toEqual([...desc].reverse());
-  });
-
-  test("AC-10 / problem breakdown has a follow-up selector", async ({ page }) => {
-    await openOverview(page);
-    const block = page.locator("section").filter({ hasText: "Problem breakdown" });
-    await expect(block).toContainText("What was wrong with the work?");
-    await pick(page, "Follow-up question", "Q7a");
-    await expect(block).not.toContainText("What was wrong with the work?");
-    await expect(block).toContainText("Q7a");
-  });
-
-  test("S-11 / every filter changes the blocks and is kept in the URL", async ({ page }) => {
-    await openOverview(page);
-    await expect(responses(page)).toContainText("11");
-    const base = await blockText(page);
-    await pick(page, "Advisor", "Anand");
-    await expect
-      .poll(() => blockText(page).then(([c, r]) => [c !== base[0], r !== base[1]]))
-      .toEqual([true, true]);
-    await expect(page).toHaveURL(/advisorId=/);
-    await expect(page.getByTestId("advisor-row")).toHaveCount(1);
-    await expect(responses(page)).toContainText("3");
-    await page.reload();
-    await expect(page.getByRole("combobox", { name: "Advisor" })).toHaveText("Anand");
-    await expect(responses(page)).toContainText("3");
-
-    await openOverview(page);
-    await pick(page, "Vehicle type", "scooter");
-    await expect(page).toHaveURL(/vehicleType=scooter/);
-    await expect(responses(page)).not.toContainText("11");
-    await expect.poll(async () => (await blockText(page))[0] !== base[0]).toBe(true);
-
-    await openOverview(page);
-    await pick(page, "Model", "Activa 6G");
-    await expect(page).toHaveURL(/model=Activa/);
-    await expect(responses(page)).not.toContainText("11");
-
-    await openOverview(page);
-    await page.getByLabel("From").fill("2026-11-15");
-    await expect(page).toHaveURL(/from=2026-11-15/);
-    await expect(responses(page)).not.toContainText("11");
-    await expect.poll(async () => (await blockText(page)).join() !== base.join()).toBe(true);
-  });
-
-  test("S-10 / a filter matching nothing shows dashes, no arrows, never 0 %, NaN or infinity", async ({
+  test("S-10 a launch-day branch with no responses shows dashes and no arrows", async ({
     page,
+    playwright,
+    baseURL,
   }) => {
-    await openOverview(page, "?from=2020-01-01&to=2020-01-31");
+    const s = await scene(playwright, String(baseURL), "Launch", 0, 0);
+    await openAs(page, s);
     await expect(page.getByText("No responses for these filters")).toBeVisible();
-    await expect(responses(page)).toContainText("—");
-    for (const b of BLOCKS) await expect(page.getByRole("heading", { name: b })).toHaveCount(0);
-    await expect(page.getByTestId("advisor-row")).toHaveCount(0);
-    await expect(page.getByTestId("comment")).toHaveCount(0);
-    await expect(page.getByTestId("delta")).toHaveCount(0);
-    const text = await page.locator("main").innerText();
-    expect(text).not.toMatch(/NaN|∞|Infinity|\b0%/);
-    await shot(page, "overview-empty");
-  });
-
-  test("G-W3 / a <script> comment is shown as plain text", async ({ page }) => {
-    await signInAs(page, "admin");
-    await page.goto("/sign-in");
-    await page.evaluate(() => {
-      const key = "psf:v1:responses";
-      const rows = JSON.parse(window.localStorage.getItem(key) ?? "[]") as {
-        id: string;
-        answers: Record<string, unknown>;
-      }[];
-      const hit = rows.find((r) => r.id === "r-s001");
-      if (hit) hit.answers["Q14"] = "<script>window.__xss=1</script>";
-      window.localStorage.setItem(key, JSON.stringify(rows));
-    });
-    await page.goto("/admin");
-    await expect(page.getByTestId("comment").filter({ hasText: "<script>" })).toBeVisible();
-    expect(await page.evaluate(() => "__xss" in window)).toBe(false);
-    await expect(page.locator("main script")).toHaveCount(0);
-  });
-
-  test("G-W2 (AC-6) / a support session cannot see the overview", async ({ page }) => {
-    await signInAs(page, "support1");
-    await page.goto("/admin");
-    await expect(page).toHaveURL(/\/not-allowed$/);
-    await expect(page.getByText("You don't have access to this page")).toBeVisible();
-    await expect(page.getByTestId("kpi-tile")).toHaveCount(0);
-  });
-
-  test("AC-10 / single column at 360 px, grid at 1440 px", async ({ page }) => {
-    await openOverview(page);
-    await expect(page.getByTestId("kpi-tile")).toHaveCount(5);
-    const tops = await page
-      .getByTestId("kpi-tile")
-      .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
-    if (isDesktop(page)) {
-      expect(new Set(tops).size).toBe(1);
-    } else {
-      expect(new Set(tops).size).toBe(5);
-      const width = await page.evaluate(() => document.documentElement.scrollWidth);
-      expect(width).toBeLessThanOrEqual(360);
+    for (const label of ["Responses received", "Response rate", "Recommend rate"]) {
+      await expect(tile(page, label)).toContainText("—");
     }
+    await expect(tile(page, "Avg overall satisfaction")).toContainText("—");
+    await expect(page.getByTestId("delta")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Category scores" })).toHaveCount(0);
+    await page.screenshot({ path: `${SHOT}/launch-day-${width(page)}.png` });
+  });
+
+  test("S-11 the date range follows the service date", async ({ page, playwright, baseURL }) => {
+    const s = await scene(playwright, String(baseURL), "Dated", 2, 2);
+    await openAs(page, s);
+    await expect(tile(page, "Responses received")).toContainText("2");
+    // a range that ended before the cards' service date holds nothing, however recent the feedback
+    await openAs(page, s, "?from=2020-01-01&to=2020-01-31");
+    await expect(page.getByText("No responses for these filters")).toBeVisible();
+    await expect(tile(page, "Responses received")).toContainText("—");
+  });
+
+  test("AC-6 (G-W2) Support is refused: not allowed on /admin and FORBIDDEN from the API", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const s = await scene(playwright, String(baseURL), "Guarded", 0, 0);
+    const res = await s.staff.api.request.post("/api/rpc/analytics/getAnalytics", {
+      headers: { origin: s.staff.api.origin },
+      data: { args: [{ from: "2026-01-01", to: "2026-12-31" }] },
+    });
+    expect(await res.json()).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+    await actAs(page, s.staff);
+    await page.goto("/admin");
+    await expect(page.getByText("You don't have access to this page")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Overview" })).toHaveCount(0);
+    await page.screenshot({ path: `${SHOT}/support-${width(page)}.png` });
   });
 });

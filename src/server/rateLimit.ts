@@ -2,12 +2,26 @@ import "server-only";
 import { createHmac, randomBytes } from "node:crypto";
 import { sql } from "drizzle-orm";
 import type { RequestCtx } from "./ctx";
-import { getServerEnv } from "./env";
+import { getPublicFloodLimitOverride, getServerEnv } from "./env";
 import { rateLimits } from "./db/schema";
 
 export const PUBLIC_FLOOD_LIMIT_PER_HOUR = 300;
 export const PUBLIC_FLOOD_BUCKET = "rpc_public";
 const HOUR_MS = 3_600_000;
+
+/**
+ * Public flood limit: the E2E-only PUBLIC_FLOOD_LIMIT_OVERRIDE (see getPublicFloodLimitOverride in env.ts)
+ * when honoured, else the fallback. It is ignored when VERCEL_ENV=production and when NODE_ENV=production
+ * on a non-`pglite:` DATABASE_URL, so a real deploy always keeps 300. If the override cannot be read
+ * at all (e.g. an env module stub without it), the fallback applies: fail safe, never fail the call.
+ */
+function publicFloodLimit(fallback: number): number {
+  try {
+    return getPublicFloodLimitOverride() ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 /** Without IP_HASH_PEPPER (dev, tests) a per-process random pepper is used: no secret lives in the source. */
 const processPepper = randomBytes(32).toString("base64");
@@ -40,5 +54,6 @@ export async function hitIpLimit(
       set: { count: sql`${rateLimits.count} + 1` },
     })
     .returning({ count: rateLimits.count });
-  return (row?.count ?? 1) <= spec.limit;
+  const limit = spec.bucket === PUBLIC_FLOOD_BUCKET ? publicFloodLimit(spec.limit) : spec.limit;
+  return (row?.count ?? 1) <= limit;
 }
