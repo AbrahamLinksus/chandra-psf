@@ -8,7 +8,14 @@ import { QUESTIONNAIRE_V1 } from "../src/domain/questionnaire";
 import { hashPassword } from "../src/server/auth/password";
 import { writeAudit } from "../src/server/audit";
 import type { Db, Tx } from "../src/server/db/client";
-import { loginAttempts, questionnaires, sessions, users } from "../src/server/db/schema";
+import { eraseJobCards, logErasure } from "../src/server/erasure";
+import {
+  erasureJournal,
+  loginAttempts,
+  questionnaires,
+  sessions,
+  users,
+} from "../src/server/db/schema";
 import { isPgliteUrl, parseServerEnv } from "../src/server/env";
 
 export const OTP_LENGTH = 16;
@@ -176,20 +183,40 @@ export async function recoverMainAdmin(
   });
 }
 
-async function openDb(): Promise<{ db: Db; close: () => Promise<void> }> {
+type Handle = { db: Db; close: () => Promise<void> };
+
+async function openDb(): Promise<Handle> {
   const env = parseServerEnv(process.env);
+  if (isPgliteUrl(env.DATABASE_URL)) return openUrl(env.DATABASE_URL);
+  if (!env.DATABASE_URL_UNPOOLED) throw new AdminError("DATABASE_URL_UNPOOLED is required");
+  return openUrl(env.DATABASE_URL_UNPOOLED);
+}
+
+/**
+ * After a restore (LLD section 26): re-erases every job card in the source database's erasure
+ * journal that is not erased here. A second run finds nothing left, so nothing changes.
+ */
+export async function reapplyErasures(deps: AdminDeps, source: Db): Promise<{ erased: number }> {
+  const journal = await source.select({ id: erasureJournal.jobCardId }).from(erasureJournal);
+  if (journal.length === 0) return { erased: 0 };
+  const now = stamp(deps).clock.now();
+  const ids = journal.map((j) => j.id);
+  const done = await deps.db.transaction((tx) => eraseJobCards(tx, ids, "request", now));
+  logErasure("request", done);
+  return { erased: done.length };
+}
+
+async function openUrl(url: string): Promise<Handle> {
   const schema = await import("../src/server/db/schema");
-  if (isPgliteUrl(env.DATABASE_URL)) {
+  if (isPgliteUrl(url)) {
     const [{ PGlite }, { drizzle }] = await Promise.all([
       import("@electric-sql/pglite"),
       import("drizzle-orm/pglite"),
     ]);
-    const target = env.DATABASE_URL.slice(PGLITE_PREFIX_LENGTH);
+    const target = url.slice(PGLITE_PREFIX_LENGTH);
     const client = new PGlite(target === "memory" ? undefined : target);
     return { db: drizzle(client, { schema }), close: () => client.close() };
   }
-  const url = env.DATABASE_URL_UNPOOLED;
-  if (!url) throw new AdminError("DATABASE_URL_UNPOOLED is required");
   const [{ Pool }, { drizzle }] = await Promise.all([
     import("@neondatabase/serverless"),
     import("drizzle-orm/neon-serverless"),
@@ -205,7 +232,7 @@ function printOtp(r: OtpResult): void {
 }
 
 const USAGE =
-  "usage: admin init --name <n> --email <e> | reissue --email <e> | recover --email <e> --no-admin-can-sign-in";
+  "usage: admin init --name <n> --email <e> | reissue --email <e> | recover --email <e> --no-admin-can-sign-in | reapply-erasures --from <url>";
 
 async function run(db: Db, argv: string[]): Promise<void> {
   const { values, positionals } = parseArgs({
@@ -214,11 +241,22 @@ async function run(db: Db, argv: string[]): Promise<void> {
     options: {
       name: { type: "string" },
       email: { type: "string" },
+      from: { type: "string" },
       "no-admin-can-sign-in": { type: "boolean", default: false },
     },
   });
   const [command] = positionals;
   const { name, email } = values;
+  if (command === "reapply-erasures" && values.from) {
+    const source = await openUrl(values.from);
+    try {
+      const r = await reapplyErasures({ db }, source.db);
+      console.log(`Re-erased ${String(r.erased)} job card(s).`);
+    } finally {
+      await source.close();
+    }
+    return;
+  }
   if (!email) throw new AdminError(USAGE);
   if (command === "init" && name) {
     const r = await initAdmin({ db }, { name, email });

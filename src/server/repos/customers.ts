@@ -6,12 +6,13 @@ import { err, ok } from "@/data/access/result";
 import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
 import type { AnswerValue, VisitStatus } from "@/domain/types";
 import { visitStatus } from "@/domain/visitStatus";
+import { verifyStepUp } from "../auth/stepUp";
 import { writeAudit } from "../audit";
 import { toCsv } from "../csv";
 import { guard, type RequestCtx } from "../ctx";
 import { branches, jobCards, responses, visits } from "../db/schema";
+import { eraseJobCards, logErasure } from "../erasure";
 import { requireMainAdmin } from "../scope";
-import { unavailable } from "./unavailable";
 
 const PHONE_KEY_LENGTH = 10;
 const MAX_ROWS = 200;
@@ -163,5 +164,28 @@ export class ServerCustomerRepo implements CustomerRepo {
       return ok({ filename: `customers-${day}.csv`, csv: toCsv(exportRows(cards, info)) });
     });
 
-  eraseCustomers: CustomerRepo["eraseCustomers"] = () => unavailable();
+  eraseCustomers: CustomerRepo["eraseCustomers"] = (jobCardIds, s) =>
+    guard(this.ctx, "customers.eraseCustomers", "write", async () => {
+      const auth = requireMainAdmin(this.ctx);
+      if (!auth.ok) return auth;
+      const ids = [...new Set(jobCardIds)];
+      if (ids.length === 0) return err("VALIDATION", "Tick at least one customer.");
+      const step = await verifyStepUp(this.ctx, s);
+      if (!step.ok) return step;
+      const erased = await this.ctx.db.transaction(async (tx) => {
+        const done = await eraseJobCards(tx, ids, "request", this.ctx.clock.now());
+        if (done.length === 0) return done;
+        await writeAudit(this.ctx, tx, {
+          action: "customer.erase",
+          entityType: "customer",
+          entityId: "erase",
+          newValue: { count: done.length },
+          branchId: null,
+        });
+        return done;
+      });
+      if (erased.length === 0) return err("NOT_FOUND", "No customer found.");
+      logErasure("request", erased);
+      return ok({ erased: erased.length });
+    });
 }

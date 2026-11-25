@@ -708,15 +708,15 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-25 · Erase a customer's personal data (and re-apply after restore)
 - Owner: backend-coder, frontend-coder
 - Depends on: T-24, T-20
-- Files: src/server/erasure.ts, src/server/repos/customers.ts, src/server/rpc/customers.ts, src/features/admin-customers/**, scripts/admin.ts (reapply-erasures command), tests/unit/server/erasure/**, tests/e2e/admin-customers-erase/**
+- Files: src/server/erasure.ts, src/server/repos/customers.ts, src/server/rpc/customers.ts, src/features/admin-customers/**, scripts/admin.ts (reapply-erasures command), tests/unit/server/erasure/**, tests/e2e/admin-customers-erase/**, tests/unit/server/rpc/phase2Stubs.test.ts
 - Context: SPEC US-30, F-10 step 4, US-32 (G-5), §5 F-10 rows · LLD-phase2 §24 (`eraseJobCards`), §26 (Restore) · files: src/domain/erasure.ts, src/server/auth/stepUp.ts · D-38: also align domain JobCard/Visit types with LLD §17.2 (erasedAt, nullable name/reg no)
 - Why separate: the irreversible path gets its own tester + reviewer; the cron reuses `eraseJobCards`.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] Ramesh ticked → confirm ("This can't be undone", 1 row) + password → "Erased customer"; phone, reg. no and Q14 gone (incl. Recently deleted and audit old/new → "[erased]"); Lakshmi untouched; Overview counts unchanged; his open link → "Link not valid"; audit `customer.erase {count}` (S-21)
   - [ ] Erasure writes `erasure_journal` and one log event with job card ids only, no personal data (G-5)
   - [ ] `admin reapply-erasures --from <url>` re-erases journal ids newer than a restore point; running it twice changes nothing (S-24)
-- Result: —
+- Result: Done 2026-11-26 · 6/6 goals · sync ✅ · 1 major fixed (audit note text redacted) · speed mode · cost not measured
 
 ### T-26 · Daily clean-up: retention, purge, expired sessions
 - Owner: backend-coder

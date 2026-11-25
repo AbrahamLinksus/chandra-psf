@@ -3,10 +3,7 @@
 import { useState } from "react";
 import { useDataAccess } from "@/data/access/provider";
 import type { CustomerRow } from "@/data/access/repos/customers";
-
-function message(e: { code: string; message: string }): string {
-  return e.code === "FORBIDDEN" ? "Not allowed" : e.message;
-}
+import { customerMessage as message, useEraseCustomers } from "./useEraseCustomers";
 
 function query(text: string): { phone: string } | { regNo: string } {
   return /[a-z]/i.test(text) ? { regNo: text.trim() } : { phone: text.trim() };
@@ -53,12 +50,12 @@ export function useCustomerSearch() {
     setError(undefined);
     const res = await da.customers.exportCustomers(ticked);
     setBusy(false);
-    if (!res.ok) {
-      setError(message(res.error));
-      return;
-    }
-    saveCsv(res.value.filename, res.value.csv);
+    if (res.ok) saveCsv(res.value.filename, res.value.csv);
+    else setError(message(res.error));
   };
 
-  return { text, setText, rows, ticked, toggle, error, busy, search, download };
+  const erase = useEraseCustomers(ticked, search);
+
+  const busy2 = busy || erase.busy;
+  return { text, setText, rows, ticked, toggle, error, busy: busy2, search, download, erase };
 }

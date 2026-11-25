@@ -1,11 +1,13 @@
 "use client";
 
-import { DownloadIcon, SearchXIcon } from "lucide-react";
+import { DownloadIcon, SearchXIcon, Trash2Icon } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomerResultRow } from "./CustomerRow";
+import { EraseDialog } from "./EraseDialog";
+import type { CustomerRow } from "@/data/access/repos/customers";
 import { useCustomerSearch } from "./useCustomerSearch";
 
 export function CustomersScreen() {
@@ -40,6 +42,11 @@ export function CustomersScreen() {
           {c.error}
         </p>
       )}
+      {c.erase.notice !== undefined && (
+        <p role="status" data-testid="erase-notice">
+          {c.erase.notice}
+        </p>
+      )}
       {c.rows?.length === 0 && (
         <EmptyState
           icon={SearchXIcon}
@@ -47,30 +54,52 @@ export function CustomersScreen() {
           hint="Check the number and try again."
         />
       )}
-      {c.rows !== undefined && c.rows.length > 0 && (
-        <>
-          <ul className="grid gap-2">
-            {c.rows.map((r) => (
-              <CustomerResultRow
-                key={r.jobCardId}
-                row={r}
-                checked={c.ticked.includes(r.jobCardId)}
-                onToggle={() => {
-                  c.toggle(r.jobCardId);
-                }}
-              />
-            ))}
-          </ul>
-          <Button
-            type="button"
-            className="h-12"
-            disabled={c.ticked.length === 0 || c.busy}
-            onClick={() => void c.download()}
-          >
-            <DownloadIcon /> Download
-          </Button>
-        </>
-      )}
+      {c.rows !== undefined && c.rows.length > 0 && <Results c={c} rows={c.rows} />}
     </main>
+  );
+}
+
+function Results({ c, rows }: { c: ReturnType<typeof useCustomerSearch>; rows: CustomerRow[] }) {
+  return (
+    <>
+      <ul className="grid gap-2">
+        {rows.map((r) => (
+          <CustomerResultRow
+            key={r.jobCardId}
+            row={r}
+            checked={c.ticked.includes(r.jobCardId)}
+            onToggle={() => {
+              c.toggle(r.jobCardId);
+            }}
+          />
+        ))}
+      </ul>
+      <Button
+        type="button"
+        className="h-12"
+        disabled={c.ticked.length === 0 || c.busy}
+        onClick={() => void c.download()}
+      >
+        <DownloadIcon /> Download
+      </Button>
+      <Button
+        type="button"
+        variant="destructive"
+        className="h-12"
+        disabled={c.ticked.length === 0 || c.busy}
+        onClick={c.erase.open}
+      >
+        <Trash2Icon /> Erase selected
+      </Button>
+      {c.erase.confirming && (
+        <EraseDialog
+          count={c.ticked.length}
+          busy={c.erase.busy}
+          error={c.erase.error}
+          onConfirm={(pw) => void c.erase.erase(pw)}
+          onClose={c.erase.close}
+        />
+      )}
+    </>
   );
 }
