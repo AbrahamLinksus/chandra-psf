@@ -7,7 +7,7 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | C:/Users/Jake/chandraProject (Windows 11, Git Bash; worktrees in C:/Users/Jake/chandraProject-wt/; start sessions in C:/Users/Jake/chandraProject) |
-| Status | Paused |
+| Status | Active |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-25 (paused: owner's weekly usage nearly out) |
+| Last updated | 2026-11-25 (resumed; T-09b running, wip/T-09b) |
 
 ## Team
 | Agent | Model | Why on this project |
