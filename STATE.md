@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5: 7/11 done incl. T-25, T-27; T-26 running; then T-28 + T-11b in parallel) |
+| Last updated | 2026-11-26 (M5: 8/11 done incl. T-26; T-28 + T-11b next in parallel) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -182,6 +182,8 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-27 | src/server/repos/users.ts createUser | branch admin passing another branch's branchId silently creates the user in their own branch (no error); LLD §19 silent | ≈5 min |
 | T-27 | src/server/repos/jobCards.ts createJobCard | into another branch is blocked with a generic error, not NOT_FOUND/FORBIDDEN | ≈3 min |
 | T-27 | tests/unit/server/scope-matrix | listFreshJobCards row still expects its stub (remove with T-01b minor) | ≈1 min |
+| T-26 | src/server/jobs/cleanup.ts | rate-limit rows use the login-attempts retention constant; give them their own | ≈3 min |
+| T-26 | src/server/jobs/cleanup.ts | unbatched single deletes and one audit row per purged id (fine at demo scale) | ≈15 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.

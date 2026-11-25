@@ -724,12 +724,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/app/api/cron/daily/**, src/server/jobs/cleanup.ts, vercel.json, tests/unit/server/cleanup/**
 - Context: SPEC US-31, US-21 (30 days), F-10 step 5, §5 F-10 retention rows · LLD-phase2 §25 · files: src/server/erasure.ts, src/domain/retention.ts
 - Why separate: own route and job (automatic deletion).
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] `GET /api/cron/daily` without the right `Bearer CRON_SECRET` → 401 (constant-time compare); `vercel.json` schedule `30 21 * * *`
   - [ ] Clock at 12 Feb 2027: the unanswered visit served 14 Nov 2026 is erased; the answered one is untouched until 14 Nov 2029; a response deleted 1 Dec 2026 is purged on 31 Dec with `response.purge` (no answers) (US-31)
   - [ ] Expired sessions and attempts / limits older than 24 h removed (G-11); one `system.cleanup` audit with counts; a second run the same day changes nothing; batches stop at 240 s and the next run continues
-- Result: —
+- Result: Done 2026-11-26 · 3/3 goals · sync ✅ · 0 major · speed mode · cost not measured
 
 ### T-27 · Wire-up: branch isolation check across every server method
 - Owner: tester

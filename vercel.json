@@ -2,5 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm db:migrate && next build",
   "regions": ["sin1"],
-  "git": { "deploymentEnabled": { "main": false } }
+  "git": { "deploymentEnabled": { "main": false } },
+  "crons": [{ "path": "/api/cron/daily", "schedule": "30 21 * * *" }]
 }
