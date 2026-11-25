@@ -711,7 +711,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/erasure.ts, src/server/repos/customers.ts, src/server/rpc/customers.ts, src/features/admin-customers/**, scripts/admin.ts (reapply-erasures command), tests/unit/server/erasure/**, tests/e2e/admin-customers-erase/**
 - Context: SPEC US-30, F-10 step 4, US-32 (G-5), §5 F-10 rows · LLD-phase2 §24 (`eraseJobCards`), §26 (Restore) · files: src/domain/erasure.ts, src/server/auth/stepUp.ts · D-38: also align domain JobCard/Visit types with LLD §17.2 (erasedAt, nullable name/reg no)
 - Why separate: the irreversible path gets its own tester + reviewer; the cron reuses `eraseJobCards`.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Ramesh ticked → confirm ("This can't be undone", 1 row) + password → "Erased customer"; phone, reg. no and Q14 gone (incl. Recently deleted and audit old/new → "[erased]"); Lakshmi untouched; Overview counts unchanged; his open link → "Link not valid"; audit `customer.erase {count}` (S-21)
   - [ ] Erasure writes `erasure_journal` and one log event with job card ids only, no personal data (G-5)

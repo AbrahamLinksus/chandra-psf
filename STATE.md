@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5: T-09b, T-06b, T-08b, T-36, T-24 approved; T-25 next) |
+| Last updated | 2026-11-26 (M5: T-09b, T-06b, T-08b, T-36, T-24 approved; T-25 running) |
 
 ## Team
 | Agent | Model | Why on this project |
