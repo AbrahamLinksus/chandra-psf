@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (T-09b approved b320fe4; T-06b, T-08b TASK READY, syncing one at a time; T-24 running) |
+| Last updated | 2026-11-26 (T-09b approved b320fe4; T-06b sync failed: chart.tsx CSP nonce + e2e RATE_LIMITED over 300/h — debug round 2 running; T-08b TASK READY, sync waits for that fix on main; T-24 running) |
 
 ## Team
 | Agent | Model | Why on this project |
