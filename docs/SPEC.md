@@ -4,6 +4,7 @@
 > Lines marked *(assumed)* were decided by the planner because the owner chose "decide for me" or has not answered yet; each can be overruled.
 > Source: owner's input spec `docs/SPEC-input.md` (2026-11-21). Its IDs (Q1–Q15, Q1a…Q13a, AC-1…AC-11) are kept unchanged.
 > **CR-1 (2026-11-22): production phase 2.** Owner: "production phase 2: server, database, real auth"; "i want to clear all existing data and start fresh, the real production thing". Answers: job cards typed in by support; keep click-to-send WhatsApp; several branches at launch; start completely empty with one admin created at setup. Each story in §3 has a **Change** column: Kept · Changed · New · Demo only.
+> **CR-2 (2026-11-26): questionnaire v2.** The owner replaced the questionnaire with a new sheet (`.results/CR-2/owner-input.md`): v2 **replaces** v1 (v1 is dropped; dev/preview responses are cleared), rating follow-ups open on **1–2**, no free-text comments box, sheet row 4 ("informed about the next service due date") removed. Question codes are **renumbered Q1–Q10 in sheet order** *(assumed)*; from here on every Q-code in this file means the v2 code. Old → new: Q12 → **Q1** (overall rating), Q2 → Q2, Q3 → Q3, Q6 → **Q4** (advisor behaviour), Q7 → **Q5** (on time), Q9 → **Q6** (good condition), Q10 → **Q7** (charges explained), Q11 → **Q8** (affordable), Q13 → **Q9** (recommend), Q15 → **Q10** (callback). Dropped: v1 Q1 (quality of work), Q4 (advisor explained work), Q5 (next service due), Q8 (washed), Q14 (additional feedback).
 > **CR-1 spec-2 (2026-11-22):** the owner's answers to the six open questions (cited **Q-1…Q-6**, not to be confused with the questionnaire codes Q1–Q15) and to the product-critic's gaps (cited **G-1…G-15**, `.results/CR-1/critique-product-critic.md`; scenarios S-16…S-30 in `docs/scenarios.md`) are folded in. Team-decidable gaps use the critic's option A. The decisions are summarised in "Resolved decisions" at the end.
 
 ## 0. Phases
@@ -28,7 +29,7 @@
 | Search engines asked not to index the site | Kept for staff and form pages *(assumed)* | Unchanged until taken offline |
 
 ## 1. Goal
-Chandra Honda (two-wheeler dealership with several branches, scooters and motorcycles) replaces its paper/Excel post-service feedback questionnaire with a digital flow used with real customers. After a vehicle is serviced and delivered, a support staff member at a branch types in the job card (or finds one already entered), the system creates a single-use feedback link (valid 7 days) and opens WhatsApp with a prefilled message. The customer answers a short, friendly, mobile-first form (14 base questions + conditional follow-ups + a callback question) on any phone. Answers are stored on the dealership's server and visible only to admins: a branch admin sees their branch, a main admin sees every branch. Admins get an analytics dashboard, a callback/complaint alerts queue and an audit log of every change. Support staff never see answers or analytics, only link status. Customer personal data is handled under India's DPDP Act basics: notice, limited retention (3 years), access and erasure on request (answered by head office), backups.
+Chandra Honda (two-wheeler dealership with several branches, scooters and motorcycles) replaces its paper/Excel post-service feedback questionnaire with a digital flow used with real customers. After a vehicle is serviced and delivered, a support staff member at a branch types in the job card (or finds one already entered), the system creates a single-use feedback link (valid 7 days) and opens WhatsApp with a prefilled message. The customer answers a short, friendly, mobile-first form (9 base questions + conditional follow-ups + a callback question, questionnaire v2, CR-2) on any phone. Answers are stored on the dealership's server and visible only to admins: a branch admin sees their branch, a main admin sees every branch. Admins get an analytics dashboard, a callback/complaint alerts queue and an audit log of every change. Support staff never see answers or analytics, only link status. Customer personal data is handled under India's DPDP Act basics: notice, limited retention (3 years), access and erasure on request (answered by head office), backups.
 
 ## 2. Users
 | User | What they want | How often |
@@ -53,12 +54,12 @@ Chandra Honda (two-wheeler dealership with several branches, scooters and motorc
 | US-07 | Customer | open my link and see a personal welcome and who will see my answers | I trust it and know it's quick | Welcome shows "Hi {name}, how was your {model}'s service on {date}?", "Takes about 2 minutes" and the short privacy notice of §9 with a "How we use your answers" link to `/privacy`; opening the page in a browser sets **Opened** (AC-3); WhatsApp's link preview alone does **not** set Opened *(assumed)* | Changed |
 | US-08 | Customer | answer one category per step with face ratings and big Yes/No chips | it's quick on a phone | 5 category steps + callback step, progress "Step 2 of 6"; faces 1–5 with label; Next disabled until the step is complete; Back keeps answers; works at 360 px (AC-11) | Kept |
 | US-09 | Customer | get short follow-up questions only when something went wrong | I can explain without a long form | Every trigger in §4 F-3 shows/hides its follow-up with a slide animation (AC-4); hidden follow-up answers are discarded on submit (and again by the server); chips required, text optional | Kept |
-| US-10 | Customer | ask for a call back and see a thank-you | I know someone will help | Q15 is always last; Thank-you shows a success animation, and "Our team will call you soon" when Q15 = Yes; status **Completed** (AC-3) | Kept |
-| US-11 | Customer | not lose answers on refresh, and not submit twice | it's reliable | Refresh mid-form restores answers (this phone's browser storage, best effort); the server accepts only one submission per link, even if Submit is tapped twice or on two phones at once: another phone sees "Thank you — already submitted"; a retry of the same submission from the same phone (e.g. the reply was lost) is treated as success and shows the normal thank-you, with "Our team will call you soon" when Q15 = Yes (G-15); a link older than 7 days shows the Expired page (AC-5); the server checks every answer again (required, triggers, 1,000-char limit) | Changed |
-| US-12 | Admin | get an alert for every unhappy customer or callback request | nobody is missed | On submit the **server** creates one alert when any of Q1/Q6/Q11/Q12 = 1 or Q15 = Yes, listing all reasons (e.g. "Callback requested · Q12 rated 1") (AC-7); Q3 = Yes alone creates none; the alert belongs to the visit's branch and shows on that branch admin's and the main admins' dashboards | Changed |
+| US-10 | Customer | ask for a call back at a time that suits me and see a thank-you | I know someone will help | Q10 (callback, was Q15) is always last; Q10 = Yes asks for a time slot (Q10a: Morning / Afternoon / Evening, required); Thank-you shows a success animation, and "Our team will call you soon" when Q10 = Yes; status **Completed** (AC-3) | Changed (CR-2) |
+| US-11 | Customer | not lose answers on refresh, and not submit twice | it's reliable | Refresh mid-form restores answers (this phone's browser storage, best effort); the server accepts only one submission per link, even if Submit is tapped twice or on two phones at once: another phone sees "Thank you — already submitted"; a retry of the same submission from the same phone (e.g. the reply was lost) is treated as success and shows the normal thank-you, with "Our team will call you soon" when Q10 = Yes (G-15); a link older than 7 days shows the Expired page (AC-5); the server checks every answer again (required, triggers, 1,000-char limit) | Changed |
+| US-12 | Admin | get an alert for every unhappy customer or callback request | nobody is missed | On submit the **server** creates one alert when any rating Q1/Q4/Q8 = 1 or Q10 = Yes, listing all reasons with the chosen callback time (e.g. "Callback requested (Morning 9 AM–12 PM) · Q1 rated 1") (AC-7); Q3 = Yes alone creates none; the alert belongs to the visit's branch and shows on that branch admin's and the main admins' dashboards | Changed (CR-2) |
 | US-13 | Admin | work the alerts queue | callbacks get done | `/admin/alerts` newest first, filter by status (and branch for main admins), rows coloured by status; Open → Contacted → Resolved with notes; nav badge shows my scope's open count; each change audited (AC-8); if another admin changed the same alert since I opened it, saving shows "Someone else changed this alert. Reload to see the latest." and nothing is lost *(assumed)* | Changed |
-| US-14 | Admin | see KPI tiles with change vs previous period | I know how we're doing at a glance | Tiles: Responses received, Response rate, Avg Q12, Recommend rate, Open alerts, each with green/red arrow vs the previous same-length period; computed only from my branch scope | Kept |
-| US-15 | Admin | see category scores, trend, advisor table, problem breakdown, question detail, recent comments | I know where to improve | All 7 blocks of §4 F-5 render (AC-10); advisor table sortable; problem breakdown has a follow-up selector; with no data yet (launch day) every block shows its "No responses for these filters" state (S-10) | Kept |
+| US-14 | Admin | see KPI tiles with change vs previous period | I know how we're doing at a glance | Tiles: Responses received, Response rate, Avg overall satisfaction (Q1, was Q12), Recommend rate (Q9, was Q13), Open alerts, each with green/red arrow vs the previous same-length period; computed only from my branch scope | Kept |
+| US-15 | Admin | see category scores, trend, advisor table, problem breakdown, question detail, recent comments (follow-up text only since CR-2) | I know where to improve | All 7 blocks of §4 F-5 render (AC-10); advisor table sortable; problem breakdown has a follow-up selector; with no data yet (launch day) every block shows its "No responses for these filters" state (S-10) | Kept |
 | US-16 | Admin | filter Overview and Responses by date range, branch, vehicle type, model, advisor | I can drill in and compare branches | Every filter changes every block and the responses table (AC-10); the **Branch** filter ("All branches" or one) is shown only to main admins; a branch admin's numbers are always their branch only; the advisor list follows the chosen branch | Changed |
 | US-17 | Admin | browse all responses and open one | I can read the full feedback | `/admin/responses` (filterable, my scope) → detail with every answer incl. follow-ups, visit + vehicle info and branch; opening another branch's response URL as a branch admin shows "Not found" | Kept |
 | US-18 | Admin | edit or delete a response after re-entering my password | data can be corrected safely | Edit/delete/restore asks for my password, checked on the server; wrong password → "Password incorrect", nothing saved; change logged with old and new values (AC-9); alert rules re-run after an edit (S-08) | Changed |
@@ -122,54 +123,56 @@ Counts: 32 stories; 31 in production (US-22 is demo only).
 1. Customer opens `/f/<code>` on any phone → the server finds the visit by the code's hash → Welcome with name, model, service date and the privacy notice (§9) → status **Opened** once the page shows in a real browser (link-preview robots don't count) *(assumed)*.
 2. Steps (one category per screen, progress bar "Step n of 6"):
    1. Service Quality & Complaint Resolution: Q1–Q3
-   2. Customer Interaction & Communication: Q4–Q6
-   3. Timelines & Vehicle Delivery: Q7–Q9
-   4. Pricing & Value for Money: Q10–Q11
-   5. Overall Satisfaction & Loyalty: Q12–Q14
-   6. Callback: Q15
+   2. Customer Interaction & Communication: Q4
+   3. Timelines & Vehicle Delivery: Q5–Q6
+   4. Pricing & Value for Money: Q7–Q8
+   5. Overall Satisfaction & Loyalty: Q9
+   6. Callback: Q10
+   (CR-2: the step titles and "Step n of 6" are unchanged; question numbers are not shown to the customer *(assumed, as v1)*.)
 3. Submit → server re-checks answers, stores them, runs alert rules → Thank-you (status **Completed**, visible to support on any device).
-- **Text length (S-13):** Q14, Q2a, Q13a and every "Tell us more" box are limited to 1,000 characters with a visible counter (also enforced by the server); emoji and Tamil text accepted.
+- **Text length (S-13):** Q2a and every "Tell us more" box are limited to 1,000 characters with a visible counter (also enforced by the server); emoji and Tamil text accepted.
 - **Abuse limits (G-7):** limits are **per link**: 30 opens and 5 submit attempts per link per hour; a generous per-network-address limit (300 requests per hour) only stops floods, so customers sharing the showroom Wi-Fi or a mobile carrier's address are never blocked (links are 32 random bytes, so guessing is already infeasible); an over-limit request sees "Too many requests, try again in a few minutes".
 - Errors / edge cases: unknown or cancelled code → "Link not valid"; expired (> 7 days) → Expired page; replaced by Regenerate or Resend → Expired page with "A newer link was sent to you on WhatsApp" (S-05, G-1); already completed from another phone → "Thank you — already submitted"; retry from the same phone after a lost reply → normal thank-you (G-15); refresh → answers restored from this phone's storage; the job card's personal data erased (US-30/31) → "Link not valid"; deactivated branch → link still works until it expires *(assumed)*; changing a parent answer so a trigger no longer matches → follow-up hides and its answer is discarded.
 
-**Base questions** (all ratings 1–5; base questions always shown):
-| Code | Category | Question | Type | Required |
-|---|---|---|---|---|
-| Q1 | Service Quality & Complaint Resolution | Are you satisfied with the quality of work carried out on your vehicle? | rating_5 | Yes |
-| Q2 | Service Quality & Complaint Resolution | Were all the complaints reported by you rectified? | yes_partial_no | Yes |
-| Q3 | Service Quality & Complaint Resolution | Did you face any issues after taking delivery of your vehicle? | yes_no | Yes |
-| Q4 | Customer Interaction & Communication | Did the Service Advisor explain the work completed on your vehicle? | yes_no | Yes |
-| Q5 | Customer Interaction & Communication | Were you informed about the next service due date? | yes_no | Yes |
-| Q6 | Customer Interaction & Communication | Were you satisfied with the behaviour of the Service Advisor? | rating_5 | Yes |
-| Q7 | Timelines & Vehicle Delivery | Was your vehicle delivered on the promised time? | yes_no | Yes |
-| Q8 | Timelines & Vehicle Delivery | Was the vehicle properly washed and cleaned? | yes_no | Yes |
-| Q9 | Timelines & Vehicle Delivery | Was the vehicle delivered in good condition? | yes_no | Yes |
-| Q10 | Pricing & Value for Money | Were the service charges explained clearly? | yes_no | Yes |
-| Q11 | Pricing & Value for Money | Were the service charges affordable? | rating_5 (changed from 1–10) | Yes |
-| Q12 | Overall Satisfaction & Loyalty | Were you satisfied with the overall service experience? | rating_5 | Yes |
-| Q13 | Overall Satisfaction & Loyalty | Would you recommend Chandra Honda to your friends and family? | yes_no | Yes |
-| Q14 | Overall Satisfaction & Loyalty | Do you have any additional feedback or suggestions? | text | No |
-| Q15 | Overall Satisfaction & Loyalty | Would you like someone from our service team to call you? | yes_no | Yes (always last) |
+**Base questions — questionnaire v2 (CR-2; replaces v1; ratings are 1–5 faces; base questions always shown):**
+| Code | Sheet no | Was (v1) | Category | Question | Type | Required |
+|---|---|---|---|---|---|---|
+| Q1 | 1 | Q12 | Service Quality & Complaint Resolution | Were you satisfied with the overall service experience? | rating_5 | Yes |
+| Q2 | 2 | Q2 | Service Quality & Complaint Resolution | Were all the complaints reported by you rectified? | yes_partial_no | Yes |
+| Q3 | 3 | Q3 | Service Quality & Complaint Resolution | Did you face any issues after taking delivery of your vehicle? | yes_no | Yes |
+| Q4 | 5 | Q6 | Customer Interaction & Communication | Were you satisfied with the behaviour of the Service Advisor? | rating_5 | Yes |
+| Q5 | 6 | Q7 | Timelines & Vehicle Delivery | Was your vehicle delivered on the promised time? | yes_no | Yes |
+| Q6 | 7 | Q9 | Timelines & Vehicle Delivery | Was the vehicle delivered in good condition? | yes_no | Yes |
+| Q7 | 8 | Q10 | Pricing & Value for Money | Were the service charges explained clearly? | yes_no | Yes |
+| Q8 | 9 | Q11 | Pricing & Value for Money | Were the service charges affordable? | rating_5 | Yes |
+| Q9 | 10 | Q13 | Overall Satisfaction & Loyalty | Would you recommend Chandra Honda to your friends and family? | yes_no | Yes |
+| Q10 | — | Q15 | Callback | Would you like someone from our Service team to call you? | yes_no | Yes (always last) |
 
-**Conditional follow-ups** (broad category chips + optional "Tell us more" text; chips required when shown):
+Dropped from v1 (CR-2): Q1 quality of work (and Q1a), Q4 advisor explained the work, Q5 next service due date (sheet row 4, removed by the owner), Q8 washed and cleaned, Q14 additional feedback (no free-text comments box).
+
+**Conditional follow-ups — v2** (concern lists: chips + optional "Tell us more" text, at least one chip required when shown, as v1; single-pick lists: one choice required):
 | Code | Parent | Trigger | Question | Type | Options |
 |---|---|---|---|---|---|
-| Q1a | Q1 | ≤ 3 | What was wrong with the work? | multi_select + text | Problem not fixed · Same problem came back · New problem appeared · Other |
-| Q2a | Q2 | Partially / No | Which complaint wasn't fixed? | text | — |
-| Q3a | Q3 | Yes | What issue did you face? | multi_select + text | Engine · Brakes · Electrical · Body & paint · Other |
-| Q6a | Q6 | ≤ 3 | What was the problem with the advisor? | multi_select + text | Rude · Not attentive · Didn't answer queries · Other |
-| Q7a | Q7 | No | How late was the delivery? | single_select | Same day · 1 day late · 2+ days late |
-| Q9a | Q9 | No | What was the problem? | multi_select + text | Scratch or dent · Missing item · Dirty · Other |
-| Q11a | Q11 | ≤ 3 | What felt expensive? | multi_select + text | Labour · Parts · Extra work not agreed · Other |
-| Q13a | Q13 | No | What's the main reason? | text | — |
+| Q1a | Q1 | 1–2 | What was the concern with the service work? | multi_select + text | Complaint not resolved · Same issue recurred · New issue noticed after service · Poor workmanship · Other |
+| Q2a | Q2 | Partially / No *(assumed, as v1)* | Which complaint(s) remain unresolved? | text (required) | — |
+| Q3a | Q3 | Yes | What type of issue did you experience? | multi_select + text | Engine / Starting · Brakes · Electrical / Battery · Lights / Indicators · Clutch / Gear · Suspension · Tyres / Wheels · Noise / Vibration · Other |
+| Q4a | Q4 | 1–2 | What was the concern? | multi_select + text | Unprofessional / Rude Behaviour · Not Attentive · Unable to Explain Queries · Delayed Response · Lack of Follow-up · Other |
+| Q5a | Q5 | No | How late was the delivery? *(assumed wording; the sheet gives only the options)* | single_select | 2–4 Hours · More than 4 Hours (Same Day) · 1 Day · More than 1 Day |
+| Q6a | Q6 | No | What was the concern? | multi_select + text | Scratches / Dents · Missing Parts / Accessories · Improper Cleaning · Damage During Service · Other |
+| Q8a | Q8 | 1–2 | Which component did you find expensive? | multi_select + text | Labour Charges · Spare Parts · Engine Oil / Lubricants · Consumables · Additional / Unapproved Work · Overall Service Cost · Other |
+| Q9a | Q9 | Yes or No (any answer) | What is the primary reason for your response? | single_select | Quality of Service · Staff Behaviour · Timely Delivery · Reasonable Pricing · Trust & Reliability · Overall Experience · Other |
+| Q10a | Q10 | Yes | When should we call you? *(assumed wording)* | single_select | Morning (9 AM–12 PM) · Afternoon (12 PM–3 PM) · Evening (3 PM–6 PM) |
 
-- Q2a and Q13a are text-only: their text is required when shown *(assumed — otherwise the follow-up has no required part)*.
-- Triggers live in question config (`show_if`, e.g. `{"op":"lte","value":3}`, `{"op":"in","value":["Partially","No"]}`), not in screen code. Question set version 1 is installed with the app at setup (it is configuration, not sample data).
+- Q7 (charges explained) has no follow-up.
+- Rating follow-ups open on **1–2** (v1: ≤ 3), owner CR-2.
+- "Other" in a concern list (multi_select + text) uses the existing optional "Tell us more" box; "Other" in a single-pick list (Q9a) has no text box *(assumed, as v1 single_select)*.
+- Q2a is text-only: its text is required when shown *(assumed, as v1)*.
+- Triggers live in question config (`show_if`, e.g. `{"op":"lte","value":2}`, `{"op":"in","value":["Partially","No"]}`, Q9a `{"op":"in","value":["Yes","No"]}`), not in screen code. **Question set version 2** is installed with the app at setup (it is configuration, not sample data); version 1 is no longer installed or accepted (CR-2: v2 replaces v1).
 
 **Form UX (owner §6.3):** Welcome → 5 category steps → Callback → Thank you; faces for ratings (very unhappy → very happy) with label under the selected one; Yes/No as large chips; follow-ups slide open under their parent; Next enabled only when the step is complete; Back keeps answers; tap targets ≥ 48 px; sticky thumb-reachable Next on mobile; success animation; works at 360 px; centred card (max ~560 px) on laptop; vehicle and customer name shown throughout.
 
 ### F-4 · Alerts (US-12, US-13)
-1. On submit the server creates an alert when any rating (Q1, Q6, Q11, Q12) = 1, or Q15 = Yes. One alert per response, all matching reasons listed. Q3 = Yes alone raises none. The alert belongs to the visit's branch.
+1. On submit the server creates an alert when any rating (v2: Q1 overall, Q4 advisor behaviour, Q8 affordability; v1 used Q1, Q6, Q11, Q12) = 1, or Q10 (callback, was Q15) = Yes. One alert per response, all matching reasons listed; the callback reason shows the chosen time slot, e.g. "Callback requested (Evening 3 PM–6 PM)". The alert threshold stays at a rating of 1 (follow-ups open at 1–2, alerts only at 1) *(assumed, as v1)*. Q3 = Yes, Q2 = No and Q9 = No alone raise none *(assumed, as v1)*. The alert belongs to the visit's branch.
 2. Admin sees the open-count badge (their scope) → `/admin/alerts` (newest first, filter by status; main admins also by branch, rows show the branch).
 3. Admin opens an alert (customer, phone, vehicle, branch, reasons, link to the response) → Contacted / Resolved, adds notes. Each status change and note is audited.
 4. **After an admin edit (S-08):** alert rules re-run on the edited answers: reasons updated; a newly due alert is created (Open); if no reason remains the alert is **Resolved** with the note "Auto-resolved: no alert reason after edit". Each change audited.
@@ -180,26 +183,27 @@ Filter bar (Overview and Responses): date range · **branch (main admins only)**
 
 | # | Block | Shows | Chart |
 |---|---|---|---|
-| 1 | KPI tiles | Responses received · Response rate · Avg overall satisfaction (Q12) · Recommend rate (Q13 % Yes) · Open alerts — each with change vs previous period | Number tiles |
-| 2 | Category scores | Score /100 for each of the 5 categories | Horizontal bar |
-| 3 | Trend | Avg Q12 and recommend rate per week/month | Line |
-| 4 | Advisor performance | Per advisor: responses, avg Q6, % Q4 Yes, % Q7 Yes, avg Q12 (main admins on "All branches": advisor name with branch) | Sortable table |
-| 5 | Problem breakdown | Counts per follow-up category (Q1a, Q3a, Q6a, Q9a, Q11a; Q7a lateness split) | Bar, with follow-up selector |
-| 6 | Question-level detail | Yes/No (Yes/Partially/No) split for Q2–Q5, Q7–Q10, Q13, Q15 | Small stacked bars |
-| 7 | Recent comments | Latest Q14 + follow-up text, with Q12 rating beside each | List |
+| 1 | KPI tiles | Responses received · Response rate · Avg overall satisfaction (**Q1**, was Q12) · Recommend rate (**Q9** % Yes, was Q13) · Open alerts — each with change vs previous period | Number tiles |
+| 2 | Category scores | Score /100 for each of the 5 categories (v2 members: 1 = Q1–Q3, 2 = Q4, 3 = Q5–Q6, 4 = Q7–Q8, 5 = Q9) | Horizontal bar |
+| 3 | Trend | Avg overall satisfaction (Q1) and recommend rate (Q9) per week/month | Line |
+| 4 | Advisor performance | Per advisor: responses, avg advisor behaviour (**Q4**, was Q6), % on time (**Q5** Yes, was Q7), avg overall (**Q1**, was Q12) (main admins on "All branches": advisor name with branch). The v1 column "% explained the work" (v1 Q4) is removed (question dropped) | Sortable table |
+| 5 | Problem breakdown | Counts per follow-up option (v2: Q1a, Q3a, Q4a, Q6a, Q8a; single-pick splits Q5a lateness and Q9a reason) | Bar, with follow-up selector |
+| 6 | Question-level detail | Yes/No (Yes/Partially/No) split for Q2, Q3, Q5, Q6, Q7, Q9, Q10 (v1: Q2–Q5, Q7–Q10, Q13, Q15) | Small stacked bars |
+| 7 | Recent comments | Latest follow-up text (Q2a and every "Tell us more" text), with the Q1 overall rating beside each; no Q14 any more (CR-2) | List |
 
 **Metric definitions (owner §10, exact):**
 - **Filter date (S-11):** the visit's **service date** drives every block, the KPI tiles, the trend and the Responses table.
 - Response rate = completed visits ÷ visits whose service date is in the period (expired counted as not responded). A response in Recently deleted does not count as completed, so deleting a response lowers the rate and restoring raises it back (S-09, D-17); a Cancelled or replaced visit is left out of both numbers (S-14). A Resend (G-1) keeps the same visit, so it doesn't change either number.
 - Rating → score: `(rating − 1) ÷ 4 × 100`.
 - Yes/No → score: Yes = 100, No = 0. Q3 is reversed (No issues = 100). Q2: Yes = 100, Partially = 50, No = 0.
-- Category score = mean of its question scores (Q14, Q15 excluded).
-- Recommend rate = % of Q13 = Yes.
+- Category score = mean of its question scores (Q10 callback and all follow-ups excluded).
+- Recommend rate = % of Q9 = Yes.
 - "Change vs previous period" compares with the same-length period immediately before.
 - Default date range: last 30 days; trend weekly for ranges ≤ 90 days, monthly beyond.
 - "Open alerts" tile counts Open alerts in the user's scope (and chosen branch) regardless of date filter.
 - **No data (S-10):** a block or tile with no matching responses shows "—" and "No responses for these filters" (never 0 %, NaN or ∞); the change arrow is hidden when the previous period has no data. This is the normal launch-day state.
 - Anonymised (erased or retention-cleaned) responses still count in every number; their comments are gone, so they drop out of Recent comments.
+- **Questionnaire version (CR-2):** analytics, alerts, the Responses detail/edit and the customer download read only v2 responses; no v1 response exists after the CR-2 data clear, so there is no v1/v2 mixing or mapping of old answers.
 
 ### F-6 · Responses, edits and audit (US-17 – US-19, US-21)
 1. Admin opens `/admin/responses` (filters as F-5) → row → detail.
@@ -220,7 +224,7 @@ Filter bar (Overview and Responses): date range · **branch (main admins only)**
 Unchanged in the frozen demo until it is taken offline at launch (Q-6); not present in production.
 
 ### F-9 · Setup and branches (US-23 – US-25)
-1. Setup (maintainer): production database created, migrations applied, question set v1 installed, first main admin created with a one-time password valid 72 h (G-14). Setup refuses to create an admin when any user exists (G-14). Nothing else.
+1. Setup (maintainer): production database created, migrations applied, question set v2 installed (CR-2), first main admin created with a one-time password valid 72 h (G-14). Setup refuses to create an admin when any user exists (G-14). Nothing else.
 2. Main admin signs in → sets own password → `/admin` empty state "Add your first branch" → `/admin/branches` → "Add branch" (name, city).
 3. Opens a branch → "Advisors" list → "Add advisor" (name).
 4. `/admin/users` → adds branch admins and support users for that branch.
@@ -259,24 +263,26 @@ Examples use fictional people and branches *(assumed: "Velachery" and "Tambaram"
 | F-3 | Customer opens the link on their phone; support's laptop shows `/support` | Laptop shows **Opened** within 30 s; after submit, **Completed** |
 | F-3 | Staff laptop left on `/support` from 19:00 to 09:00 the next day | No refreshes overnight; on first use at 09:00 the list refreshes at once (G-6) |
 | F-3 | 45 customers submit from the showroom Wi-Fi within one hour | All 45 accepted (G-7) |
-| F-3 | Q1 = 2 | Q1a slides open: chips Problem not fixed · Same problem came back · New problem appeared · Other + "Tell us more" |
-| F-3 | Q7 = No, then changed to Yes | Q7a appears, then hides; its answer is not saved |
-| F-3 | Q12 = 1, Q15 = Yes, submit | Thank-you with "Our team will call you soon"; one alert "Callback requested · Q12 rated 1" for Velachery |
+| F-3 | Q1 (overall) = 2 | Q1a slides open: chips Complaint not resolved · Same issue recurred · New issue noticed after service · Poor workmanship · Other + "Tell us more" |
+| F-3 | Q4 (advisor) = 3 | No follow-up (opens only on 1–2) and no alert |
+| F-3 | Q5 = No, then changed to Yes | Q5a appears, then hides; its answer is not saved |
+| F-3 | Q9 = Yes | Q9a "What is the primary reason for your response?" opens (it opens for No too) |
+| F-3 | Q1 = 1, Q10 = Yes, Q10a = Evening (3 PM–6 PM), submit | Thank-you with "Our team will call you soon"; one alert "Callback requested (Evening 3 PM–6 PM) · Q1 rated 1" for Velachery |
 | F-3 | Submit tapped on two phones with the same link | One response stored; the other phone shows "Thank you — already submitted" |
 | F-3 | Submit with Q15 = Yes reaches the server but the reply is lost; the customer taps Submit again on the same phone | Thank-you with "Our team will call you soon"; still one response (G-15) |
 | F-3 | Opening a link created 8 days ago | Expired page: "This feedback link has expired. Please contact Chandra Honda." |
 | F-4 | Alert for Priya S. → Contacted, note "Called, bike rechecked 22 Nov" | Row turns amber; audit: `admin · alert.status · open → contacted` + note |
-| F-5 | Q1 ratings 4, 5, 3 | Scores 75, 100, 50 |
+| F-5 | Q1 (overall) ratings 4, 5, 3 | Scores 75, 100, 50; Avg overall satisfaction tile 4.0 |
 | F-5 | Q2 answers Yes, Partially, No | Scores 100, 50, 0 |
 | F-5 | Velachery 40 visits, 30 completed; Tambaram 10 visits, 5 completed | Velachery admin: response rate 75%; main admin "All branches": 70%; main admin "Tambaram": 50% |
-| F-6 | Change Q6 from 2 → 4, password correct | Q6a removed; audit `response.edit` old `{Q6:2,Q6a:{options:["Rude"]}}` new `{Q6:4}` (D-16) |
-| F-6 | Edit Q12 1 → 4 on a response whose only alert reason was "Q12 rated 1" | Alert Resolved; audit `response.edit` and `alert.status · open → resolved` "Auto-resolved: no alert reason after edit" (S-08) |
+| F-6 | Change Q4 from 2 → 4, password correct | Q4a removed; audit `response.edit` old `{Q4:2,Q4a:{options:["Not Attentive"]}}` new `{Q4:4}` (D-16) |
+| F-6 | Edit Q1 1 → 4 on a response whose only alert reason was "Q1 rated 1" | Alert Resolved; audit `response.edit` and `alert.status · open → resolved` "Auto-resolved: no alert reason after edit" (S-08) |
 | F-6 | Delete a response on 1 Dec 2026 | In Recently deleted with "Removed for good on 31 Dec 2026"; on 31 Dec it is gone and the audit shows a system clean-up entry |
 | F-7 | Velachery admin adds `arun@chandrahonda.in`, role Support | Role picker offers only Support, branch fixed to Velachery |
 | F-7 | Main admin corrects `arun@chandrahonda.in` to `arun.k@chandrahonda.in` and promotes him to Branch admin | Saved; Arun's open sessions end; audit shows old → new email and role (G-9) |
 | F-7 | Admin resets Priya's password while she is signed in on a phone | Her phone's next action → sign-in; she signs in with the temporary password → "Set your password" |
 | F-10 | Main admin searches mobile `98400 12345` | Two rows: Ramesh Kumar (Velachery, 14 Nov 2026) and Lakshmi Kumar (Tambaram, 2 Dec 2026), none ticked |
-| F-10 | Ticks only Ramesh's row → Erase personal data, password correct | Ramesh's job card shows "Erased customer", reg. no and phone gone, Q14 text gone; Lakshmi's row untouched; Overview counts unchanged; audit `customer.erase` without the number |
+| F-10 | Ticks only Ramesh's row → Erase personal data, password correct | Ramesh's job card shows "Erased customer", reg. no and phone gone, Q2a and "Tell us more" text gone; Lakshmi's row untouched; Overview counts unchanged; audit `customer.erase` without the number |
 | F-10 | Velachery branch admin opens `/admin/customers` | "Not allowed" |
 | F-10 | Visit served 14 Nov 2026, never answered | On 12 Feb 2027 its name, phone and reg. no are erased by the daily clean-up |
 | F-10 | Visit served 14 Nov 2026, answered | On 14 Nov 2029 its personal data is erased by the daily clean-up |
@@ -286,8 +292,8 @@ Examples use fictional people and branches *(assumed: "Velachery" and "Tambaram"
 ## 6. Data
 - **Entities:** branches (name, city, active); advisors (branch, name, active); users (name, email, password hash, role support / branch_admin / main_admin, branch — empty for main admins, active, must-set-password, one-time password expires at, last sign-in); sessions (user, created, last active, ends); sign-in attempts (for rate limits); job_cards (branch, job card no unique per branch, customer name, phone, reg. no, model, vehicle type, service type, service date, advisor, created by, personal-data-erased at) — replaces `mock_dms`; vehicles are not a separate entity *(assumed: reg. no and model live on the job card)*; service_visits (job card, current link hash, status created/opened/completed/expired/cancelled, expires at, created by, replaced by, opened/completed/cancelled at; a Resend replaces the link hash and keeps the visit, G-1; visits belong to the branch, G-8); questions (versioned, `show_if`, parent); responses (one per visit, questions version, submitted at, deleted at); answers (value_num / value_text / value_options by type); alerts (reasons, status, notes, updated by); audit_log (append-only, actor, branch, old/new values). Owner's §8 model is the starting point; the architect finalises it.
 - **Answer storage by type:** ratings → number; yes/no, yes/partial/no, single_select → text; multi_select → options list (+ text for "Tell us more"); text → text.
-- **Questions are versioned:** editing wording creates a new version; old answers keep pointing at the old version (question editing UI itself is Later).
-- **Start data (owner, CR-1):** completely empty. Setup installs only the question set v1 and one main admin. No seed script runs against production; nothing is imported from the demo.
+- **Questions are versioned:** editing wording creates a new version; old answers keep pointing at the old version (question editing UI itself is Later). **CR-2 exception:** v2 *replaces* v1 rather than living beside it: before any real customer data exists, the v1 responses, their alerts and their visits on the dev/preview databases are cleared, and only v2 is installed and accepted from then on (owner, CR-2).
+- **Start data (owner, CR-1):** completely empty. Setup installs only the question set v2 (CR-2) and one main admin. No seed script runs against production; nothing is imported from the demo.
 - **Volume** *(assumed)*: up to 10 branches, ~50 staff accounts, up to 3,000 visits/month across branches (≈ 36,000/year, ≈ 400,000 answers/year; ≈ 1.2 million answers over the 3-year retention).
 - **Retention (Q-4):** personal data (name, phone, reg. no, free text) of answered visits kept **3 years** from service date, unanswered visits 90 days, then erased automatically; anonymous ratings kept for analytics; Recently deleted kept 30 days; expired sessions and sign-in attempts older than 24 h removed daily (G-11); audit entries kept as long as the system runs, with personal values erased alongside the customer's.
 - **Time:** store UTC, display IST.
@@ -379,7 +385,7 @@ Examples use fictional people and branches *(assumed: "Velachery" and "Tambaram"
 - [ ] The customer opens the link on a different phone (360 px), sees the privacy notice, completes the form; the support laptop shows Opened then Completed without reload (AC-3, AC-4, AC-11, US-05, US-07).
 - [ ] A staff screen left open and unused makes no requests to the server until someone returns to it (G-6).
 - [ ] Re-opening a submitted link shows "already submitted"; an 8-day-old link shows the expired page; two simultaneous submits store one response; a same-phone retry after a lost reply shows the normal thank-you (AC-5, US-11, G-15).
-- [ ] A rating of 1 or Q15 = Yes creates an alert for that branch; Open → Contacted → Resolved is audited (AC-7, AC-8).
+- [ ] A rating of 1 (Q1, Q4 or Q8) or Q10 = Yes creates an alert for that branch; Open → Contacted → Resolved is audited (AC-7, AC-8).
 - [ ] All 7 analytics blocks render and react to every filter; a branch admin sees only their branch, a main admin sees all with the Branch filter (AC-10, US-16, US-29).
 - [ ] A support session gets 403 from every admin data request; a branch admin gets "Not found" for another branch's response, alert and user, and "Not allowed" on Customers (AC-6, US-29, G-4).
 - [ ] Editing, deleting and restoring a response needs the password checked by the server; the audit shows old and new values (AC-9, US-18, US-21).
@@ -404,6 +410,9 @@ Production may be built and tested before these are done, with staff-made test d
 - If a staff device is lost or wiped: nothing is lost; its session expires within 2 h idle (support) or 12 h idle (admins), and an admin can end it sooner by resetting the password or deactivating the account.
 - Undo: deleted responses stay restorable in "Recently deleted" for 30 days; edits have no one-click undo (old values in the audit log); **customer erasure and automatic retention clean-up cannot be undone** (confirm dialog + password for manual erasure), and a restore never brings erased data back into use (G-5).
 - Consequence in one line: data is shared, backed up for 7 days and kept for 3 years of personal detail, but an erasure is final.
+
+## Resolved decisions (CR-2, 2026-11-26)
+Owner: build now, before the demo · v2 replaces v1 (v1 dropped, dev/preview responses cleared) · rating follow-ups open on 1–2 · no free-text comments box · sheet row 4 removed. Planner's simplest choices (*assumed*, each can be overruled): codes renumbered Q1–Q10 in sheet order with callback last; concern lists stay multi-select + optional "Tell us more"; Q5a, Q9a, Q10a single pick; Q2a opens on Partially or No; alerts stay at rating 1 on every v2 rating (Q1, Q4, Q8) or callback Yes; v1 step titles kept; advisor table drops "% explained the work".
 
 ## Resolved decisions (CR-1)
 Owner answers (2026-11-22):

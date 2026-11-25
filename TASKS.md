@@ -16,7 +16,7 @@ scope guard enforces it). `Frozen:` lists the shared code the foundation builds;
 task that claims a frozen path itself may change it. Work that touches every feature is one
 wire-up task at the end, not an edit inside each feature.
 
-Size: phase 1 medium (cap 15) · 12 tasks, all Done · phase 2 (CR-1) large (cap 30) · 31 tasks (one over: see T-18 `Why separate`) · production gate: `docs/PRODUCTION.md`
+Size: phase 1 medium (cap 15) · 12 tasks, all Done · phase 2 (CR-1) large (cap 30) · 31 tasks (one over: see T-18 `Why separate`) · CR-2: +T-37r review fixes, +4 tasks T-38…T-41 (each with `Why separate`) · production gate: `docs/PRODUCTION.md`
 
 Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/app/providers.tsx, src/app/globals.css, src/app/admin/layout.tsx, src/app/support/layout.tsx, src/components/ui/**, src/components/shared/**, src/hooks/**, src/data/access/**, src/data/remote/**, src/domain/types.ts, src/domain/schemas.ts, src/domain/questionnaire.ts, src/domain/answers.ts, src/domain/time.ts, src/domain/visitStatus.ts, src/domain/constants.ts, src/domain/visibility.ts, src/domain/alertRules.ts, src/domain/roles.ts, src/domain/jobCardInput.ts, src/domain/models.ts, src/domain/passwordPolicy.ts, src/domain/retention.ts, src/domain/erasure.ts, src/config/env.ts, src/server/env.ts, src/server/log.ts, src/server/ctx.ts, src/server/scope.ts, src/server/audit.ts, src/server/tokens.ts, src/server/rateLimit.ts, src/server/erasure.ts, src/server/csv.ts, src/server/createServerDataAccess.ts, src/server/db/**, src/server/auth/**, src/server/rpc/index.ts, src/app/api/rpc/**, src/proxy.ts, drizzle/**, drizzle.config.ts, vercel.json, scripts/migrate.ts, scripts/admin.ts, tests/support/**, gate configs (tsconfig.json; eslint.config.mjs; prettier config; .dependency-cruiser.cjs; vitest.config.ts; playwright.config.ts; postcss.config.mjs; components.json; scripts/check.sh; .env.example)
 
@@ -806,4 +806,64 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] M1: when the daily clean-up purges a deleted response (and its alerts), the audit rows for those ids are redacted in the same transaction (no Q14 free text, no alert note text); a test edits → deletes → purges → erases and finds no customer text in audit_log
   - [ ] M2: `pnpm admin reapply-erasures` works in chunks (~500 ids per transaction), takes an optional `--since <date>`, and logs each id's real source (request / retention); a test covers more than one chunk
   - [ ] M3 (D-45): OWNER.md and docs/PRODUCTION.md say the pre-demo check and any test data happen on the preview (Neon dev) only; production holds no customer data before `pnpm golive:check`; one consistent answer for who runs the check (the developer)
+- Result: —
+
+## M6 · Questionnaire v2 (CR-2)
+
+> CR-2 (D-46): questionnaire v2 replaces v1 (9 base questions + callback, codes Q1–Q10, follow-ups at 1–2, no comments box); v1 data on dev/preview is cleared. Order: T-38 → (T-39 ∥ T-40) → T-41. T-38 depends on T-37r because both change `scripts/admin.ts`, `src/server/erasure.ts` and `tests/unit/server/erasure/**`. `src/domain/types.ts` is changed by T-38 (`AlertReason`) and then T-39 (`OverviewData`), never at the same time. Cap: the plan was already at 31 (large, cap 30), so each CR-2 task carries `Why separate:`.
+
+### T-38 · Questionnaire v2: customer form, rules and setup (foundation for CR-2)
+- Owner: backend-coder, frontend-coder
+- Depends on: T-37r
+- Files: src/domain/questionnaire.ts, src/domain/visibility.ts, src/domain/schemas.ts, src/domain/answers.ts, src/domain/alertRules.ts, src/domain/erasure.ts, src/domain/types.ts, src/server/erasure.ts, src/server/repos/feedback.ts, src/features/feedback-form/**, scripts/admin.ts, scripts/golive-check.ts, drizzle/** (only if 0000_init.sql has a CHECK or enum naming question or alert-reason codes; a new migration is a schema change and must be reported), tests/support/**, tests/unit/feedback-form/**, tests/unit/domain/**, tests/unit/foundation/domain.test.ts, tests/unit/foundation/domain-helpers.test.ts, tests/unit/server/feedback/**, tests/unit/server/erasure/**, tests/unit/server/admin/**, tests/unit/golive/**, tests/e2e/feedback-form/**
+- Context: SPEC CR-2 note, US-10, US-11, US-12, F-3, F-4 step 1, F-9, §5 F-3 rows, §6 Data, Resolved decisions (CR-2) · LLD §1.2, §1.3, §9 (draft) · LLD-phase2 §21, §24 (`eraseJobCards`), §26 (`admin`, `golive-check`) · files: src/domain/questionnaire.ts, src/domain/visibility.ts, src/domain/alertRules.ts, src/domain/erasure.ts, src/features/feedback-form/*, scripts/admin.ts, drizzle/0000_init.sql
+- Why separate: the CR-2 foundation; the questionnaire config, rules and form must land together or the form e2e breaks, and T-39/T-40 build on its v2 codes.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] A customer link shows the 6 steps with exactly the v2 questions and options of SPEC F-3 (1: Q1–Q3 · 2: Q4 · 3: Q5–Q6 · 4: Q7–Q8 · 5: Q9 · 6: Q10), "Step n of 6" and the v1 step titles; there is no comments box; a draft saved in the phone under v1 is discarded
+  - [ ] Q1, Q4 or Q8 = 2 opens its follow-up, 3 does not; Q2 = Partially or No requires Q2a text; Q9 Yes or No opens Q9a; Q10 = Yes requires Morning / Afternoon / Evening; the server rejects v1 codes, hidden follow-ups and a missing required follow-up
+  - [ ] Submitting Q1 = 1, Q10 = Yes, Q10a = Evening creates one alert "Callback requested (Evening 3 PM–6 PM) · Q1 rated 1" and the thank-you shows the callback line; Q1 = 2 alone or Q3 = Yes alone creates none
+  - [ ] Erasing a customer removes Q2a and every "Tell us more" text and keeps ratings, chosen options and Q10a (S-21)
+  - [ ] `admin init` on an empty database installs questionnaire v2 only and `golive:check` reports v2; `admin clear-feedback` without the confirm flag changes nothing, with it deletes alerts, answers, responses, links and visits and the v1 questionnaire in one transaction, installs v2, keeps branches, advisors, users, job cards, the audit log and the erasure journal, prints counts and writes one `system.cleanup` audit entry
+- Result: —
+
+### T-39 · Overview analytics on v2
+- Owner: backend-coder, frontend-coder
+- Depends on: T-38
+- Files: src/domain/metrics/**, src/domain/types.ts, src/server/repos/analytics.ts, src/data/access/repos/analytics.ts, src/features/admin-overview/**, tests/unit/admin-overview/**, tests/unit/server/analytics/**, tests/e2e/admin-overview/**
+- Context: SPEC CR-2 note, US-14, US-15, F-5, §5 F-5 rows · LLD-phase2 §17.2 (§10 row), §19 · files: src/domain/metrics/*, src/domain/questionnaire.ts, src/features/admin-overview/*
+- Why separate: its own screen and repo; runs side by side with T-40 after the foundation.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] KPI tiles show "Avg overall satisfaction" from Q1 and "Recommend rate" from Q9; Q1 ratings 4, 5, 3 → 4.0 (SPEC §5 F-5)
+  - [ ] Category scores use the v2 membership (Q10 and follow-ups excluded); Trend uses Q1 and Q9; launch day (no responses) still shows "—" in every block (S-10)
+  - [ ] The advisor table shows responses, avg advisor behaviour (Q4), % on time (Q5) and avg overall (Q1), with no "% explained the work" column, and every column sorts
+  - [ ] The problem breakdown selector lists Q1a, Q3a, Q4a, Q5a, Q6a, Q8a and Q9a with their v2 options; Question detail shows Q2, Q3, Q5, Q6, Q7, Q9 and Q10; Recent comments shows only follow-up text (Q2a and "Tell us more") with the Q1 rating
+- Result: —
+
+### T-40 · Responses, alerts and customer download on v2
+- Owner: backend-coder, frontend-coder
+- Depends on: T-38
+- Files: src/features/admin-responses/**, src/features/admin-alerts/**, src/features/admin-customers/**, src/server/repos/responses.ts, src/server/repos/alerts.ts, src/server/repos/customers.ts, src/server/csv.ts, tests/unit/server/responses/**, tests/unit/server/alerts/**, tests/unit/server/customers/**, tests/e2e/admin-responses/**, tests/e2e/admin-alerts/**, tests/e2e/admin-customers/**, tests/e2e/admin-customers-erase/**
+- Context: SPEC CR-2 note, US-12, US-17, US-18, US-30, F-4, F-6, F-10, §5 F-6 and F-10 rows · LLD-phase2 §17.2 (§11 and §12 rows), §18.4, §24 (CustomerRepo, CSV) · files: src/domain/questionnaire.ts, src/domain/alertRules.ts, src/features/admin-responses/*, src/features/admin-alerts/*, src/server/csv.ts
+- Why separate: three staff screens that read answers by code; disjoint from T-39's files so both run at once.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] Response detail lists every v2 answer with its question text, including the Q10a time slot; nothing shows a v1 code or label
+  - [ ] Editing Q4 2 → 4 with the password removes Q4a and audits old `{Q4:2,Q4a:…}` new `{Q4:4}`; editing Q1 1 → 4 on an alert whose only reason was "Q1 rated 1" → Resolved "Auto-resolved: no alert reason after edit"; Q10 No → Yes (with a slot) → a new Open alert (SPEC §5 F-6, S-08)
+  - [ ] The alert row and drawer show "Callback requested (Evening 3 PM–6 PM)" for a callback alert
+  - [ ] The customer download has v2 question columns only (no Q14 or other v1 columns); erasing a customer removes Q2a and "Tell us more" text from the response detail and the download (S-21)
+- Result: —
+
+### T-41 · Wire-up: v2 walkthrough, preview data clear, demo docs
+- Owner: tester, docs
+- Depends on: T-38, T-39, T-40
+- Files: tests/e2e/walkthrough/**, tests/e2e/preview/**, docs/DEPLOY.md, docs/DEMO-SCRIPT.md, docs/WALKTHROUGH.md, docs/LLD-phase2.md, README.md
+- Context: SPEC CR-2 note, §5 F-3 rows, F-9, §12 DoD · files: tests/e2e/walkthrough/*, tests/e2e/preview/*, docs/DEPLOY.md, docs/DEMO-SCRIPT.md
+- Why separate: the whole-app check after the v2 slices; no feature edits (fixes raise `Needs file:` on the owning slice).
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] The full walkthrough e2e (init → job card → link → v2 form at 360 px → alert with the callback slot → Overview with Q1 / Q9 tiles) passes on PGlite (DoD 3–8)
+  - [ ] **Maintainer step:** after the v2 build is on the preview, `admin clear-feedback` runs there once; the preview suite then passes against it (S-12)
+  - [ ] docs/DEPLOY.md documents `clear-feedback` (dev/preview only, before go-live, what it keeps); docs/DEMO-SCRIPT.md uses the v2 example (Q1 = 1 + callback Evening); the as-built LLD-phase2 and WALKTHROUGH name questionnaire v2
 - Result: —
