@@ -655,7 +655,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-06b · Overview analytics on the server, with the branch filter
 - Owner: backend-coder, frontend-coder
 - Depends on: T-04b, T-21
-- Files: src/server/repos/analytics.ts, src/server/rpc/analytics.ts, src/data/access/repos/analytics.ts, src/features/admin-overview/**, src/app/admin/page.tsx, tests/unit/server/analytics/**, tests/e2e/admin-overview/**, src/components/ui/chart.tsx, src/server/rateLimit.ts, playwright.config.ts
+- Files: src/server/repos/analytics.ts, src/server/rpc/analytics.ts, src/data/access/repos/analytics.ts, src/features/admin-overview/**, src/app/admin/page.tsx, tests/unit/server/analytics/**, tests/e2e/admin-overview/**, src/components/ui/chart.tsx, src/server/rateLimit.ts, playwright.config.ts, tests/unit/server/rate-limit/**, src/server/env.ts
 - Context: SPEC US-14 to US-16, F-5, §5 F-5 rows · LLD-phase2 §17.2 (§10 row), §19 · files: src/domain/metrics/*, src/features/admin-overview/*
 - Why separate: own repo and route (scope leaks in numbers).
 - Status: In progress
@@ -695,7 +695,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-24 · Privacy requests: find a customer across branches and download
 - Owner: backend-coder, frontend-coder
 - Depends on: T-03b
-- Files: src/server/repos/customers.ts, src/server/rpc/customers.ts, src/server/csv.ts, src/data/access/repos/customers.ts, src/features/admin-customers/**, src/app/admin/customers/**, tests/unit/server/customers/**, tests/e2e/admin-customers/**
+- Files: src/server/repos/customers.ts, src/server/rpc/customers.ts, src/server/csv.ts, src/data/access/repos/customers.ts, src/features/admin-customers/**, src/app/admin/customers/**, tests/unit/server/customers/**, tests/e2e/admin-customers/**, tests/unit/server/rpc/phase2Stubs.test.ts
 - Context: SPEC US-30, F-10 steps 1–3, §5 F-10 rows · LLD-phase2 §24 (CustomerRepo, CSV) · files: src/features/admin-customers/*
 - Why separate: own repo and route (personal data export); erase (T-25) builds on its screen.
 - Status: In progress

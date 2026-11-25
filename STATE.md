@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (T-09b approved b320fe4; T-06b sync failed: chart.tsx CSP nonce + e2e RATE_LIMITED over 300/h — debug round 2 running; T-08b TASK READY, sync waits for that fix on main; T-24 running) |
+| Last updated | 2026-11-26 (T-06b: owner OK one more fix — env read moved to src/server/env.ts, then sync; T-08b + T-24 TASK READY, syncs wait for T-06b on main (rate-limit fix); frozen files chart.tsx, rateLimit.ts, env.ts, playwright.config.ts granted to T-06b) |
 
 ## Team
 | Agent | Model | Why on this project |
