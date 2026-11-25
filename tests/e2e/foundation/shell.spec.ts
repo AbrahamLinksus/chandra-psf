@@ -65,7 +65,7 @@ test.describe("T-01 routing and shell", () => {
           .getByRole("navigation", { name: "Admin tabs" })
           .getByRole("link", { name: label });
         if ((await tab.count()) === 0) {
-          await page.getByRole("button", { name: "More" }).click();
+          await page.getByRole("button", { name: "More", exact: true }).click();
           await page.getByRole("dialog").getByRole("link", { name: label }).click();
         } else {
           await tab.click();

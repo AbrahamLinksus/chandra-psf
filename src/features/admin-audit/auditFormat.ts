@@ -56,3 +56,9 @@ export function needsTruncation(text: string): boolean {
 export function truncate(text: string): string {
   return needsTruncation(text) ? `${text.slice(0, TRUNCATE_AT)}…` : text;
 }
+
+/** Label for any stored action; unknown actions show their raw key. */
+export function actionLabel(action: string): string {
+  const labels: Record<string, string | undefined> = ACTION_LABELS;
+  return labels[action] ?? action;
+}

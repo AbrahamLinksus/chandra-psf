@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (parallel: T-09b, T-06b, T-08b running; T-24 next slot; runners stop before sync, Orchestrator syncs one at a time) |
+| Last updated | 2026-11-26 (T-09b approved; T-06b, T-08b TASK READY, syncing one at a time; T-24 next) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -150,6 +150,12 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-07b | tests/e2e/admin-alerts | audit alert.status asserted only at unit level; add the e2e check once T-09b's audit.listAudit lands | ≈3 min |
 | T-07b | e2e suite | close to the 300/h anonymous (per-IP) limit; new specs that sign in more may trip it — merge sign-ins or add a test-only limit | ≈10 min |
 | T-07b | src/data/access/repos/alerts.ts | rework rewrote the whole file (diff noise); repo has 321 CRLF files under src — consider a .gitattributes eol policy | ≈5 min |
+| T-09b | src/server/rpc/audit.ts | access "staff" → "admin" (defense in depth; repo already refuses support) | ≈3 min |
+| T-09b | src/server/repos/audit.ts cursor | non-numeric cursor silently returns page 1 | ≈3 min |
+| T-09b | src/features/admin-audit | list rows, not a literal table; first page not live-refreshed; Load more error has no retry | ≈25 min |
+| T-09b | tests/e2e/admin-audit | Load more (>100 rows) not e2e-tested; alert.status audit asserted in unit only | ≈10 min |
+| T-09b | src/data/access/index.ts | audit types not re-exported (shared file); imported from repos/audit directly | ≈2 min |
+| T-09b | check output | pre-existing "admin failed: refused" line | ≈5 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.

@@ -633,6 +633,10 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Result: —
 
 ### T-35 · Cloud sessions + preview workflow — DROPPED 2026-11-24 (owner: not needed; moving accounts instead)
+- Owner: —
+- Depends on: —
+- Files: —
+- Status: Dropped
 
 ## M5 · Admin console, privacy, clean-up, go-live readiness
 
@@ -678,15 +682,15 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-09b · Audit log on the server: scoped, branch column, paging
 - Owner: backend-coder, frontend-coder
 - Depends on: T-02b
-- Files: src/server/repos/audit.ts, src/server/rpc/audit.ts, src/data/access/repos/audit.ts, src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/server/audit/**, tests/e2e/admin-audit/**
+- Files: src/server/repos/audit.ts, src/server/rpc/audit.ts, src/data/access/repos/audit.ts, src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/server/audit/**, tests/e2e/admin-audit/**, tests/e2e/foundation/shell.spec.ts
 - Context: SPEC US-19, F-6 step 5 · LLD-phase2 §17.2 (§13 row), §16.1 (audit_log) · files: src/features/admin-audit/*
 - Why separate: own read-only repo and route.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] A branch admin sees only their branch's entries, the main admin all with a Branch filter; columns time (IST), actor, branch, action, entity, old → new; system entries show "System"
   - [ ] 100 per page with "Load more" (cursor); action filter; no edit or delete controls and no write method in the RPC table
   - [ ] Support → FORBIDDEN (G-W2)
-- Result: —
+- Result: Done 2026-11-26 · 3/3 goals · sync ✅ · 0 major, 7 minors · cost not measured
 
 ### T-24 · Privacy requests: find a customer across branches and download
 - Owner: backend-coder, frontend-coder
