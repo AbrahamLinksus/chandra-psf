@@ -1,23 +1,33 @@
 # Chandra PSF: for the owner
 
-> One screen, plain words, no code. Written at handover from what was built and tested.
+> One screen, plain words, no code. Updated at handover from what was built and tested.
 
-**What it does:** After a service, support staff send each customer a WhatsApp link. The customer answers a short form on their phone, and the admin team sees the results, alerts for unhappy or callback customers, an audit log and the user accounts. It is a demo on sample data.
+**What it does:** After a service, support staff type in the job card and send the customer a WhatsApp link. The customer answers a short form on their phone. Admins see the results, alerts for unhappy or callback customers, an audit log and the staff accounts.
 
-**How to start it:** Open https://chandra-psf.vercel.app on any phone or computer, no setup needed. To run a copy on your own computer, ask whoever set it up; the start command is `pnpm dev`, then open http://localhost:8000.
+**Roles:**
+- **Main admin** (head office): all branches, staff accounts, and customer privacy requests.
+- **Branch admin:** everything for their own branch, including its support staff.
+- **Support:** creates job cards and links for their branch. No admin screens.
+- **Branches and advisors** are added in the app. Advisors are the people named on job cards; they do not sign in.
 
-**What it can't do (yet):**
-- It does not send WhatsApp messages. Support opens WhatsApp with the message, or copies the link.
-- It does not sync between devices. Each phone and computer keeps its own copy.
-- It does not hold real customer data. Use sample data only.
-- It is not secure enough for real use: passwords and sign-in checks run in the browser.
-- The dealership phone number shown to customers is a placeholder until the real number is set.
+**Passwords:** An admin resets a forgotten password under Users, then gives the temporary password in person or through your password manager. Nobody resets their own. Too many wrong passwords lock an account for 15 minutes; an admin reset clears the lock. The app sends no reset emails.
+
+**Privacy requests (main admin only):** Customers screen. Search by mobile number or registration number, tick the records, then Download or Erase personal data (it asks for your password). Erasing cannot be undone. Answers are kept 3 years; unanswered links are removed after 90 days by a daily clean-up.
+
+**How to start it:** Open the app's web address in any browser. To run a copy on your own computer, ask the developer; the start command is `pnpm dev`.
+
+**Before the demo (manual check):** On the live site, sign in as support, make a link, open it on a real phone, and submit with "Yes" to the callback question. The support screen should show Opened, then Completed, without a reload, and the branch admin should see the alert.
+
+**Before the first real customer link (go-live gate):** Work through the owner checklist in `docs/PRODUCTION.md`. Then the developer runs `pnpm golive:check`, which must pass. Until then, use staff test data only.
+
+**What it can't do (yet):** Send WhatsApp messages itself (support opens WhatsApp with the message). Send emails. Work offline. The company name and contact details stay placeholders until they are set on Vercel.
 
 **What could lose your data:**
-- **Reset demo data** on the sign-in screen puts back the sample data and removes everything entered since.
-- Clearing the browser's site data (in its privacy or history settings) deletes everything entered in that browser.
-- There is no backup. Data made on one phone or computer is not on any other.
+- An erasure is final.
+- Deleted responses stay in "Recently deleted" for 30 days, then they are gone.
+- Until the paid plans are set up, backups keep only about 6 hours of history. Paid plans give 7 days.
+- See `docs/SPEC.md` §13 and `docs/PRODUCTION.md` for the full rules.
 
-**If something goes wrong:** Reload the page and try again. If it still fails, write down what you were doing and the message on screen, then ask for a fix with `/setup-project fix <what happened>`.
+**If something goes wrong:** Reload the page and try again. If it still fails, note what you were doing and the message on screen, then ask for a fix with `/setup-project fix <what happened>`. If no admin can sign in, ask the developer; never send a password in chat.
 
-**What it costs to run:** Nothing extra. It is hosted on Vercel's free tier. There are no other paid services and no keys to buy.
+**What it costs to run:** Nothing while it is tested on free plans. Real customers need Vercel Pro and a paid Neon database, about US$20–45 a month in total (SPEC §9 estimate). No other paid services.

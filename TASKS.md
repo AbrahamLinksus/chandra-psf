@@ -788,9 +788,9 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: .github/workflows/ci.yml, README.md, OWNER.md, docs/** (as-built LLD and ARCHITECTURE and WALKTHROUGH; DEMO-GUIDE.md removed from main), src/** (known minors of 5 min or less), tests/**
 - Context: stage 8 handover · STATE.md Known minors · batched review
 - Why separate: final handover; folds in the T-12 README / demo-guide rework.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] CI runs check.sh with PGlite (no external database) and passes on a fresh clone; the README covers `pnpm install`, local PGlite, `db:migrate`, `admin init`, `scripts/check.sh` (G-06)
   - [ ] As-built docs updated; OWNER.md explains roles, branches, resets, privacy requests and the go-live gate; known minors fixed or listed
-- Result: —
+- Result: Done 2026-11-26 · CI (check.sh, Node 24+26, PGlite), as-built LLD-phase2 (M5, new §17.5), README, DEPLOY.md, DEMO-SCRIPT.md, OWNER.md, SPEC G-12 (D-41), CONVENTIONS (D-34) · minors listed not fixed (speed mode) · batched review deferred to after the demo · sync ✅
 

@@ -1,4 +1,4 @@
-# Deploying the preview to Vercel
+# Deploying to Vercel (demo, preview and production)
 
 The app is a Next.js 16 project. Vercel detects it automatically. `vercel.json` sets the build command (migrations, then build), the region `sin1` and the daily cron. Since T-28, a push to `main` deploys to Production. The demo project is not connected to GitHub, so that does not touch the demo.
 
@@ -138,7 +138,7 @@ Vercel > project > Settings > Environment Variables. Add each one for **Producti
 Recommended: `NEXT_PUBLIC_COMPANY_NAME`, `NEXT_PUBLIC_PRIVACY_PHONE`, `NEXT_PUBLIC_PRIVACY_EMAIL`. Optional: `NEXT_PUBLIC_POLL_SECONDS` (default 30).
 - Placeholder values are flagged by the go-live check: run `pnpm golive:check` (see the Go-live gate section at the end of this file).
 - `NEXT_PUBLIC_*` values and `APP_URL` are built into the app. After changing any of them, redeploy.
-- Preview deployments run `db:migrate` too. Give them a separate Neon branch (for example `dev`) or leave the database keys unset.
+- Preview deployments run `db:migrate` too, so they need their own Neon branch (for example `dev`) with both `DATABASE_URL` and `DATABASE_URL_UNPOOLED` set. Leaving those keys unset makes the build fail.
 
 ### 4. Deploy
 - Production deploys on every push to `main`. Before pushing, run `bash scripts/check.sh` (needs Git Bash).
@@ -226,8 +226,8 @@ pnpm golive:check
 - `NEXT_PUBLIC_COMPANY_NAME`, `NEXT_PUBLIC_PRIVACY_PHONE`, `NEXT_PUBLIC_PRIVACY_EMAIL` or `NEXT_PUBLIC_DEALER_PHONE` is empty or still the placeholder.
 - `APP_URL` is missing, is not `https://`, or is a local address.
 - `DATABASE_URL` is the local pglite database.
-- The production database holds rows in `advisors`, `job_cards`, `visits`, `link_tokens`, `responses` or `alerts`, or holds users who are not main admins. Only the question set and the main admins are allowed before launch.
+- The production database holds rows in `job_cards`, `visits`, `link_tokens`, `responses` or `alerts` (customer data). Branches, advisors and staff users are allowed before launch (D-43).
 
 The check does not cover the other SPEC §12.1 items (paid plans, restore rehearsal, legal check, demo offline, first admin). Those are in PRODUCTION.md. Branch rows are not counted by the check.
 
-Note: section 6 and the production steps tell you to add advisors and staff accounts in the app. The check counts advisors and non-main-admin users as launch data, so it fails while they exist. Ask the developer how to handle this before you add them.
+Note: section 6 and the production steps tell you to add branches, advisors and staff accounts in the app. The check allows them (D-43); it fails only when customer data exists.

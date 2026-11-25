@@ -11,7 +11,7 @@
 - UI only from shadcn/ui (`src/components/ui`) + Tailwind utilities + tokens in `globals.css`; no inline `style`, no hex colours in components (use `--brand`, status tokens). Icons: lucide only.
 - Copy text comes from SPEC (exact wording). Dates shown with `formatIST*` (LLD §1.5); stored as UTC ISO / IST `YYYY-MM-DD`.
 - Every interactive element ≥ 48 px tap target, labelled inputs, keyboard reachable; check 360 px and 1440 px.
-- Zod at every boundary: env (§0.5), stored collections (§3), seed fixture (§4), submissions (§1.2).
+- Zod at every boundary: stored collections (§3), seed fixture (§4), submissions (§1.2).
 
 ## 2. Layering (dependencies point inward only)
 ```
@@ -47,7 +47,7 @@ src/app (routes, thin)  →  src/features/<name>  →  src/components/shared, sr
 ## 5. Errors, logging, config, tests
 - Errors: repositories return `Result` with an `ErrorCode` (§2.1); screens map codes to SPEC messages; any write shows `SaveState` (saving / "Couldn't save, try again" + Retry, input kept).
 - Logging: none in phase 1 beyond dev-only `console.error` in the store's catch; never log answers, names or phones. **P2:** server logs only through `src/server/log.ts` (`log.event(name, fields)`, `log.error(where, errorClass)`): JSON lines with ids, counts and error classes; never names, phones, reg. nos, answers, emails, IPs, codes, tokens or passwords.
-- Config: only via `src/config/env.ts` (zod); no magic constants — 7-day expiry, 1000-char limit, 30-day default range live in `src/domain/constants.ts`. **P2:** server secrets only via `src/server/env.ts`; retention ages, idle timeouts, lockout and rate limits are named constants in `src/domain/constants.ts`.
+- Config: only via `src/config/env.ts` (the single `process.env` reader; plain checks, no zod, so it is safe on client pages under the strict CSP — D-34); no magic constants — 7-day expiry, 1000-char limit, 30-day default range live in `src/domain/constants.ts`. **P2:** server secrets only via `src/server/env.ts`; retention ages, idle timeouts, lockout and rate limits are named constants in `src/domain/constants.ts`.
 - **P2 database:** schema only in `src/server/db/schema/*`, changes only by a new drizzle migration (serial, one task at a time; never edit an applied migration); multi-row writes in one transaction; optimistic concurrency via `version` where LLD says so.
 - **P2 tests:** server repos are tested against PGlite with the real migration applied (`tests/support/pglite.ts`) and a fixed `Clock`, through the repo interface; never mock Drizzle. Screens/hooks tests use `tests/support/fakeDataAccess.ts`. E2E runs `next dev` on `DATABASE_URL=pglite:memory` seeded through `scripts/admin.ts init` + RPC calls, never a seed file.
 - Tests (Vitest, `tests/unit/<area>/*.test.ts`): Arrange-Act-Assert, one behaviour per test, `it('<condition> → <expected>')` inside `describe('<unit>')`. Repos tested against an in-memory `Storage` fake and a fixed `Clock` from `tests/support/`; never mock domain functions.

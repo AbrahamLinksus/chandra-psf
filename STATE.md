@@ -14,13 +14,13 @@
 | Runners | on |
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
-| Milestone | M4 · Support → customer loop across devices (9/9 original + T-22s, T-22s2 done; M4-docs approved; only T-23 left) |
-| Next step | M5: all done except T-30 handover (needs T-23: owner preview run, then review + sync). SPEED MODE until the demo. Owner: Vercel Production env + admin init + cron check (Owner actions). After the demo: Known minors pass. |
+| Milestone | M5 · 12/12 done (T-23 via owner manual check D-44) |
+| Next step | Phase 2 (M5) build COMPLETE 2026-11-26. Owner, tomorrow: Vercel builds resume (rate limit hit 2026-11-26 ~15:00); set Production env + admin init + cron check; demo manual check (Owner actions). After the demo: batched review + Known minors pass (exit speed mode), then the stage-8 handover card. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5: 11/12 done incl. T-23 (D-44); T-30 handover running) |
+| Last updated | 2026-11-26 (M5 complete; T-30 handover approved) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -195,6 +195,11 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-29 | scripts/golive-check.ts | never run against a real Neon DB (pglite dry run only) — run once before launch | ≈5 min |
 | T-29 | docs/PRODUCTION.md | phase-1 rows G-W4, G-W6 stale ("no server / no database") | ≈2 min |
 | T-29 | docs/SPEC.md US-01 | says 5 wrong passwords lock; T-20 locks on the 6th — align wording or code | ≈3 min |
+| T-30 | .github/workflows/ci.yml | gitleaks sha256 pinned but not re-checked against the release; actionlint not run; CI never run on GitHub yet — check the first run | ≈5 min |
+| T-30 | docs/SPEC.md l.338 | privacy notice text still "{Company name} (Chandra Honda) collects…" — owner to confirm wording | ≈2 min |
+| T-30 | docs/DEMO-SCRIPT.md | "temporary password shown for new user" wording not verified against the UI | ≈2 min |
+| T-30 | vercel.json | no `git` key any more: whether main auto-deploys is set per Vercel project | ≈2 min |
+| post-demo | batched review | T-27, T-11b, T-29, T-30 had no separate review (speed mode); T-25 had no post-fix review pass | ≈30 min |
 
 ## Owner actions (outside the repo)
 - Before the demo (D-44): on the deployed site, sign in as support, generate a link, open it on a real phone, submit with Q15 = Yes; the laptop must show Opened → Completed without reload and the branch admin the alert. If the link opens the wrong site or a Vercel login: fix APP_URL / Deployment Protection.

@@ -2,7 +2,7 @@
 
 A mobile-first web app that replaces the paper post-service questionnaire for Chandra Honda: support staff create a WhatsApp feedback link from a job card, and the customer answers a short form on their phone. An admin console shows the results.
 
-**Status:** phase 2, milestone M4 built: the support → customer loop works across devices. Support staff create job cards and generate, send, resend, regenerate or cancel customer links (any support user at the branch can act on the branch's links). The customer form works on any phone and shows a privacy notice with a `/privacy` page. Screens refresh live while staff use them (`NEXT_PUBLIC_POLL_SECONDS`, default 30). The alerts queue is per branch. Still to come in M5: analytics, responses and audit on the server, privacy requests and erasure, daily clean-up, and production. The phase 1 demo (sample data, kept in the browser) is frozen at https://chandra-psf.vercel.app (presenter steps in [docs/DEMO-GUIDE.md](docs/DEMO-GUIDE.md)). Phase 2 design: [docs/LLD-phase2.md](docs/LLD-phase2.md).
+**Status:** phase 2 (CR-1) is built: sign-in and staff accounts on Postgres, job cards and customer links across branches, the customer form with a privacy notice and `/privacy` page, live refresh, admin overview, alerts, responses, audit log, customer privacy requests (find, download, erase) and the daily clean-up. Going live needs the owner's steps in [docs/PRODUCTION.md](docs/PRODUCTION.md) first; until then, use staff test data only. The owner's guide is [OWNER.md](OWNER.md); a local demo is in [docs/DEMO-SCRIPT.md](docs/DEMO-SCRIPT.md). The phase 1 demo (sample data, kept in the browser) is frozen at https://chandra-psf.vercel.app (presenter steps in [docs/DEMO-GUIDE.md](docs/DEMO-GUIDE.md)). Phase 2 design: [docs/LLD-phase2.md](docs/LLD-phase2.md).
 
 ## Architecture
 
@@ -106,6 +106,8 @@ pnpm build && pnpm start             # http://localhost:8000
 
 To run on another port, add `-p <port>`, for example `pnpm dev -p <port>` or `pnpm start -p <port>` (the default is 8000).
 
+Go-live check (production settings, run by the developer before the first real customer link): `pnpm golive:check`. The owner's steps are in [docs/PRODUCTION.md](docs/PRODUCTION.md) and [OWNER.md](OWNER.md).
+
 ### Environment keys
 
 Every key the server or the build reads is in `.env.example` (placeholders only). Real values never go into git: locally they go in `.env`, on Vercel in the project's environment variables. Keys that are not in `.env.example` are listed in the last table.
@@ -195,6 +197,7 @@ docs/             specification, design, architecture, walkthrough, deployment, 
 - `docs/WALKTHROUGH.md`: guided code tour and how to extend
 - `docs/DEPLOY.md`: publishing to Vercel, and the phase 2 preview checklist
 - `docs/PRODUCTION.md`: production-readiness gate checklist: each item is built and tested, waived by the owner, or not applicable
-- `docs/DEMO-GUIDE.md`: presenter guide
+- `docs/DEMO-GUIDE.md`: presenter guide for the phase 1 demo
+- `docs/DEMO-SCRIPT.md`: running a local phase 2 demo alone, step by step
 - `docs/CONVENTIONS.md`: code rules and checks
 - `OWNER.md`: one-page guide for the owner (no code)
