@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (T-09b approved; T-06b, T-08b TASK READY, syncing one at a time; T-24 next) |
+| Last updated | 2026-11-26 (T-09b approved b320fe4; T-06b, T-08b TASK READY, syncing one at a time; T-24 running) |
 
 ## Team
 | Agent | Model | Why on this project |

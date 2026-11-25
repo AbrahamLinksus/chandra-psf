@@ -633,9 +633,9 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Result: —
 
 ### T-35 · Cloud sessions + preview workflow — DROPPED 2026-11-24 (owner: not needed; moving accounts instead)
-- Owner: —
+- Owner: docs
 - Depends on: —
-- Files: —
+- Files: docs/dropped-T-35.md
 - Status: Dropped
 
 ## M5 · Admin console, privacy, clean-up, go-live readiness
@@ -698,7 +698,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/customers.ts, src/server/rpc/customers.ts, src/server/csv.ts, src/data/access/repos/customers.ts, src/features/admin-customers/**, src/app/admin/customers/**, tests/unit/server/customers/**, tests/e2e/admin-customers/**
 - Context: SPEC US-30, F-10 steps 1–3, §5 F-10 rows · LLD-phase2 §24 (CustomerRepo, CSV) · files: src/features/admin-customers/*
 - Why separate: own repo and route (personal data export); erase (T-25) builds on its screen.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] The main admin searches `98400 12345` → two rows (Ramesh Kumar · Velachery · 14 Nov 2026; Lakshmi Kumar · Tambaram · 2 Dec 2026), none ticked; no match → "No customer found with that number" (S-21)
   - [ ] Download with only Ramesh ticked → a CSV (UTF-8 BOM) of that job card's link and answers only; a value starting `=` is prefixed with `'`; audit `customer.export {count}` without personal values
