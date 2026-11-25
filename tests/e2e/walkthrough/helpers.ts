@@ -158,15 +158,15 @@ const chip = (page: Page, code: string, name: string) =>
   q(page, code).getByRole("button", { name, exact: true });
 const next = (page: Page) => page.getByRole("button", { name: "Next", exact: true });
 
-/** Welcome to the callback step (Q10 left to the caller); `q4` is the Service Advisor (Q4) rating to tap. */
-export async function fillUntilCallback(page: Page, q4: 1 | 5, started = false): Promise<void> {
+/** Welcome to the callback step (Q10 left to the caller); `q1` is the overall rating (Q1) to tap, 1 opens Q1a. */
+export async function fillUntilCallback(page: Page, q1: 1 | 5, started = false): Promise<void> {
   if (!started) await page.getByRole("button", { name: "Start" }).click();
-  await rate(page, "Q1", /^5 /).click();
+  await rate(page, "Q1", new RegExp(`^${String(q1)} `)).click();
+  if (q1 === 1) await chip(page, "Q1a", "Poor workmanship").click();
   await chip(page, "Q2", "Yes").click();
   await chip(page, "Q3", "No").click();
   await next(page).click();
-  await rate(page, "Q4", new RegExp(`^${String(q4)} `)).click();
-  if (q4 === 1) await chip(page, "Q4a", "Not Attentive").click();
+  await rate(page, "Q4", /^5 /).click();
   await next(page).click();
   await chip(page, "Q5", "Yes").click();
   await chip(page, "Q6", "Yes").click();

@@ -128,7 +128,7 @@ test.describe("T-11b DoD 3-8: two devices, one visit", () => {
     await expect(row.getByText("Opened", { exact: true })).toBeVisible({ timeout: POLL_WAIT });
     await shot(page, "journey-3-laptop-opened");
 
-    // The customer answers with Q4 = 1 and Q10 = Yes (S-12) and submits.
+    // The customer answers with Q1 = 1 and Q10 = Yes, Evening (S-12) and submits.
     await fillUntilCallback(phone, 1);
     await answerCallback(phone, "Yes");
     await submitForm(phone);
@@ -153,6 +153,7 @@ test.describe("T-11b DoD 3-8: two devices, one visit", () => {
       "data-status",
       "contacted",
     );
+    await expect(ramesh).toContainText(/Evening.*3 PM/); // the alert shows the callback slot
     await shot(tabA, "journey-6-alerts-open");
 
     // --- Alert: Open -> Contacted -> Resolved ---
@@ -161,6 +162,28 @@ test.describe("T-11b DoD 3-8: two devices, one visit", () => {
     await setStatus(tabA, "Ramesh Kumar", "Resolved");
     await expect(ramesh).toHaveAttribute("data-status", "resolved");
     await shot(tabA, "journey-7-alert-resolved");
+
+    // --- Overview (v2): D-47 tiles in words, and a category that expands to its questions ---
+    await tabA.goto("/admin");
+    await expect(tabA.getByRole("heading", { name: "Overview" })).toBeVisible();
+    const tile = (label: string) => tabA.locator(`[data-testid="kpi-tile"][data-label="${label}"]`);
+    for (const label of [
+      "Avg overall satisfaction",
+      "Recommend rate",
+      "Responses",
+      "Response rate",
+      "Callbacks requested",
+    ]) {
+      await expect(tile(label)).toBeVisible();
+    }
+    await expect(tile("Callbacks requested")).toContainText("2"); // Farida's and Ramesh's
+    await expect(tile("Responses")).toContainText("2");
+    const category = tabA.getByTestId("category-row").first();
+    await expect(category.getByRole("button")).toHaveAttribute("aria-expanded", "false");
+    await category.getByRole("button").click();
+    await expect(category.getByRole("button")).toHaveAttribute("aria-expanded", "true");
+    await expect(category.getByTestId("category-question").first()).toBeVisible();
+    await shot(tabA, "journey-7b-overview");
 
     // --- Everything is in the audit, with the branch ---
     const alerts = await rpcCall<AlertRow[]>(boss.api, "alerts", "listAlerts", [{}]);

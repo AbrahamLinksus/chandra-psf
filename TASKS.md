@@ -863,12 +863,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: tests/e2e/walkthrough/**, tests/e2e/preview/**, docs/DEPLOY.md, docs/DEMO-SCRIPT.md, docs/WALKTHROUGH.md, docs/LLD-phase2.md, README.md
 - Context: SPEC CR-2 note, §5 F-3 rows, F-9, §12 DoD · files: tests/e2e/walkthrough/*, tests/e2e/preview/*, docs/DEPLOY.md, docs/DEMO-SCRIPT.md
 - Why separate: the whole-app check after the v2 slices; no feature edits (fixes raise `Needs file:` on the owning slice).
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] The full walkthrough e2e (init → job card → link → v2 form at 360 px → alert with the callback slot → Overview with Q1 / Q9 tiles) passes on PGlite (DoD 3–8)
   - [ ] **Maintainer step:** after the v2 build is on the preview, `admin clear-feedback` runs there once; the preview suite then passes against it (S-12)
   - [ ] docs/DEPLOY.md documents `clear-feedback` (dev/preview only, before go-live, what it keeps); docs/DEMO-SCRIPT.md uses the v2 example (Q1 = 1 + callback Evening); the as-built LLD-phase2 and WALKTHROUGH name questionnaire v2
-- Result: —
+- Result: Done 2026-11-26 · 2/3 goals, criterion 2 (clear-feedback on the preview) ⏳ owner · walkthrough v2 18/18 · docs v2 · sync ✅ · approved under D-49
 
 ### T-42 · Dealer vehicle model list (D-48)
 - Owner: backend-coder
@@ -881,3 +881,16 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] HONDA_MODELS holds exactly the dealer list, title-cased (scooters: Activa, Activa 125, Activa e:, Activa i, Aviator, Cliq, Dio, Dio 125; motorcycles: CB Hornet 160R, CB Shine, CB Trigger, CB Twister, CB Unicorn, CB Unicorn 160, CB Unicorn Dazzler, CB125 Hornet, CB125 Shine SP, CD 110 Dream, Dream Neo, Dream Yuga, Grazia, Hornet 2.0, Livo, Navi, Shine, Shine 125, SP125, SP160 OBD2, Unicorn, X Blade) plus "Other"; each mapped to its vehicle type
   - [ ] Existing job cards with a model no longer in the list still display (no validation on read); tests updated
 - Result: Done 2026-11-26 · dealer list 8 scooters + 22 motorcycles + Other · old cards read as Other (original name kept) · 904 unit tests · sync ✅ · approved under D-49
+
+### T-43r · clear-feedback must name the database it wipes (data-loss guard)
+- Owner: backend-coder
+- Depends on: T-38
+- Files: scripts/adminClear.ts, scripts/admin.ts, tests/unit/server/admin/**, docs/DEPLOY.md
+- Context: T-41 card note · D-46, D-49 · LLD-phase2 §26
+- Why separate: found after T-38: the refusal checks VERCEL_ENV/NODE_ENV only, so a maintainer running it locally with the production DATABASE_URL would delete every customer response.
+- Status: Backlog
+- Acceptance criteria:
+  - [ ] `clear-feedback` also requires `--database-host <host>` equal to the host of the DATABASE_URL it will use (pglite: `--database-host pglite`); a missing or different host refuses and deletes nothing; the refusal message names the expected host but no credentials
+  - [ ] Unit tests: wrong host refuses, missing host refuses, matching host clears; existing production refusal still works
+  - [ ] docs/DEPLOY.md shows the new flag
+- Result: —

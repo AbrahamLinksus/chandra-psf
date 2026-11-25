@@ -90,6 +90,22 @@ This puts a preview of the phase-2 app on its own Vercel project. It does not to
 6. On your laptop, run `pnpm admin init` with `DATABASE_URL_UNPOOLED` pointing at the **`dev`** direct URL. Never use the `production` URL for this command.
 7. Send the team the preview URL only (just the address, for example `https://<name>.vercel.app`), through the Orchestrator conversation. Sign in on a Preview deployment's address for sign-in tests. The project's own address (for example `chandra-psf-preview.vercel.app`) serves a Production deployment; this project has no Production environment variables, so it fails with a server ZodError. The verify-preview step then checks the first admin sign-in and password, adds a branch and a support user, the sign-in timing (argon2), `noindex`, the security headers and the not-found page.
 
+### Clear feedback for questionnaire v2 (CR-2, maintainer step)
+
+Run this **once**, after the build with questionnaire v2 is live on the preview project. It is a maintainer step (it needs the Neon `dev` direct URL); the owner does not run it. It deletes all feedback data on the database that `DATABASE_URL_UNPOOLED` points at, and installs questionnaire v2.
+
+```powershell
+$env:DATABASE_URL_UNPOOLED = '<dev direct URL>'
+pnpm admin clear-feedback --confirm-delete-all-feedback
+Remove-Item Env:DATABASE_URL_UNPOOLED
+```
+
+- **Dev or preview only.** The command refuses when `VERCEL_ENV` or `NODE_ENV` is `production`, and refuses without `--confirm-delete-all-feedback`. The refusal depends on those settings only, not on which database is reached, so the URL must be the `dev` branch, never `production`.
+- **Deletes:** every alert, answer (response), link and visit, the old v1 questionnaire and the rate-limit counters. Then it installs v2 and writes one audit entry (`system.cleanup`, "CR-2: feedback cleared, questionnaire v2 installed").
+- **Keeps:** branches, advisors, users and their sessions, job cards, the audit log and the erasure journal.
+- **Output:** `Cleared: <n> alert(s), <n> response(s) with answers, <n> link(s), <n> visit(s), <n> old questionnaire(s). Questionnaire v2 installed.`
+- Running it again deletes the feedback made since the last run, so run it only once per cut-over.
+
 ## Demo (phase 1) — frozen
 
 - Git tag `demo-v1` (annotated) and branch `demo`, both at commit `67ceeb1`, hold the exact code live on https://chandra-psf.vercel.app.

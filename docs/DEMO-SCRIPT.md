@@ -36,7 +36,7 @@ Open http://localhost:8000.
 ## 4. Create a job card and a feedback link as support
 
 1. Sign in as the support user with the temporary password. Set a new password when asked.
-2. Open **New feedback link**. Type in a job card (customer, vehicle and service details).
+2. Open **New feedback link**. Type in a job card (customer, vehicle and service details). Use the vehicle model **Activa**, so the Overview has a model to filter on.
 3. Generate the link and copy it.
 
 Sending on WhatsApp opens WhatsApp with the message ready. The demo does not send anything by itself.
@@ -49,9 +49,14 @@ On the support list, the link shows **Opened** once the page loads. Screens refr
 
 ## 6. Fill in the form
 
-In the private window: read the privacy notice, press **Start**, answer the steps. For an alert, give one rating of 1 **or** answer **Yes** to the callback question (Q15). Submit.
+In the private window: read the privacy notice, press **Start**, and answer the six steps (questionnaire v2). For the demo alert, do this:
 
-The thank-you page appears.
+1. Questionnaire step 1, **Overall service** (Q1): rate it **1**, then pick one concern.
+2. Questionnaire step 6, **Callback** (Q10): answer **Yes**, then pick the slot **Evening**.
+
+Submit. The thank-you page says our team will call the customer in the Evening slot.
+
+The response raises an alert whose reasons include the callback (Evening 3 PM–6 PM) and the rating of 1.
 
 ## 7. Check the results
 
@@ -59,7 +64,11 @@ Keep the support list open in the first window:
 
 - **Support list:** the link shows **Completed** (within about 30 seconds, without a reload).
 - **Alerts** (admin): a new alert for the branch, status Open. Change it to Contacted, then Resolved.
-- **Overview** (admin): the analytics blocks show the new response. Try a filter (date range or branch).
+- **Overview** (admin): walk through it in this order (Overview v2, D-47):
+  1. **Tiles, read them in words:** Avg overall satisfaction (1.0 for the rating you gave), Recommend rate, Responses (1), Response rate, **Callbacks requested** (1), Open alerts (1). A change arrow appears only when the previous period has data.
+  2. **Categories:** five rows (the five steps), each with a score out of 100. Click one, for example "Service Quality & Complaint Resolution", to expand it: the answer counts for each question, with its follow-up answers under it.
+  3. **Advisors:** the table has a weighted advisor score. Q4 (advisor behaviour) counts most (30 of 100). An advisor needs at least 3 responses before a score shows, so with one response the score is "—". Say so to the audience; do not read it as 0.
+  4. Try a filter (date range, branch or model **Activa**).
 - **Responses** (admin): the response is listed. Open it to see the answers.
 - **Audit** (admin): newest first. Look for the link, response, alert and user entries you made.
 

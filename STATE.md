@@ -216,6 +216,10 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-39 | src/features/admin-overview tiles | tile says "Responses", SPEC says "Responses received" | ≈1 min |
 | T-39 | src/domain/constants.ts | RECENT_COMMENTS constant now unused — remove | ≈1 min |
 | T-39 | docs/SPEC.md §3 US-14, US-15 | still describe the old blocks (problem breakdown selector, recent comments) — update to D-47 | ≈3 min |
+| T-41 | docs/LLD-phase2.md | ~433 lines, over the 400-line cap — split or trim | ≈15 min |
+| T-41 | docs/WALKTHROUGH.md | §1 items 6–8, §2 steps 1–8, §3–§6 still describe the phase-1 local store — phase-2 rewrite | ≈30 min |
+| T-41 | tests/unit/server/auth-limits, tests/unit/server/auth | two unused eslint-disable directives | ≈1 min |
+| Windows | vitest | default worker count can hit V8 out-of-memory; check.sh runs need VITEST_MAX_WORKERS=3 | ≈2 min |
 
 ## Owner actions (outside the repo)
 - DONE 2026-11-26 (D-48) on the preview (Neon dev): 7 branches (Head Office, RS Puram, Vadavalli, Thondamuthur, PN Palayam, TVS Nagar, Thudiyalur; city Coimbatore) and 14 advisors entered through the app. Thondamuthur has no advisor yet (support can't create job cards there until one is added). Test branch "Velachery (test)" left as is. Staff accounts: add when emails exist. Production: same entries before launch.

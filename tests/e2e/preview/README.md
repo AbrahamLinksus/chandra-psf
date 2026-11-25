@@ -5,7 +5,7 @@ This suite runs only against the deployed preview and the Neon `dev` database. Y
 What it proves:
 
 - A support laptop makes a link; a 360 px phone opens it; the laptop shows Opened within 30 s, then Completed after submit, with no reload.
-- A Q15 = Yes answer raises an alert for that branch: Velachery's admin sees it, Tambaram's does not.
+- A Q10 = Yes answer raises an alert for that branch: Velachery's admin sees it, Tambaram's does not.
 - A laptop tab left idle for 15+ minutes makes no requests, and refreshes at once when you press a key.
 
 ## 1. Before you start
