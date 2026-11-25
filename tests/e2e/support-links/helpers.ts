@@ -108,7 +108,7 @@ export async function makeCard(
       customerName: "Ramesh Kumar",
       phone: o.phone === undefined ? "98400 12345" : o.phone,
       regNo: o.reg ?? "tn09bx4521",
-      model: "Activa 6G",
+      model: "Activa",
       serviceType: "Paid service",
       serviceDate: new Date().toISOString().slice(0, 10),
       advisorId: staff.advisorId,

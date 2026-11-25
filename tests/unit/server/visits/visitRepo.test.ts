@@ -58,7 +58,7 @@ async function card(branchId: string, no: string, o: { phone?: string | null; re
       phone: o.phone === undefined ? "+919840012345" : o.phone,
       regNo: reg,
       regNoKey: keyOf(reg),
-      model: "Activa 6G",
+      model: "Activa",
       vehicleType: "scooter",
       advisorId: must(adv).id,
       serviceType: "Paid service",
@@ -101,7 +101,7 @@ describe("createVisitLink (AC-2, D-11, S-01)", () => {
     const { jc } = await setup();
     const out = value(await repo().createVisitLink({ jobCardId: jc.id }));
     const text =
-      "Hi Ramesh Kumar, thank you for servicing your Activa 6G (TN 09 BX 4521) at Chandra Honda. " +
+      "Hi Ramesh Kumar, thank you for servicing your Activa (TN 09 BX 4521) at Chandra Honda. " +
       `Please share your feedback (2 mins): ${out.url}`;
     expect(out.whatsappUrl).toBe(`https://wa.me/919840012345?text=${encodeURIComponent(text)}`);
   });

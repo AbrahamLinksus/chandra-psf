@@ -69,7 +69,7 @@ async function card(
       phoneKey: "9840012345",
       regNo: `TN01AB${String(1000 + seq)}`,
       regNoKey: `TN01AB${String(1000 + seq)}`,
-      model: "Activa 6G",
+      model: "Activa",
       vehicleType: "scooter",
       advisorId: must(adv).id,
       serviceType: "Paid service",

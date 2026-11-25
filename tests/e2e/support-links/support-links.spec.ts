@@ -38,7 +38,7 @@ test.describe("T-03c support: generate and send a link, My links / All branch li
     await expect(page.getByText(/^Expires \d{1,2} [A-Z][a-z]{2} \d{4}$/)).toBeVisible();
 
     const text =
-      `Hi Ramesh Kumar, thank you for servicing your Activa 6G (TN 09 BX 4521) at Chandra Honda. ` +
+      `Hi Ramesh Kumar, thank you for servicing your Activa (TN 09 BX 4521) at Chandra Honda. ` +
       `Please share your feedback (2 mins): ${url}`;
     const send = page.getByRole("link", { name: "Send on WhatsApp" });
     await expect(send).toHaveAttribute(

@@ -26,7 +26,7 @@ async function openNew(
 
 function expectedWa(number: string, url: string): string {
   const text =
-    `Hi Ramesh Kumar, thank you for servicing your Activa 6G (TN 09 BX 4521) at Chandra Honda. ` +
+    `Hi Ramesh Kumar, thank you for servicing your Activa (TN 09 BX 4521) at Chandra Honda. ` +
     `Please share your feedback (2 mins): ${url}`;
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
@@ -49,7 +49,7 @@ test.describe("T-03 support: look up, send, manage links", () => {
     for (const t of [
       "Ramesh Kumar",
       "TN 09 BX 4521",
-      "Activa 6G",
+      "Activa",
       "Scooter",
       "Paid service",
       "Suresh",

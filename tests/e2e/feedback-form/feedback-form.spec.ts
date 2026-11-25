@@ -95,7 +95,7 @@ test.describe("T-04b customer form on a real server", () => {
 
     await page.goto(link.path);
     await expect(
-      page.getByRole("heading", { name: /^Hi Ramesh Kumar, how was your Activa 6G's service on / }),
+      page.getByRole("heading", { name: /^Hi Ramesh Kumar, how was your Activa's service on / }),
     ).toBeVisible();
     await expect(page.getByText("Takes about 2 minutes")).toBeVisible();
     const notice = page.getByRole("complementary", { name: "Privacy notice" });

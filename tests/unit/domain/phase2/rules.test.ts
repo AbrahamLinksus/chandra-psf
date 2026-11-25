@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { stripFreeText } from "@/domain/erasure";
 import { jobCardInputSchema } from "@/domain/jobCardInput";
+import { HONDA_MODELS } from "@/domain/models";
 import { passwordProblem } from "@/domain/passwordPolicy";
 import { retentionCutoffs, retentionDueDate } from "@/domain/retention";
 import { isAdmin, isMainAdmin } from "@/domain/roles";
@@ -12,7 +13,7 @@ const VALID = {
   customerName: "Ramesh Kumar",
   phone: "98400 12345",
   regNo: "tn09bx4521",
-  model: "Activa 6G",
+  model: "Activa",
   serviceType: "Paid service",
   serviceDate: "2026-11-14",
   advisorId: "adv-1",
@@ -59,6 +60,12 @@ describe("jobCardInputSchema service date and model", () => {
   });
   it("impossible date → rejected without throwing", () => {
     expect(parse({ serviceDate: "2026-13-45" }).success).toBe(false);
+  });
+  it("HONDA_MODELS has 8 scooters, 22 motorcycles and Other with no type", () => {
+    const types = Object.values(HONDA_MODELS);
+    expect(types.filter((t) => t === "scooter")).toHaveLength(8);
+    expect(types.filter((t) => t === "motorcycle")).toHaveLength(22);
+    expect(HONDA_MODELS.Other).toBeNull();
   });
   it("model Other without name and vehicle type → both flagged", () => {
     const r = jobCardInputSchema(NOW).safeParse({ ...VALID, model: "Other" });

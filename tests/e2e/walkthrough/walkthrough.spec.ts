@@ -37,7 +37,7 @@ async function typeInJobCard(page: Page, no: string): Promise<void> {
   await form.getByLabel("Customer name").fill("Ramesh Kumar");
   await form.getByLabel("Mobile (optional)").fill("98400 12345");
   await form.getByLabel("Reg. no.").fill("tn09bx4521");
-  await form.getByLabel("Model", { exact: true }).selectOption("Activa 6G");
+  await form.getByLabel("Model", { exact: true }).selectOption("Activa");
   await form.getByLabel("Service type").selectOption("Paid service");
   await form.getByLabel("Advisor").selectOption({ label: "Suresh" });
   await page.getByRole("button", { name: "Save job card" }).click();

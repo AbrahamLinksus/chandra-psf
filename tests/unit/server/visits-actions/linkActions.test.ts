@@ -58,7 +58,7 @@ async function card(branchId: string, no: string) {
       phone: "+919840012345",
       regNo: "TN 09 BX 4521",
       regNoKey: "TN09BX4521",
-      model: "Activa 6G",
+      model: "Activa",
       vehicleType: "scooter",
       advisorId: must(adv).id,
       serviceType: "Paid service",

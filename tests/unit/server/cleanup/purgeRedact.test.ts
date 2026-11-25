@@ -49,7 +49,7 @@ async function seedResponse(branchId: string, no: string, deletedAt: Date | null
       phoneKey: "9840099999",
       regNo: `TN01${no}`,
       regNoKey: `TN01${no}`,
-      model: "Activa 6G",
+      model: "Activa",
       vehicleType: "scooter",
       advisorId: must(adv).id,
       serviceType: "Paid service",

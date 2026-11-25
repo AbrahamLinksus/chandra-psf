@@ -876,8 +876,8 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/domain/models.ts, tests/unit/foundation/**, tests/unit/domain/**, tests/unit/server/**, tests/e2e/**
 - Context: D-48 · SPEC F-2 (model pick list)
 - Why separate: small domain data change; runs after T-38 so the foundation tests don't collide.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] HONDA_MODELS holds exactly the dealer list, title-cased (scooters: Activa, Activa 125, Activa e:, Activa i, Aviator, Cliq, Dio, Dio 125; motorcycles: CB Hornet 160R, CB Shine, CB Trigger, CB Twister, CB Unicorn, CB Unicorn 160, CB Unicorn Dazzler, CB125 Hornet, CB125 Shine SP, CD 110 Dream, Dream Neo, Dream Yuga, Grazia, Hornet 2.0, Livo, Navi, Shine, Shine 125, SP125, SP160 OBD2, Unicorn, X Blade) plus "Other"; each mapped to its vehicle type
   - [ ] Existing job cards with a model no longer in the list still display (no validation on read); tests updated
-- Result: —
+- Result: Done 2026-11-26 · dealer list 8 scooters + 22 motorcycles + Other · old cards read as Other (original name kept) · 904 unit tests · sync ✅ · approved under D-49

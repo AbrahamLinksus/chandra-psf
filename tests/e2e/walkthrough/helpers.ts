@@ -232,7 +232,7 @@ export async function cardWithLink(
       customerName: o.name,
       phone: o.phone,
       regNo: o.reg,
-      model: "Activa 6G",
+      model: "Activa",
       serviceType: "Paid service",
       serviceDate: o.date,
       advisorId: staff.advisorId,

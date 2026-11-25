@@ -61,7 +61,7 @@ async function scene(playwright: Playwright, base: string, customer: string): Pr
       customerName: customer,
       phone: "98400 12345",
       regNo: "tn09bx4521",
-      model: "Activa 6G",
+      model: "Activa",
       serviceType: "Paid service",
       serviceDate: new Date().toISOString().slice(0, 10),
       advisorId,

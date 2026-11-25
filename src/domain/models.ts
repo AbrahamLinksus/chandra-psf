@@ -2,19 +2,38 @@ export type VehicleType = "scooter" | "motorcycle";
 
 export const OTHER_MODEL = "Other";
 
-/** Honda two-wheeler pick list (SPEC F-2): model name to vehicle type. "Other" asks for both. */
+/** Dealer two-wheeler pick list (D-48): model name to vehicle type. "Other" asks for both. */
 export const HONDA_MODELS: Readonly<Record<string, VehicleType | null>> = {
-  "Activa 6G": "scooter",
+  Activa: "scooter",
   "Activa 125": "scooter",
+  "Activa e:": "scooter",
+  "Activa i": "scooter",
+  Aviator: "scooter",
+  Cliq: "scooter",
   Dio: "scooter",
   "Dio 125": "scooter",
-  Shine: "motorcycle",
-  "Shine 100": "motorcycle",
-  SP125: "motorcycle",
-  Unicorn: "motorcycle",
+  "CB Hornet 160R": "motorcycle",
+  "CB Shine": "motorcycle",
+  "CB Trigger": "motorcycle",
+  "CB Twister": "motorcycle",
+  "CB Unicorn": "motorcycle",
+  "CB Unicorn 160": "motorcycle",
+  "CB Unicorn Dazzler": "motorcycle",
+  "CB125 Hornet": "motorcycle",
+  "CB125 Shine SP": "motorcycle",
+  "CD 110 Dream": "motorcycle",
+  "Dream Neo": "motorcycle",
+  "Dream Yuga": "motorcycle",
+  Grazia: "motorcycle",
   "Hornet 2.0": "motorcycle",
-  CB350: "motorcycle",
   Livo: "motorcycle",
+  Navi: "motorcycle",
+  Shine: "motorcycle",
+  "Shine 125": "motorcycle",
+  SP125: "motorcycle",
+  "SP160 OBD2": "motorcycle",
+  Unicorn: "motorcycle",
+  "X Blade": "motorcycle",
   [OTHER_MODEL]: null,
 };
 

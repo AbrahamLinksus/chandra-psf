@@ -68,7 +68,7 @@ async function seedVisits(
         phone: "+919840012345",
         regNo: key,
         regNoKey: key,
-        model: "Activa 6G",
+        model: "Activa",
         vehicleType: "scooter",
         advisorId: b.advisorId,
         serviceType: "Paid service",

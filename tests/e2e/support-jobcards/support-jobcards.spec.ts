@@ -80,7 +80,7 @@ async function fillRamesh(page: Page, o: { phone?: string; date?: string } = {})
   await form.getByLabel("Customer name").fill("Ramesh Kumar");
   await form.getByLabel("Mobile (optional)").fill(o.phone ?? "98400 12345");
   await form.getByLabel("Reg. no.").fill("tn09bx4521");
-  await form.getByLabel("Model", { exact: true }).selectOption("Activa 6G");
+  await form.getByLabel("Model", { exact: true }).selectOption("Activa");
   await form.getByLabel("Service type").selectOption("Paid service");
   if (o.date !== undefined) await form.getByLabel("Service date").fill(o.date);
   await form.getByLabel("Advisor").selectOption({ label: "Suresh" });
@@ -114,7 +114,7 @@ test.describe("T-03b support: find a job card or type in a new one", () => {
     await expect(summary).toHaveText("+91 98400 12345 · TN 09 BX 4521 · Scooter · Advisor: Suresh");
     const card = page.getByRole("region", { name: "Job card details" });
     await expect(card).toContainText("Ramesh Kumar");
-    await expect(card).toContainText("Activa 6G · Paid service");
+    await expect(card).toContainText("Activa · Paid service");
     await shot(page, "4-found-after-save");
 
     await openNew(page);

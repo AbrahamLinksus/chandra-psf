@@ -62,7 +62,7 @@ async function seedCard(db: Db, o: { branchId: string; userId: string; no: strin
       phone: "+919840012345",
       regNo: "TN 09 BX 4521",
       regNoKey: keyOf(`TN09BX4521${o.no}`),
-      model: "Activa 6G",
+      model: "Activa",
       vehicleType: "scooter",
       advisorId: must(adv).id,
       serviceType: "Paid service",

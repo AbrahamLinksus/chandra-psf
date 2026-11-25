@@ -46,7 +46,7 @@ async function seed(entries: Entry[]) {
         phoneKey: "9840012345",
         regNo: `TN09BX${String(1000 + i)}`,
         regNoKey: `TN09BX${String(1000 + i)}`,
-        model: "Activa 6G",
+        model: "Activa",
         vehicleType: "scooter",
         advisorId: must(adv).id,
         serviceType: "Paid service",

@@ -86,7 +86,7 @@ const rows: Record<string, Call[]> = {
           customerName: "New Customer",
           phone: "+919840099999",
           regNo: "TN 09 ZZ 0001",
-          model: "Activa 6G",
+          model: "Activa",
           serviceType: "Paid service",
           serviceDate: "2026-11-20",
           advisorId: f.advisorId,

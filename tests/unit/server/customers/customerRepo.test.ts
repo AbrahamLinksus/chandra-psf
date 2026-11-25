@@ -64,7 +64,7 @@ async function card(
       phoneKey: phone.slice(-10),
       regNo: o.reg,
       regNoKey: keyOf(o.reg),
-      model: "Activa 6G",
+      model: "Activa",
       vehicleType: "scooter",
       advisorId: must(adv).id,
       serviceType: "Paid service",

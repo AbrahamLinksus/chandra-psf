@@ -46,7 +46,7 @@ describe("getVisitByToken states", () => {
       state: "ready",
       visitId: s.visitId,
       customerName: "Ramesh Kumar",
-      model: "Activa 6G",
+      model: "Activa",
       serviceDate: "2026-11-14",
     });
   });

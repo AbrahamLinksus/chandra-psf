@@ -52,7 +52,7 @@ describe("admin reapply-erasures --from <url> (S-24)", () => {
         phoneKey: "9840012345",
         regNo: "TN09BX4521",
         regNoKey: "TN09BX4521",
-        model: "Activa 6G",
+        model: "Activa",
         vehicleType: "scooter",
         advisorId: must(adv).id,
         serviceType: "Paid service",
