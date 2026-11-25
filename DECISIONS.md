@@ -51,3 +51,4 @@
 | D-40 | 2026-11-24 | Architect write access to docs/LLD-phase2.md (M3 grant stored as `write_add`, which the scope guard ignores) | Fix the grant: architect `write` = plugin defaults + docs/LLD-phase2.md in .devteam/scopes.json | owner | M4-docs |
 | D-41 | 2026-11-26 | Fallback company name when NEXT_PUBLIC_COMPANY_NAME is unset (SPEC G-12 said "Chandra Honda") | Keep "Your Company Name"; the real name is set on Vercel before customers see it; SPEC G-12 wording to be updated at handover | owner | T-36 |
 | D-42 | 2026-11-26 | T-24 CSV "link" column: only a hash of the link code is stored | Accept a link-status column instead of the link URL | owner | T-24 |
+| D-43 | 2026-11-26 | Go-live check vs setup data (DEPLOY.md adds advisors before launch) | golive:check allows branches, advisors and staff users; only customer data (job cards, links, responses, alerts) must be empty | owner | T-29 |

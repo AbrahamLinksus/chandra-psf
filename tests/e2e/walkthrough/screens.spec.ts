@@ -1,131 +1,183 @@
 /* eslint-disable max-lines-per-function -- one screenshot tour per role */
-import { expect, test, type Page } from "@playwright/test";
-import { signInAs } from "../../support/e2e";
-import { fillUntilCallback, makeToken, shot, stored } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { createSupportUser, rpcCall } from "../../support/e2e";
+import { sharedAdminApi, sharedAdminInBrowser } from "../admin-users/sharedAdmin";
+import { newBranch } from "../support-links/helpers";
+import {
+  CALLBACK,
+  OWN,
+  TEMP,
+  afterFirstRunStarted,
+  answerCallback,
+  branchAdminFor,
+  capture,
+  cardWithLink,
+  digits,
+  expectLabelled,
+  expectNoDemo,
+  fillUntilCallback,
+  isDesktop,
+  regOf,
+  setPasswordUI,
+  shot,
+  signInUI,
+  submitForm,
+  today,
+  uniq,
+} from "./helpers";
 
-/** Every visible form control must have an accessible name (G-W5). */
-async function expectLabelled(page: Page, where: string): Promise<void> {
-  const unnamed = await page.evaluate(() => {
-    const sel = "input:not([type=hidden]), textarea, select, [role=combobox], [role=switch]";
-    const bad: string[] = [];
-    const hasName = (el: HTMLElement): boolean =>
-      ((el as HTMLInputElement).labels?.length ?? 0) > 0 ||
-      (el.getAttribute("aria-label") ?? "").trim() !== "" ||
-      (el.getAttribute("aria-labelledby") ?? "")
-        .split(/\s+/)
-        .some((id) => (document.getElementById(id)?.textContent ?? "").trim() !== "");
-    const shown = (el: HTMLElement): boolean =>
-      el.offsetParent !== null || getComputedStyle(el).position === "fixed";
-    for (const el of Array.from(document.querySelectorAll<HTMLElement>(sel))) {
-      if (shown(el) && !hasName(el)) bad.push(el.outerHTML.slice(0, 120));
-    }
-    return bad;
-  });
-  expect(unnamed, `unlabelled controls on ${where}`).toEqual([]);
-}
+test.beforeAll(afterFirstRunStarted);
 
-async function visit(page: Page, url: string, ready: RegExp | string, name: string): Promise<void> {
-  await page.goto(url);
-  await expect(page.getByRole("heading", { name: ready }).first()).toBeVisible();
-  await expectLabelled(page, url);
-  await shot(page, name);
-}
-
-// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-11b.
-test.fixme(true, "rebuilt by T-11b");
-
-test.describe("T-11 SPEC 7 screens at 360 and 1440 px (G-W5)", () => {
-  test("public and sign-in screens", async ({ page }) => {
-    await page.goto("/sign-in");
-    await expect(page.getByRole("button", { name: "Sign in as Admin" })).toBeVisible();
-    await expectLabelled(page, "/sign-in");
-    await shot(page, "sign-in");
-    await page.getByRole("button", { name: "Reset demo data" }).click();
-    await expect(page.getByRole("alertdialog")).toBeVisible();
-    await shot(page, "reset-dialog");
-    await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
-
-    // admin-created user with a temp password -> set-password
-    await page.evaluate(() => {
-      const key = "psf:v1:users";
-      const users = JSON.parse(window.localStorage.getItem(key) ?? "[]") as { id: string }[];
-      const next = users.map((u) => (u.id === "u-support2" ? { ...u, mustSetPassword: true } : u));
-      window.localStorage.setItem(key, JSON.stringify(next));
+test.describe("T-11b SPEC 7 screens at 360 and 1440 px (G-W5, DoD last item)", () => {
+  test("public screens: sign-in, privacy and every customer form state", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const { staff } = await newBranch(playwright, String(baseURL), {
+      label: "Screens",
+      name: "Kavitha",
     });
-    await page.reload();
-    await page.getByLabel("Email").fill("support2@chandrahonda.demo");
-    await page.getByLabel("Password").fill("Demo@2026");
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page.getByRole("heading", { name: "Set your password" })).toBeVisible();
-    await expectLabelled(page, "/set-password");
-    await shot(page, "set-password");
-  });
+    const fresh = await cardWithLink(staff, {
+      name: "Ramesh Kumar",
+      phone: digits(),
+      reg: regOf(),
+      date: today(),
+    });
 
-  test("customer form screens and link states", async ({ page }) => {
-    await page.goto(`/f/${makeToken("v-t11-shots", 1)}`);
-    await expect(page.getByRole("button", { name: "Start" })).toBeVisible();
-    await expectLabelled(page, "form welcome");
-    await shot(page, "form-welcome");
+    await capture(page, "/sign-in", "sign-in");
+    await expect(page.getByText("Forgot your password? Ask your admin to reset it.")).toBeVisible();
+    await expect(page.getByRole("combobox")).toHaveCount(0); // no role picker
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+    await capture(page, "/privacy", "privacy");
+
+    await capture(page, `/f/${fresh.code}`, "form-welcome");
     await page.getByRole("button", { name: "Start" }).click();
-    await expect(page.getByText("Step 1 of 6").first()).toBeVisible();
-    await expectLabelled(page, "form step 1");
+    await expect(page.locator('[data-question="Q1"]')).toBeVisible();
+    await expectLabelled(page, "form step");
     await shot(page, "form-step");
-    await page.getByRole("button", { name: "Back" }).click();
-    await fillUntilCallback(page, { q6: "1 Very poor", q15: "Yes" });
+
+    await fillUntilCallback(page, 5, true);
     await expect(page.locator('[data-question="Q15"]')).toBeVisible();
     await expectLabelled(page, "form callback");
     await shot(page, "form-callback");
-    await page.locator('[data-question="Q15"]').getByRole("button", { name: "Yes" }).click();
-    await page.getByRole("button", { name: "Submit" }).click();
-    await expect(page.getByText("Our team will call you soon")).toBeVisible();
+    await answerCallback(page, "Yes");
+    await submitForm(page);
+    await expect(page.getByRole("heading", { name: "Thank you for your feedback" })).toBeVisible();
+    await expectNoDemo(page, "form thank-you");
     await shot(page, "form-thank-you");
 
-    await page.goto(`/f/${makeToken("v-s001", 1, "JC-24-1001")}`);
+    await page.goto(`/f/${fresh.code}`);
     await expect(page.getByText("Thank you — already submitted")).toBeVisible();
-    await shot(page, "form-already-submitted");
-    await page.goto(`/f/${makeToken("v-t11-old", 8, "JC-24-1042")}`);
-    await expect(page.getByText(/This feedback link has expired/)).toBeVisible();
-    await shot(page, "form-expired");
-    await page.goto("/f/not-a-real-token");
-    await expect(page.getByText(/link/i).first()).toBeVisible();
-    await shot(page, "form-invalid");
+    await shot(page, "form-state-already-submitted");
+
+    await page.goto(`/f/${"a".repeat(43)}`);
+    await expect(page.getByText("Link not valid")).toBeVisible();
+    await expectNoDemo(page, "form not valid");
+    await shot(page, "form-state-not-valid");
   });
 
-  test("support screens and not-allowed", async ({ page }) => {
-    await signInAs(page, "support1");
-    await visit(page, "/support", "My feedback links", "support-list");
-    await page.goto("/support/new");
-    await page.getByLabel("Job card number").fill("JC-24-1042");
-    await page.getByRole("button", { name: "Look up" }).click();
-    await expect(page.getByLabel("Phone")).toBeVisible();
-    await expectLabelled(page, "/support/new");
-    await shot(page, "support-new");
-    await page.getByRole("button", { name: "Generate link" }).click();
-    await expect(page.getByTestId("link-url")).toBeVisible();
-    await shot(page, "support-new-link");
+  test("support screens: set-password, my links, new link, my account, not-allowed", async ({
+    page,
+    playwright,
+    baseURL,
+  }) => {
+    const base = String(baseURL);
+    const admin = await sharedAdminApi(playwright, base);
+    const { branchId, staff } = await newBranch(playwright, base, {
+      label: "Support",
+      name: "Meena",
+    });
+    await cardWithLink(staff, {
+      name: "Ramesh Kumar",
+      phone: digits(),
+      reg: regOf(),
+      date: today(),
+    });
+    const email = `scr${uniq()}@ch.in`;
+    await createSupportUser(admin, { name: "Latha", email, tempPassword: TEMP, branchId });
+
+    await page.goto("/sign-in");
+    await signInUI(page, email, TEMP);
+    await expect(page).toHaveURL(/\/set-password$/);
+    await expect(page.getByRole("heading", { name: "Set your password" })).toBeVisible();
+    await expectLabelled(page, "/set-password");
+    await expectNoDemo(page, "/set-password");
+    await shot(page, "set-password");
+    await setPasswordUI(page, OWN);
+    await expect(page).toHaveURL(/\/support$/);
+
+    await expect(page.getByRole("link", { name: "New feedback link" })).toBeVisible();
+    await expectLabelled(page, "/support");
+    await expectNoDemo(page, "/support");
+    await shot(page, "support-list");
+    await page.getByLabel("All branch links").click();
+    await expect(page.getByText("Created by Meena")).toBeVisible();
+    await shot(page, "support-list-all-branch");
+
+    await capture(page, "/support/new", "support-new");
+    await capture(page, "/account", "my-account");
     await page.goto("/admin");
-    await expect(page.getByText("You don't have access to this page")).toBeVisible();
+    await expect(page).toHaveURL(/\/not-allowed$/);
+    await expectNoDemo(page, "/not-allowed");
     await shot(page, "not-allowed");
   });
 
-  test("admin screens", async ({ page }) => {
-    await signInAs(page, "admin");
-    await visit(page, "/admin", "Overview", "admin-overview");
-    await expect(page.getByTestId("kpi-tile")).toHaveCount(5);
-    await visit(page, "/admin/alerts", "Alerts", "admin-alerts");
-    await page.getByRole("button", { name: /Kavitha P/ }).click();
-    await expect(page.getByRole("button", { name: "Contacted", exact: true }).last()).toBeVisible();
-    await expectLabelled(page, "alert drawer");
-    await shot(page, "admin-alert-drawer");
-    await page.keyboard.press("Escape");
-    await visit(page, "/admin/responses", "Responses", "admin-responses");
-    await visit(page, "/admin/responses/r-s005", "Response", "admin-response-detail");
-    await page.getByRole("button", { name: "Edit", exact: true }).click();
-    await expectLabelled(page, "response edit");
-    await shot(page, "admin-response-edit");
-    await visit(page, "/admin/responses/deleted", /Recently deleted/, "admin-deleted");
-    await visit(page, "/admin/audit", "Audit log", "admin-audit");
-    await visit(page, "/admin/users", "Support users", "admin-users");
-    expect((await stored(page, "users")).length).toBeGreaterThan(0);
+  test("admin screens: main admin sees every admin screen; branch admin sees theirs", async ({
+    page,
+    browser,
+    playwright,
+    baseURL,
+  }) => {
+    const base = String(baseURL);
+    const { branchId, staff } = await newBranch(playwright, base, {
+      label: "Admin screens",
+      name: "Kavitha",
+    });
+    await cardWithLink(
+      staff,
+      { name: "Ramesh Kumar", phone: digits(), reg: regOf(), date: today() },
+      CALLBACK,
+    );
+    const boss = await branchAdminFor(playwright, base, branchId);
+    const responses = await rpcCall<{ id: string }[]>(boss.api, "responses", "listResponses", [
+      { from: "2000-01-01", to: "2100-01-01" },
+    ]);
+    const responseId = responses[0]?.id ?? "";
+    expect(responseId).not.toBe("");
+
+    await sharedAdminInBrowser(page, playwright, base);
+    await capture(page, "/admin", "admin-overview");
+    if (!isDesktop(page)) {
+      await page.getByRole("button", { name: "More" }).click();
+      await expect(page.getByRole("link", { name: "Customers" })).toBeVisible();
+      await shot(page, "admin-more-menu");
+    } else {
+      await expect(page.getByRole("link", { name: "Customers" })).toBeVisible();
+    }
+    await capture(page, "/admin/alerts", "admin-alerts");
+    await capture(page, "/admin/responses", "admin-responses");
+    await capture(page, `/admin/responses/${responseId}`, "admin-response-detail");
+    await capture(page, "/admin/responses/deleted", "admin-deleted");
+    await capture(page, "/admin/audit", "admin-audit");
+    await capture(page, "/admin/users", "admin-users");
+    await capture(page, "/admin/branches", "admin-branches");
+    await capture(page, `/admin/branches/${branchId}`, "admin-branch");
+    await capture(page, "/admin/customers", "admin-customers");
+    await capture(page, "/account", "my-account-admin");
+
+    const context = await browser.newContext({ baseURL: base, viewport: page.viewportSize() });
+    await context.addCookies(boss.cookies);
+    const mine = await context.newPage();
+    await capture(mine, "/admin", "branch-admin-overview");
+    await capture(mine, "/admin/advisors", "branch-admin-advisors");
+    await mine.goto("/admin/customers");
+    // The page shell opens for a branch admin; the server refuses the search itself (DoD 10).
+    await mine.getByLabel("Phone number or registration number").fill(digits());
+    await mine.getByRole("button", { name: "Search" }).click();
+    await expect(mine.getByText("Not allowed")).toBeVisible();
+    await expect(mine.getByRole("checkbox")).toHaveCount(0);
+    await shot(mine, "branch-admin-customers-not-allowed");
+    await context.close();
   });
 });

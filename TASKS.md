@@ -749,13 +749,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: tests/e2e/walkthrough/**
 - Context: SPEC §12 (DoD), §5 · files: tests/support/*, docs/scenarios.md (S-16 to S-30)
 - Why separate: the whole-app check; no feature edits (fixes raise `Needs file:` on the owning slice).
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] On a fresh PGlite server: init → the owner sets a password → "Add your first branch" → two branches, advisors, a branch admin and a support user each → each lands on their portal (DoD 1–2, S-16)
   - [ ] Two browser contexts: job card → link → customer form at 360 px with the notice → the laptop shows Opened then Completed without reload → alert → Contacted → Resolved, all in the audit (DoD 3–8, S-06, S-12)
   - [ ] Edit / delete / restore with the password; lockout + admin reset; erase one ticked customer; clean-up run by clock (DoD 11–14, S-09, S-21, S-27)
   - [ ] 360 px and 1440 px screenshots of every SPEC §7 screen in `.results/T-11b/`; an accessibility check (labelled inputs) passes (G-W5); no demo label, picker or Reset anywhere (DoD last item)
-- Result: —
+- Result: Done 2026-11-26 · 3/4 goals ✅, clean-up deletion by clock unit-tested only (job cards refuse service dates >60 days) · 18 walkthrough tests, no app bugs, 95 screenshots · sync ✅ · speed mode
 
 ### T-28 · Production deploy on the new vercel.app address
 - Owner: devops

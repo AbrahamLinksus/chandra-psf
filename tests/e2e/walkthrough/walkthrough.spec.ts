@@ -1,261 +1,189 @@
-/* eslint-disable max-lines-per-function -- walkthrough scenarios read top to bottom */
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { signInAs } from "../../support/e2e";
+/* eslint-disable max-lines-per-function -- one test plays the whole two-device scenario */
+import { expect, test, type Page } from "@playwright/test";
+import { rpcCall } from "../../support/e2e";
+import { sharedAdminApi } from "../admin-users/sharedAdmin";
+import { actAs, newBranch } from "../support-links/helpers";
 import {
-  confirmPassword,
-  isDesktop,
-  makeToken,
-  moveAlert,
-  signOutSupport,
-  stored,
+  HAPPY,
+  afterFirstRunStarted,
+  answerCallback,
+  branchAdminFor,
+  cardWithLink,
+  fillUntilCallback,
+  shot,
   submitForm,
+  today,
 } from "./helpers";
 
-interface AuditRow {
-  action: string;
-  entityType?: string;
-  entityId?: string;
-  oldValue: unknown;
-  newValue: unknown;
-}
+test.beforeAll(afterFirstRunStarted);
+
+const POLL_WAIT = 50_000; // the support list refreshes every 30 s while in use (G-6)
+const NOTE = "Called Selvam, bike rechecked";
+
 interface AlertRow {
-  responseId: string;
+  id: string;
+  customerName: string;
   status: string;
 }
-interface ResponseRow {
-  id: string;
-  visitId: string;
-  answers: Record<string, unknown>;
-}
 
-const tile = (page: Page, label: string) =>
-  page.getByTestId("kpi-tile").filter({ hasText: label }).locator("p").nth(1);
-/** Phone tab bar: Alerts shows a dot (the count itself is desktop-only). */
-const mobileDot = (page: Page) =>
-  page.getByRole("navigation", { name: "Admin tabs" }).locator('a[href="/admin/alerts"] .bg-brand');
-
-const badge = (page: Page) => page.getByLabel(/\d+ open/).first();
-
-async function generateLink(page: Page): Promise<string> {
+async function typeInJobCard(page: Page, no: string): Promise<void> {
   await page.goto("/support/new");
-  await page.getByLabel("Job card number").fill("JC-24-1042");
+  await expect(page.getByRole("heading", { name: "New feedback link" })).toBeVisible();
+  await page.getByLabel("Job card number").first().fill(no);
   await page.getByRole("button", { name: "Look up" }).click();
-  await page.getByRole("button", { name: "Generate link" }).click();
-  const url = (await page.getByTestId("link-url").textContent()) ?? "";
-  return new URL(url).pathname;
+  const missing = page.getByRole("alert").filter({ hasText: "at this branch yet" });
+  await missing.getByRole("button", { name: "New job card" }).click();
+  const form = page.locator("form").filter({ hasText: "Save job card" });
+  await form.getByLabel("Customer name").fill("Ramesh Kumar");
+  await form.getByLabel("Mobile (optional)").fill("98400 12345");
+  await form.getByLabel("Reg. no.").fill("tn09bx4521");
+  await form.getByLabel("Model", { exact: true }).selectOption("Activa 6G");
+  await form.getByLabel("Service type").selectOption("Paid service");
+  await form.getByLabel("Advisor").selectOption({ label: "Suresh" });
+  await page.getByRole("button", { name: "Save job card" }).click();
+  await expect(page.getByRole("region", { name: "Job card details" })).toContainText(
+    "Ramesh Kumar",
+  );
 }
 
-/** Signs out in place (no reload), then signs in as admin through the picker. */
-async function switchToAdmin(page: Page): Promise<void> {
-  await signOutSupport(page);
-  await page.getByRole("button", { name: "Sign in as Admin" }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+async function setStatus(page: Page, who: string, status: string, note?: string): Promise<void> {
+  await page.getByRole("button", { name: new RegExp(who) }).click();
+  await page.getByRole("button", { name: status, exact: true }).last().click();
+  if (note) await page.getByLabel("Add a note").fill(note);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByLabel("Add a note")).toHaveValue("");
+  await page.keyboard.press("Escape");
 }
 
-/** The sign-in init script re-applies Support 1 on every load of `page`, so admin gets a fresh tab. */
-async function adminTab(page: Page, context: BrowserContext): Promise<Page> {
-  await page.goto("/support");
-  await signOutSupport(page);
-  const admin = await context.newPage();
-  await admin.goto("/sign-in");
-  await admin.getByRole("button", { name: "Sign in as Admin" }).click();
-  await expect(admin).toHaveURL(/\/admin$/);
-  return admin;
-}
-
-// Phase-1 demo spec: it signs in through browser storage, which no longer exists. Rebuilt on the server by T-11b.
-test.fixme(true, "rebuilt by T-11b");
-
-test.describe("T-11 definition-of-done walkthrough", () => {
-  test("S-06 two tabs: a submission in tab B shows in tab A live and a save in A keeps it", async ({
+test.describe("T-11b DoD 3-8: two devices, one visit", () => {
+  test("test_s12_phone_completes_form_laptop_sees_opened_then_completed_alert_contacted_resolved_all_audited (S-12, S-06, DoD 3-8)", async ({
     page,
-    context,
+    browser,
+    playwright,
+    baseURL,
   }) => {
-    await signInAs(page, "support1");
-    const path = await generateLink(page);
-    await page.goto("/support");
-    const row = page.getByRole("listitem").filter({ hasText: "JC-24-1042" });
-    await expect(row.getByText("Created", { exact: true })).toBeVisible();
-
-    const tabB = await context.newPage();
-    await submitForm(tabB, path, { q6: "1 Very poor", q15: "Yes" });
-    await expect(row.getByText("Completed", { exact: true })).toBeVisible();
-
-    // same tab A, no reload: sign out and in as admin through the UI
-    await switchToAdmin(page);
-    await page
-      .getByRole("link", { name: /Alerts/ })
-      .first()
-      .click();
-    await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
-    const before = isDesktop(page) ? Number((await badge(page).innerText()).trim()) : 0;
-    const listed = await page.locator("li > button[data-status]").count();
-    const storedBefore = (await stored<AlertRow>(tabB, "alerts")).length;
-    if (!isDesktop(page)) await expect(mobileDot(page)).toBeVisible();
-
-    await submitForm(tabB, `/f/${makeToken("v-t11-b", 1, "JC-24-1043")}`, {
-      q6: "5 Excellent",
-      q15: "Yes",
+    test.setTimeout(240_000);
+    const base = String(baseURL);
+    const { branchId, staff } = await newBranch(playwright, base, {
+      label: "Velachery",
+      name: "Kavitha",
     });
-    if (isDesktop(page)) await expect(badge(page)).toHaveText(String(before + 1));
-    else await expect(mobileDot(page)).toBeVisible();
-    await expect(page.locator("li > button[data-status]")).toHaveCount(listed + 1);
+    const boss = await branchAdminFor(playwright, base, branchId);
+    // An older alert, already in the queue, that tab A will work on while tab B submits (S-06).
+    await cardWithLink(
+      staff,
+      { name: "Farida Banu", phone: "98400 55555", reg: "tn10ab1111", date: today() },
+      { ...HAPPY, Q15: "Yes" },
+    );
 
-    await moveAlert(page, /Kavitha P/, "Contacted");
-    await expect(page.getByRole("button", { name: /Kavitha P/ })).toHaveAttribute(
+    // --- Support laptop: type in a new job card, generate the link, WhatsApp message ---
+    await actAs(page, staff);
+    const no = `JC-24-${String(1000 + Math.floor(Math.random() * 8999))}`;
+    await typeInJobCard(page, no);
+    await page.getByRole("button", { name: "Generate link" }).click();
+    const url = (await page.getByTestId("link-url").textContent()) ?? "";
+    expect(url).toMatch(/\/f\/[A-Za-z0-9_-]{43}$/);
+    expect(url).not.toMatch(/Ramesh|98400|JC-24|tn09/i); // the link holds no customer data (AC-2)
+    const href =
+      (await page.getByRole("link", { name: "Send on WhatsApp" }).getAttribute("href")) ?? "";
+    expect(href).toContain("https://wa.me/919840012345?text=");
+    expect(decodeURIComponent(href)).toContain(url);
+    await shot(page, "journey-1-link-generated");
+    const path = new URL(url).pathname;
+
+    // Tab A: the branch admin's alert queue, opened now and not reloaded until later (S-06).
+    const adminContext = await browser.newContext({ baseURL: base, viewport: page.viewportSize() });
+    await adminContext.addCookies(boss.cookies);
+    const tabA = await adminContext.newPage();
+    await tabA.goto("/admin/alerts");
+    await expect(tabA.getByRole("button", { name: /Farida Banu/ })).toBeVisible();
+
+    // The support list (laptop) stays open; a marker proves it is never reloaded.
+    await page.goto("/support");
+    const row = page.getByRole("listitem").filter({ hasText: no });
+    await expect(row.getByText("Created", { exact: true })).toBeVisible();
+    await page.evaluate(() => {
+      (window as unknown as { __kept: boolean }).__kept = true;
+    });
+
+    // --- Customer's own phone: a second browser context at 360 px ---
+    const phoneContext = await browser.newContext({
+      baseURL: base,
+      viewport: { width: 360, height: 780 },
+      hasTouch: true,
+    });
+    const phone = await phoneContext.newPage();
+    await phone.goto(path);
+    await expect(phone.getByRole("heading", { name: /^Hi Ramesh Kumar/ })).toBeVisible();
+    const notice = phone.getByRole("complementary", { name: "Privacy notice" });
+    await expect(notice).toContainText("3 years");
+    await expect(notice.getByRole("link", { name: "How we use your answers" })).toBeVisible();
+    expect(
+      await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+    ).toBeLessThanOrEqual(0);
+    await phone.screenshot({ path: `.results/T-11b/journey-2-customer-welcome-360.png` });
+
+    // Laptop: Opened shows up without a reload.
+    await page.mouse.move(100, 100);
+    await expect(row.getByText("Opened", { exact: true })).toBeVisible({ timeout: POLL_WAIT });
+    await shot(page, "journey-3-laptop-opened");
+
+    // The customer answers with Q6 = 1 and Q15 = Yes (S-12) and submits.
+    await fillUntilCallback(phone, 1);
+    await answerCallback(phone, "Yes");
+    await submitForm(phone);
+    await expect(phone.getByRole("heading", { name: "Thank you for your feedback" })).toBeVisible();
+    await expect(phone.getByText("Our team will call you soon")).toBeVisible();
+    await phone.screenshot({ path: `.results/T-11b/journey-4-customer-thanks-360.png` });
+    await phoneContext.close();
+
+    await page.mouse.move(120, 120);
+    await expect(row.getByText("Completed", { exact: true })).toBeVisible({ timeout: POLL_WAIT });
+    expect(await page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept)).toBe(
+      true,
+    );
+    await shot(page, "journey-5-laptop-completed");
+
+    // --- S-06: tab A is stale (no reload). Moving the older alert must not lose the new one ---
+    await setStatus(tabA, "Farida Banu", "Contacted", "Called Farida");
+    await tabA.reload();
+    const ramesh = tabA.getByRole("button", { name: /Ramesh Kumar/ });
+    await expect(ramesh).toHaveAttribute("data-status", "open");
+    await expect(tabA.getByRole("button", { name: /Farida Banu/ })).toHaveAttribute(
       "data-status",
       "contacted",
     );
-    const responses = await stored<ResponseRow>(tabB, "responses");
-    const theirs = responses.filter((r) => r.visitId === "v-t11-b");
-    expect(theirs).toHaveLength(1);
-    const alerts = await stored<AlertRow>(tabB, "alerts");
-    expect(alerts.some((a) => a.responseId === theirs[0]?.id && a.status === "open")).toBe(true);
-    expect(alerts).toHaveLength(storedBefore + 1);
-  });
+    await shot(tabA, "journey-6-alerts-open");
 
-  test("AC-3 AC-7 AC-8 S-12 link -> Opened -> submit Q6=1 Q15=Yes -> alert Open -> Contacted -> Resolved, all audited", async ({
-    page,
-    context,
-  }) => {
-    await signInAs(page, "support1");
-    const path = await generateLink(page);
-    await page.goto("/support");
-    const row = page.getByRole("listitem").filter({ hasText: "JC-24-1042" });
-    await expect(row.getByText("Created", { exact: true })).toBeVisible();
+    // --- Alert: Open -> Contacted -> Resolved ---
+    await setStatus(tabA, "Ramesh Kumar", "Contacted", NOTE);
+    await expect(ramesh).toHaveAttribute("data-status", "contacted");
+    await setStatus(tabA, "Ramesh Kumar", "Resolved");
+    await expect(ramesh).toHaveAttribute("data-status", "resolved");
+    await shot(tabA, "journey-7-alert-resolved");
 
-    await page.goto(path);
-    await expect(page.getByRole("button", { name: "Start" })).toBeVisible();
-    await page.goto("/support");
-    await expect(row.getByText("Opened", { exact: true })).toBeVisible();
-
-    await submitForm(page, path, { q6: "1 Very poor", q15: "Yes" });
-    await page.goto("/support");
-    await expect(row.getByText("Completed", { exact: true })).toBeVisible();
-
-    const admin = await adminTab(page, context);
-    await admin.goto("/admin/alerts");
-    const alert = admin.getByRole("button", { name: /Ramesh Kumar/ });
-    await expect(alert).toHaveAttribute("data-status", "open");
-    await moveAlert(admin, /Ramesh Kumar/, "Contacted");
-    await expect(alert).toHaveAttribute("data-status", "contacted");
-    await moveAlert(admin, /Ramesh Kumar/, "Resolved");
-    await expect(alert).toHaveAttribute("data-status", "resolved");
-    const alert0 = await alert.getAttribute("data-alert-id");
-
-    await admin.goto("/admin/audit");
-    await expect(admin.getByTestId("audit-row").first()).toBeVisible();
-    const all = await stored<AuditRow>(admin, "audit");
-    const rows = all.filter((a) => a.action === "alert.status").slice(-2);
-    expect(rows.map((a) => [a.oldValue, a.newValue])).toEqual([
-      ["open", "contacted"],
-      ["contacted", "resolved"],
-    ]);
-    const shown = admin.getByTestId("audit-row").filter({ hasText: "Alert status changed" });
-    expect(await shown.count()).toBeGreaterThanOrEqual(2);
-    const created = all.find((a) => a.action === "alert.create" && a.entityId === alert0);
-    expect(all.some((a) => a.action === "link.create")).toBe(true);
-    expect(created?.entityType).toBe("alert");
-  });
-
-  test("D-16 the Q6a audit value is the raw {options:[...]}", async ({ page, context }) => {
-    await signInAs(page, "support1");
-    const path = await generateLink(page);
-    await submitForm(page, path, { q6: "1 Very poor", q15: "No" });
-    const admin = await adminTab(page, context);
-    const mine = (await stored<ResponseRow>(admin, "responses")).filter(
-      (r) =>
-        !r.id.startsWith("r-s") &&
-        (r.answers["Q6a"] as { options?: string[] } | undefined)?.options?.[0] === "Rude",
+    // --- Everything is in the audit, with the branch ---
+    const alerts = await rpcCall<AlertRow[]>(boss.api, "alerts", "listAlerts", [{}]);
+    const mine = alerts.find((a) => a.customerName === "Ramesh Kumar");
+    expect(mine?.status).toBe("resolved");
+    const admin = await sharedAdminApi(playwright, base);
+    const audit = await rpcCall<{ entries: { action: string; entityId: string }[] }>(
+      admin,
+      "audit",
+      "listAudit",
+      [{ branchId }],
     );
-    expect(mine).toHaveLength(1);
-    await admin.goto(`/admin/responses/${mine[0]?.id ?? ""}`);
-    await admin.getByRole("button", { name: "Edit", exact: true }).click();
-    await admin
-      .getByRole("group", { name: /Satisfied with the behaviour|Q6|behaviour/i })
-      .getByRole("button", { name: "4", exact: true })
-      .click();
-    await admin.getByRole("button", { name: "Save changes" }).click();
-    await confirmPassword(admin);
-    await expect(admin.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
-    const entry = (await stored<AuditRow>(admin, "audit")).find(
-      (a) => a.action === "response.edit",
+    expect(audit.entries.map((e) => e.action)).toEqual(
+      expect.arrayContaining(["jobcard.create", "link.create", "alert.create", "alert.status"]),
     );
-    expect(entry?.oldValue).toEqual({ Q6: 1, Q6a: { options: ["Rude"] } });
-    expect(entry?.newValue).toEqual({ Q6: 4 });
-  });
-
-  test("S-09 delete a response: KPIs drop and its alert leaves; Restore brings all back", async ({
-    page,
-  }) => {
-    await signInAs(page, "admin");
-    await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
-    const openAlerts = Number(await tile(page, "Open alerts").innerText());
-    expect(openAlerts).toBeGreaterThan(0);
-    const received = Number(await tile(page, "Responses received").innerText());
-    const rateBefore = await tile(page, "Response rate").innerText();
-    expect(received).toBeGreaterThan(1);
-
-    // r-s005 (Kavitha P) stands in for the spec's CUST-014: recent, with an open alert
-    await page.goto("/admin/responses/r-s005");
-    await page.getByRole("button", { name: "Delete", exact: true }).click();
-    await page
-      .getByRole("alertdialog")
-      .getByRole("button", { name: "Delete", exact: true })
-      .click();
-    await confirmPassword(page);
-    await expect(page).toHaveURL(/\/admin\/responses$/);
-
-    await page.goto("/admin");
-    await expect(tile(page, "Responses received")).toHaveText(String(received - 1));
-    await expect(tile(page, "Response rate")).not.toHaveText(rateBefore);
-    await expect(tile(page, "Open alerts")).toHaveText(String(openAlerts - 1));
-    await page.goto("/admin/alerts");
-    await expect(page.getByRole("heading", { name: "Alerts" })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Kavitha P/ })).toHaveCount(0);
-
-    await page.goto("/admin/responses/deleted");
-    await page
-      .locator('li[data-response-id="r-s005"]')
-      .getByRole("button", { name: "Restore" })
-      .click();
-    await confirmPassword(page);
-    await expect(page.getByText("Nothing deleted")).toBeVisible();
-
-    await page.goto("/admin");
-    await expect(tile(page, "Responses received")).toHaveText(String(received));
-    await expect(tile(page, "Response rate")).toHaveText(rateBefore);
-    await expect(tile(page, "Open alerts")).toHaveText(String(openAlerts));
-    await page.goto("/admin/alerts");
-    await expect(page.getByRole("button", { name: /Kavitha P/ })).toHaveAttribute(
-      "data-status",
-      "open",
-    );
-    const actions = (await stored<AuditRow>(page, "audit"))
-      .map((a) => a.action)
-      .filter((a) => a.startsWith("response."));
-    expect(actions).toEqual(["response.delete", "response.restore"]);
-  });
-
-  test("AC-6 D-15 a support session is redirected to /not-allowed from every /admin URL, no data", async ({
-    page,
-  }) => {
-    await signInAs(page, "support1");
-    const urls = [
-      "/admin",
-      "/admin/alerts",
-      "/admin/responses",
-      "/admin/responses/r-s001",
-      "/admin/responses/deleted",
-      "/admin/audit",
-      "/admin/users",
-    ];
-    for (const url of urls) {
-      await page.goto(url);
-      await expect(page).toHaveURL(/\/not-allowed$/);
-      await expect(page.getByText("You don't have access to this page")).toBeVisible();
-      await expect(page.locator("body")).not.toContainText(/Kavitha|Responses received|@chandra/);
-    }
+    expect(
+      audit.entries.filter((e) => e.entityId === mine?.id && e.action === "alert.status").length,
+    ).toBeGreaterThanOrEqual(2);
+    await tabA.goto("/admin/audit");
+    await expect(
+      tabA.getByTestId("audit-row").filter({ hasText: "Alert status changed" }).first(),
+    ).toBeVisible();
+    await shot(tabA, "journey-8-audit");
+    await adminContext.close();
   });
 });

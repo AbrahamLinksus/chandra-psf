@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5: 9/11 done incl. T-28 (owner steps pending); T-11b TASK READY, sync next; T-29 next) |
+| Last updated | 2026-11-26 (M5: 10/11 done incl. T-11b; T-29 small fix (D-43) then sync; T-30 handover needs T-23) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -187,6 +187,9 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-28 | docs/DEPLOY.md l.141 | wrongly says Preview DB keys may be unset; Preview needs its own Neon branch (db:migrate needs DATABASE_URL_UNPOOLED) | ≈1 min |
 | T-28 | docs/DEPLOY.md | title still "Deploying the preview"; step 1: a second Vercel project on this repo must not build main (set its Production Branch elsewhere or an Ignored Build Step) | ≈3 min |
 | T-28 | docs/DEPLOY.md step 10 | Neon backup-branch behaviour after restore unverified (LLD §26) | ≈10 min |
+| T-11b | src/app/admin/customers | branch admin sees the page shell (heading, search) and gets "Not allowed" only after Search | ≈5 min |
+| T-11b | src/features/admin-users | hidden aria-hidden native selects have no label | ≈3 min |
+| T-11b | tests/e2e/walkthrough | clean-up deletion by clock not e2e-testable (job cards refuse service dates >60 days); unit covers the cut-offs | — |
 
 ## Owner actions (outside the repo)
 - T-28 (approved 2026-11-26, main → Vercel Production ON): set Production env on the new project — DATABASE_URL + DATABASE_URL_UNPOOLED (Neon production), CRON_SECRET, IP_HASH_PEPPER (32+ chars each), APP_URL (new https .vercel.app), NEXT_PUBLIC_DEALER_PHONE; recommended the 3 contact keys; redeploy; run `pnpm admin init` against Neon production (docs/DEPLOY.md step 6); run the cron once in Vercel → 200 + audit system.cleanup. Until then main builds fail before touching any DB.
