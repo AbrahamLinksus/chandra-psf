@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 PAUSED (usage limit): T-27 sync ✅ in Batch queue; T-25 runner was mid-build — resume with a fresh runner at the first step not ✅ in its TASK_PROGRESS.md (wip/T-25), PORT=8025, speed mode |
+| Last updated | 2026-11-26 PAUSED (usage limit): T-27 sync FAILED (fix first); T-25 runner was mid-build — resume with a fresh runner at the first step not ✅ in its TASK_PROGRESS.md (wip/T-25), PORT=8025, speed mode |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -37,7 +37,7 @@
 - Tasks in progress live on `wip/*` branches (see `taskgit.sh list`); their step states are in each branch's TASK_PROGRESS.md.
 
 ## Batch queue (low-risk cards waiting for the batch card)
-- T-27 (low risk, tests only): TASK READY, sync ✅, 2/2 goals, 217/217 matrix, no leaks. Card: chandraProject-wt/T-27/.results/T-27/card.md. Approve → TASKGIT approve with PORT=8027. Then add the real eraseCustomers row after T-25 merges.
+- T-27 (low risk, tests only): TASK READY but SYNC FAILED (exit 5; see chandraProject-wt/T-27/.results/T-27/sync-check.txt → tester), 2/2 goals, 217/217 matrix, no leaks. Card: chandraProject-wt/T-27/.results/T-27/card.md. Approve → TASKGIT approve with PORT=8027. Then add the real eraseCustomers row after T-25 merges.
 
 ## Open decisions (waiting for the owner)
 - none
