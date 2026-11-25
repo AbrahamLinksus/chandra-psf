@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5: 8/11 done; T-28 + T-11b running in parallel) |
+| Last updated | 2026-11-26 (M5: 9/11 done incl. T-28 (owner steps pending); T-11b TASK READY, sync next; T-29 next) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -184,8 +184,12 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-27 | tests/unit/server/scope-matrix | listFreshJobCards row still expects its stub (remove with T-01b minor) | ≈1 min |
 | T-26 | src/server/jobs/cleanup.ts | rate-limit rows use the login-attempts retention constant; give them their own | ≈3 min |
 | T-26 | src/server/jobs/cleanup.ts | unbatched single deletes and one audit row per purged id (fine at demo scale) | ≈15 min |
+| T-28 | docs/DEPLOY.md l.141 | wrongly says Preview DB keys may be unset; Preview needs its own Neon branch (db:migrate needs DATABASE_URL_UNPOOLED) | ≈1 min |
+| T-28 | docs/DEPLOY.md | title still "Deploying the preview"; step 1: a second Vercel project on this repo must not build main (set its Production Branch elsewhere or an Ignored Build Step) | ≈3 min |
+| T-28 | docs/DEPLOY.md step 10 | Neon backup-branch behaviour after restore unverified (LLD §26) | ≈10 min |
 
 ## Owner actions (outside the repo)
+- T-28 (approved 2026-11-26, main → Vercel Production ON): set Production env on the new project — DATABASE_URL + DATABASE_URL_UNPOOLED (Neon production), CRON_SECRET, IP_HASH_PEPPER (32+ chars each), APP_URL (new https .vercel.app), NEXT_PUBLIC_DEALER_PHONE; recommended the 3 contact keys; redeploy; run `pnpm admin init` against Neon production (docs/DEPLOY.md step 6); run the cron once in Vercel → 200 + audit system.cleanup. Until then main builds fail before touching any DB.
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
 - Set the real dealer phone on Vercel (NEXT_PUBLIC_DEALER_PHONE, Production + Preview) and redeploy — see docs/DEPLOY.md. After T-36 also set NEXT_PUBLIC_COMPANY_NAME, NEXT_PUBLIC_PRIVACY_PHONE, NEXT_PUBLIC_PRIVACY_EMAIL (D-41: unset shows "Your Company Name" and placeholder contacts).
 - T-33s (D-30): after the next preview deploy, set AUTH_HASH_TIMING=1 on Vercel Preview, sign in ~20×, check the log: hash ≥100 ms and p95 sign-in <1 s; then unset it. Below 100 ms or p95 ≥1 s → retune task.

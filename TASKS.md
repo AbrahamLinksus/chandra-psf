@@ -763,12 +763,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: vercel.json, docs/DEPLOY.md
 - Context: SPEC §8, §12 DoD (DEPLOY.md item), US-23, US-32 · HLD Free now / paid later · LLD-phase2 §15.5, §16.2, §25, §26 · files: .env.example
 - Why separate: owner's accounts; the production database.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] **Owner step:** Production env on the new project (Neon `main` URLs, its own `CRON_SECRET`, `IP_HASH_PEPPER`, `APP_URL` = the new `….vercel.app` address, public placeholders); production deploys switched on; the maintainer runs `admin init` against `main` → only questionnaire v1 + one main admin exist (DoD 1, G-04)
   - [ ] The cron is visible in Vercel and one run returns 200 with an audit `system.cleanup`
   - [ ] `docs/DEPLOY.md` holds setup, first admin, re-issue / recovery, the free → paid upgrade (plans + 7-day history setting), partial restore into a branch and full rollback with `reapply-erasures` (US-32, G-5, S-24, DoD 15)
-- Result: —
+- Result: Done 2026-11-26 · vercel.json main → production ON, docs/DEPLOY.md production steps 0–10 · criteria 1–2 ⏳ owner steps (STATE "Owner actions") · sync ✅ · 0 major
 
 ### T-29 · Go-live gate checklist
 - Owner: backend-coder, devops
