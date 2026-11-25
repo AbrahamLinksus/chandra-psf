@@ -18,9 +18,9 @@
 | Next step | DEADLINE MODE: T-09b → T-06b → T-08b (one at a time; admin screens for a working model), then T-28 production deploy needs T-26 (T-24 → T-25 → T-26); T-36, T-27, T-11b, T-29, T-30 after. T-23 (wip/T-23, not reviewed/synced): wait for the owner's preview run, or approve later; it does not block M5 tasks. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
-| Cost mode | balanced |
+| Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5: T-09b, T-06b, T-08b, T-36, T-24 approved; T-25 running) |
+| Last updated | 2026-11-26 (SPEED MODE until demo; T-25 + T-27 running in parallel, owner OK to start T-27 before T-25 lands) |
 
 ## Team
 | Agent | Model | Why on this project |

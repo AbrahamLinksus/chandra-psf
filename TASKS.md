@@ -737,7 +737,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: tests/unit/server/scope-matrix/**
 - Context: SPEC US-29, §2 Role rules, DoD scope item · LLD-phase2 §19 table, §17.3 · files: src/server/rpc/*
 - Why separate: one whole-app check that needs every repo; fixes raise `Needs file:` on the owning slice.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Every RPC method in the registry is called as support, as branch admin of the other branch and as main admin against a two-branch PGlite fixture; results match the LLD §19 table (out of scope → NOT_FOUND / FORBIDDEN, never partial data) (US-29, AC-6, G-W2)
   - [ ] A `branchId` argument from a branch user never widens their scope; a new RPC method without a matrix row fails the test
