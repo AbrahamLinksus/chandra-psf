@@ -208,6 +208,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | M5 review | docs/PRODUCTION.md G-6 | says T-23 "still Backlog" (D-44 closed it) | ≈1 min |
 
 ## Owner actions (outside the repo)
+- After M6 (questionnaire v2) is approved: on the preview (Neon dev) run `pnpm admin clear-feedback --confirm-delete-all-feedback` (dev/preview only; keeps job cards, branches, users, audit) before sending v2 links, or v2 submits fail.
 - Before the demo (D-44): on the deployed site, sign in as support, generate a link, open it on a real phone, submit with Q15 = Yes; the laptop must show Opened → Completed without reload and the branch admin the alert. If the link opens the wrong site or a Vercel login: fix APP_URL / Deployment Protection.
 - T-28 (approved 2026-11-26, main → Vercel Production ON): set Production env on the new project — DATABASE_URL + DATABASE_URL_UNPOOLED (Neon production), CRON_SECRET, IP_HASH_PEPPER (32+ chars each), APP_URL (new https .vercel.app), NEXT_PUBLIC_DEALER_PHONE; recommended the 3 contact keys; redeploy; run `pnpm admin init` against Neon production (docs/DEPLOY.md step 6); run the cron once in Vercel → 200 + audit system.cleanup. Until then main builds fail before touching any DB.
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
