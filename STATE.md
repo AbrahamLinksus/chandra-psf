@@ -15,7 +15,7 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M5 · 12/12 done (T-23 via owner manual check D-44) |
-| Next step | Owner 2026-11-26: "review only, then handover" — batched M5 review running (read-only, .results/M5-review), Major findings → fix tasks; then stage-8 handover card. Push main only (wip/* builds burn the Vercel limit): avoid task branches where possible. Known minors stay listed. |
+| Next step | M5 batched review done (0 critical, 3 major → T-37r, 9 minors listed). T-37r running; then stage-8 handover card. Push main only where possible. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
@@ -199,7 +199,13 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-30 | docs/SPEC.md l.338 | privacy notice text still "{Company name} (Chandra Honda) collects…" — owner to confirm wording | ≈2 min |
 | T-30 | docs/DEMO-SCRIPT.md | "temporary password shown for new user" wording not verified against the UI | ≈2 min |
 | T-30 | vercel.json | no `git` key any more: whether main auto-deploys is set per Vercel project | ≈2 min |
-| post-demo | batched review | T-27, T-11b, T-29, T-30 had no separate review (speed mode); T-25 had no post-fix review pass | ≈30 min |
+| M5 review | docs/DEPLOY.md:20 | says no APP_URL → browser address; phase 2 falls back to localhost (tokens.ts) — mark phase-1 only | ≈2 min |
+| M5 review | README.md:92-95, docs/DEMO-SCRIPT.md step 0 | tsx scripts may not load .env; verify on a fresh clone, add --env-file=.env if needed | ≈5 min |
+| M5 review | docs/DEMO-SCRIPT.md step 3 | admin types the temporary password; the app doesn't show one — reword | ≈1 min |
+| M5 review | tests/e2e/admin-customers-erase | conditional Q14 assertion can pass silently — make it unconditional | ≈2 min |
+| M5 review | tests/unit/golive | D-43 test is tautological — assert EMPTY_TABLES contents | ≈3 min |
+| M5 review | scripts/golive-check.ts | invalid APP_URL shows only "ZodError" — report as a finding | ≈5 min |
+| M5 review | docs/PRODUCTION.md G-6 | says T-23 "still Backlog" (D-44 closed it) | ≈1 min |
 
 ## Owner actions (outside the repo)
 - Before the demo (D-44): on the deployed site, sign in as support, generate a link, open it on a real phone, submit with Q15 = Yes; the laptop must show Opened → Completed without reload and the branch admin the alert. If the link opens the wrong site or a Vercel login: fix APP_URL / Deployment Protection.

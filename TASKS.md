@@ -794,3 +794,16 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
   - [ ] As-built docs updated; OWNER.md explains roles, branches, resets, privacy requests and the go-live gate; known minors fixed or listed
 - Result: Done 2026-11-26 · CI (check.sh, Node 24+26, PGlite), as-built LLD-phase2 (M5, new §17.5), README, DEPLOY.md, DEMO-SCRIPT.md, OWNER.md, SPEC G-12 (D-41), CONVENTIONS (D-34) · minors listed not fixed (speed mode) · batched review deferred to after the demo · sync ✅
 
+
+### T-37r · M5 review fixes: purge redaction, chunked re-apply, demo on preview (M5 batched review M1–M3)
+- Owner: backend-coder, tester, planner
+- Depends on: T-25, T-26, T-29, T-30
+- Files: src/server/jobs/cleanup.ts, src/server/erasure.ts, scripts/admin.ts, tests/unit/server/cleanup/**, tests/unit/server/erasure/**, tests/unit/server/admin-script/**, docs/PRODUCTION.md, OWNER.md
+- Context: M5 batched review (Orchestrator notes) · LLD-phase2 §24–§26 · D-44, D-45
+- Why separate: Major findings from the M5 batched review; personal data and the recovery path.
+- Status: In progress
+- Acceptance criteria:
+  - [ ] M1: when the daily clean-up purges a deleted response (and its alerts), the audit rows for those ids are redacted in the same transaction (no Q14 free text, no alert note text); a test edits → deletes → purges → erases and finds no customer text in audit_log
+  - [ ] M2: `pnpm admin reapply-erasures` works in chunks (~500 ids per transaction), takes an optional `--since <date>`, and logs each id's real source (request / retention); a test covers more than one chunk
+  - [ ] M3 (D-45): OWNER.md and docs/PRODUCTION.md say the pre-demo check and any test data happen on the preview (Neon dev) only; production holds no customer data before `pnpm golive:check`; one consistent answer for who runs the check (the developer)
+- Result: —
