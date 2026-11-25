@@ -873,7 +873,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-42 · Dealer vehicle model list (D-48)
 - Owner: backend-coder
 - Depends on: T-38
-- Files: src/domain/models.ts, tests/unit/foundation/**, tests/unit/domain/**
+- Files: src/domain/models.ts, tests/unit/foundation/**, tests/unit/domain/**, tests/unit/server/**, tests/e2e/**
 - Context: D-48 · SPEC F-2 (model pick list)
 - Why separate: small domain data change; runs after T-38 so the foundation tests don't collide.
 - Status: In progress
