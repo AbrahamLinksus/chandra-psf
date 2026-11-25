@@ -654,7 +654,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/analytics.ts, src/server/rpc/analytics.ts, src/data/access/repos/analytics.ts, src/features/admin-overview/**, src/app/admin/page.tsx, tests/unit/server/analytics/**, tests/e2e/admin-overview/**
 - Context: SPEC US-14 to US-16, F-5, §5 F-5 rows · LLD-phase2 §17.2 (§10 row), §19 · files: src/domain/metrics/*, src/features/admin-overview/*
 - Why separate: own repo and route (scope leaks in numbers).
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Velachery 40 visits / 30 completed and Tambaram 10 / 5 → the Velachery admin sees 75 %, the main admin "All branches" 70 % and "Tambaram" 50 % (S-30); the Branch filter is shown only to main admins; the advisor list follows the branch
   - [ ] Launch day (no responses) → every block "—" / "No responses for these filters", no arrows (S-10); Open alerts excludes alerts of deleted responses (T-06r regression, S-09); all blocks filter on the service date (S-11)
@@ -667,7 +667,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/responses.ts, src/server/rpc/responses.ts, src/data/access/repos/responses.ts, src/features/admin-responses/**, src/app/admin/responses/**, tests/unit/server/responses/**, tests/e2e/admin-responses/**
 - Context: SPEC US-17, US-18, US-21, F-6, F-4 step 4, §5 F-6 rows · LLD-phase2 §17.2 (§12 row), §18.4 · files: src/domain/alertRules.ts, src/domain/visibility.ts, src/server/auth/stepUp.ts
 - Why separate: own repo and routes (data changes behind step-up).
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Edit Q6 2 → 4 with the right password (checked on the server) → Q6a removed, audit old `{Q6:2,Q6a:{options:["Rude"]}}` new `{Q6:4}`; wrong → "Password incorrect" and nothing saved; a stale version → "Someone else changed this. Reload to see the latest." (AC-9, G-01)
   - [ ] Edit Q12 1 → 4 on an only-reason alert → Resolved "Auto-resolved: no alert reason after edit"; Q15 No → Yes → a new Open alert (S-08)
@@ -681,7 +681,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/audit.ts, src/server/rpc/audit.ts, src/data/access/repos/audit.ts, src/features/admin-audit/**, src/app/admin/audit/**, tests/unit/server/audit/**, tests/e2e/admin-audit/**
 - Context: SPEC US-19, F-6 step 5 · LLD-phase2 §17.2 (§13 row), §16.1 (audit_log) · files: src/features/admin-audit/*
 - Why separate: own read-only repo and route.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] A branch admin sees only their branch's entries, the main admin all with a Branch filter; columns time (IST), actor, branch, action, entity, old → new; system entries show "System"
   - [ ] 100 per page with "Load more" (cursor); action filter; no edit or delete controls and no write method in the RPC table

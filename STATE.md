@@ -7,7 +7,7 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | C:/Users/Jake/chandraProject (Windows 11, Git Bash; worktrees in C:/Users/Jake/chandraProject-wt/; start sessions in C:/Users/Jake/chandraProject) |
-| Status | Paused |
+| Status | In progress |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
@@ -15,7 +15,7 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M4 · Support → customer loop across devices (9/9 original + T-22s, T-22s2 done; M4-docs approved; only T-23 left) |
-| Next step | M4: T-23 on wip/T-23 — preview suite written (tests/e2e/preview/, README there). Blocked on (1) Vercel free-plan build rate limit (wip/T-23 build failed 'build-rate-limit'; Redeploy it after the daily reset, optionally set Ignored Build Step to build only wip/T-23) and (2) owner sign-in on the wip/T-23 PREVIEW deployment address (not chandra-psf-preview.vercel.app, which is a Production deployment with no Production env → ZodError). Then owner runs the suite → review → sync (PORT=8023) → card → M4 milestone card → M5 (start with T-36). |
+| Next step | DEADLINE MODE (owner 2026-11-25): working model first; fix only what breaks the app, loses data or leaks personal data, rest → Known minors. T-06b, T-08b, T-09b in progress in parallel (backend steps); T-23 preview suite being hardened (no traces/credentials in output), owner has signed in on the wip/T-23 Preview (build limit cleared) and runs it next. Then T-24 → T-25 → T-26, T-36, T-27, T-11b, T-28. One full check at a time. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
