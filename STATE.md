@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-25 (resumed; T-09b running, wip/T-09b) |
+| Last updated | 2026-11-26 (parallel: T-09b, T-06b, T-08b running; T-24 next slot; runners stop before sync, Orchestrator syncs one at a time) |
 
 ## Team
 | Agent | Model | Why on this project |
