@@ -68,7 +68,7 @@ This puts a preview of the phase-2 app on its own Vercel project. It does not to
    - Node.js version: **24.x**.
    - `vercel.json` already sets the build command to `pnpm db:migrate && next build`. Leave it as it is.
    - `vercel.json` also pins functions to region `sin1` (Singapore), next to the Neon database (aws ap-southeast-1). The default `iad1` made sign-in take about 3-4 s.
-2. Neon: this project's main branch is named `production`. **Do not use it for preview.** Use the `dev` branch. Copy its **pooled** connection URL and its **unpooled (direct)** connection URL.
+2. Neon: the production database is the Neon branch `production`. **Do not use it for preview.** Use the `dev` branch. Copy its **pooled** connection URL and its **unpooled (direct)** connection URL.
 3. Add these variables for the **Preview** environment only (not Production):
    - `DATABASE_URL`: the `dev` pooled URL. Used at runtime and by the build.
    - `DATABASE_URL_UNPOOLED`: the `dev` direct URL. Used by `db:migrate` and by `pnpm admin`.
@@ -136,7 +136,7 @@ Vercel > project > Settings > Environment Variables. Add each one for **Producti
 | `NEXT_PUBLIC_DEALER_PHONE` | dealership phone number (the build fails without it) |
 
 Recommended: `NEXT_PUBLIC_COMPANY_NAME`, `NEXT_PUBLIC_PRIVACY_PHONE`, `NEXT_PUBLIC_PRIVACY_EMAIL`. Optional: `NEXT_PUBLIC_POLL_SECONDS` (default 30).
-- Placeholder values are flagged by the go-live check. That check is declared as `pnpm golive:check` but its script is not in the repo yet, so check placeholders by hand.
+- Placeholder values are flagged by the go-live check: run `pnpm golive:check` (see the Go-live gate section at the end of this file).
 - `NEXT_PUBLIC_*` values and `APP_URL` are built into the app. After changing any of them, redeploy.
 - Preview deployments run `db:migrate` too. Give them a separate Neon branch (for example `dev`) or leave the database keys unset.
 
@@ -189,7 +189,7 @@ This costs money and uses the owner's accounts. Nothing in the app changes.
 1. Vercel: upgrade the account to **Pro** (Billing). Pro is needed for commercial use. Hobby is for non-commercial use only.
 2. Neon: upgrade the project to a **paid** plan (Billing).
 3. Neon: project settings > history retention (restore window) > set it to **7 days**. Free keeps a shorter window (about 6 hours), which is accepted only while no real customer data is held.
-4. Before launch, rehearse one partial restore (section 9) on the paid plan.
+4. Before launch, rehearse one partial restore (section 9) on the paid plan. The full go-live checklist is in PRODUCTION.md ("Owner checklist: go-live gate").
 
 ### 9. Partial restore into a branch (damaged rows)
 Use this for a few rows. Production is not overwritten.
@@ -213,3 +213,21 @@ Use this only when the whole production database must go back to a point in time
 3. In the app, search Customers for an erased customer: the row shows "Erased customer".
 4. When the owner confirms, delete the backup branch in Neon (it still holds personal data erased after the restore point).
 5. Close the PowerShell window.
+
+## Go-live gate (before the first real customer link)
+
+Run the check against the production settings, in the same way as section 6 (set the values only in the PowerShell window, then close it). Owner steps are in PRODUCTION.md ("Owner checklist: go-live gate").
+
+```powershell
+pnpm golive:check
+```
+
+`scripts/golive-check.ts` fails when any of these is true, and prints the setting or table name with a count (never a value):
+- `NEXT_PUBLIC_COMPANY_NAME`, `NEXT_PUBLIC_PRIVACY_PHONE`, `NEXT_PUBLIC_PRIVACY_EMAIL` or `NEXT_PUBLIC_DEALER_PHONE` is empty or still the placeholder.
+- `APP_URL` is missing, is not `https://`, or is a local address.
+- `DATABASE_URL` is the local pglite database.
+- The production database holds rows in `advisors`, `job_cards`, `visits`, `link_tokens`, `responses` or `alerts`, or holds users who are not main admins. Only the question set and the main admins are allowed before launch.
+
+The check does not cover the other SPEC §12.1 items (paid plans, restore rehearsal, legal check, demo offline, first admin). Those are in PRODUCTION.md. Branch rows are not counted by the check.
+
+Note: section 6 and the production steps tell you to add advisors and staff accounts in the app. The check counts advisors and non-main-admin users as launch data, so it fails while they exist. Ask the developer how to handle this before you add them.

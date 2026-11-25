@@ -15,12 +15,12 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M4 · Support → customer loop across devices (9/9 original + T-22s, T-22s2 done; M4-docs approved; only T-23 left) |
-| Next step | DEADLINE MODE: T-09b → T-06b → T-08b (one at a time; admin screens for a working model), then T-28 production deploy needs T-26 (T-24 → T-25 → T-26); T-36, T-27, T-11b, T-29, T-30 after. T-23 (wip/T-23, not reviewed/synced): wait for the owner's preview run, or approve later; it does not block M5 tasks. |
+| Next step | M5: all done except T-30 handover (needs T-23: owner preview run, then review + sync). SPEED MODE until the demo. Owner: Vercel Production env + admin init + cron check (Owner actions). After the demo: Known minors pass. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5: 10/11 done incl. T-11b; T-29 small fix (D-43) then sync; T-30 handover needs T-23) |
+| Last updated | 2026-11-26 (M5: 10/11 done; only T-30 left, waits on T-23) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -190,6 +190,11 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-11b | src/app/admin/customers | branch admin sees the page shell (heading, search) and gets "Not allowed" only after Search | ≈5 min |
 | T-11b | src/features/admin-users | hidden aria-hidden native selects have no label | ≈3 min |
 | T-11b | tests/e2e/walkthrough | clean-up deletion by clock not e2e-testable (job cards refuse service dates >60 days); unit covers the cut-offs | — |
+| T-29 | scripts/golive-check.ts | DEALER_PHONE_PLACEHOLDER duplicates DEV_FALLBACK_DEALER_PHONE; export it from src/config/env.ts | ≈3 min |
+| T-29 | tests/unit/golive | "setup data allowed" case can't feed setup counts (script only reads customer tables) | ≈5 min |
+| T-29 | scripts/golive-check.ts | never run against a real Neon DB (pglite dry run only) — run once before launch | ≈5 min |
+| T-29 | docs/PRODUCTION.md | phase-1 rows G-W4, G-W6 stale ("no server / no database") | ≈2 min |
+| T-29 | docs/SPEC.md US-01 | says 5 wrong passwords lock; T-20 locks on the 6th — align wording or code | ≈3 min |
 
 ## Owner actions (outside the repo)
 - T-28 (approved 2026-11-26, main → Vercel Production ON): set Production env on the new project — DATABASE_URL + DATABASE_URL_UNPOOLED (Neon production), CRON_SECRET, IP_HASH_PEPPER (32+ chars each), APP_URL (new https .vercel.app), NEXT_PUBLIC_DEALER_PHONE; recommended the 3 contact keys; redeploy; run `pnpm admin init` against Neon production (docs/DEPLOY.md step 6); run the cron once in Vercel → 200 + audit system.cleanup. Until then main builds fail before touching any DB.
