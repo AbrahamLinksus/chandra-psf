@@ -13,6 +13,16 @@ import {
 
 export class ClearRefused extends Error {}
 
+/** Host of the database URL ("pglite" for pglite: URLs). Never returns or throws the URL itself. */
+export function databaseHostOf(url: string): string {
+  if (url.startsWith("pglite:")) return "pglite";
+  try {
+    return new URL(url).hostname;
+  } catch {
+    throw new ClearRefused("refused: the database URL in use is not a valid URL");
+  }
+}
+
 export interface ClearResult {
   alerts: number;
   responses: number;
@@ -21,18 +31,12 @@ export interface ClearResult {
   questionnaires: number;
 }
 
-/**
- * CR-2 cleanup: deletes alerts, answers (responses), links and visits and the v1 questionnaire,
- * installs v2, in one transaction. Keeps branches, advisors, users, job cards, the audit log and the
- * erasure journal. Refused on production, and without the confirm flag.
- */
-export async function clearFeedback(
-  deps: { db: Db; now?: () => Date },
-  input: {
-    confirm: boolean;
-    env?: { VERCEL_ENV?: string | undefined; NODE_ENV?: string | undefined };
-  },
-): Promise<ClearResult> {
+function assertMayClear(input: {
+  confirm: boolean;
+  expectedHost: string | undefined;
+  actualHost: string;
+  env?: { VERCEL_ENV?: string | undefined; NODE_ENV?: string | undefined };
+}): void {
   const env = input.env ?? process.env;
   if (env.VERCEL_ENV === "production" || env.NODE_ENV === "production") {
     throw new ClearRefused("refused: clear-feedback never runs against production");
@@ -42,6 +46,30 @@ export async function clearFeedback(
       "refused: pass --confirm-delete-all-feedback to delete all feedback data",
     );
   }
+  if (!input.expectedHost || input.expectedHost !== input.actualHost) {
+    throw new ClearRefused(
+      `refused: --database-host must be ${input.actualHost}, the database this command would wipe`,
+    );
+  }
+}
+
+/**
+ * CR-2 cleanup: deletes alerts, answers (responses), links and visits and the v1 questionnaire,
+ * installs v2, in one transaction. Keeps branches, advisors, users, job cards, the audit log and the
+ * erasure journal. Refused on production, without the confirm flag, and unless --database-host names the host in use.
+ */
+export async function clearFeedback(
+  deps: { db: Db; now?: () => Date },
+  input: {
+    confirm: boolean;
+    /** Host the operator says they are wiping (--database-host). */
+    expectedHost: string | undefined;
+    /** Host of the DATABASE_URL this run actually uses. */
+    actualHost: string;
+    env?: { VERCEL_ENV?: string | undefined; NODE_ENV?: string | undefined };
+  },
+): Promise<ClearResult> {
+  assertMayClear(input);
   return deps.db.transaction(async (tx) => {
     const result: ClearResult = {
       alerts: (await tx.delete(alerts).returning({ id: alerts.id })).length,
@@ -67,8 +95,15 @@ export async function clearFeedback(
   });
 }
 
-export async function runClear(db: Db, confirm: boolean): Promise<void> {
-  const r = await clearFeedback({ db }, { confirm });
+export async function runClear(
+  db: Db,
+  opts: { confirm: boolean; expectedHost: string | undefined; databaseUrl: string },
+): Promise<void> {
+  const actualHost = databaseHostOf(opts.databaseUrl);
+  const r = await clearFeedback(
+    { db },
+    { confirm: opts.confirm, expectedHost: opts.expectedHost, actualHost },
+  );
   console.log(
     `Cleared: ${String(r.alerts)} alert(s), ${String(r.responses)} response(s) with answers, ` +
       `${String(r.linkTokens)} link(s), ${String(r.visits)} visit(s), ` +

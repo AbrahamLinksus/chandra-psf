@@ -2,7 +2,6 @@
 // Logic is exported (functions take a db handle) so tests and Playwright globalSetup can call it.
 // Passwords are printed once by the CLI and never logged or audited.
 import { randomInt } from "node:crypto";
-import { parseArgs } from "node:util";
 import { count, eq, gt, sql } from "drizzle-orm";
 import { QUESTIONNAIRE_V2 } from "../src/domain/questionnaire";
 import { hashPassword } from "../src/server/auth/password";
@@ -17,6 +16,7 @@ import {
   users,
 } from "../src/server/db/schema";
 import { isPgliteUrl, parseServerEnv } from "../src/server/env";
+import { parseCli } from "./adminCli";
 import { runClear } from "./adminClear";
 export { clearFeedback, type ClearResult } from "./adminClear";
 export const OTP_LENGTH = 16;
@@ -185,7 +185,7 @@ export async function recoverMainAdmin(
   });
 }
 
-type Handle = { db: Db; close: () => Promise<void> };
+type Handle = { db: Db; url: string; close: () => Promise<void> };
 
 async function openDb(): Promise<Handle> {
   const env = parseServerEnv(process.env);
@@ -238,14 +238,14 @@ async function openUrl(url: string): Promise<Handle> {
     ]);
     const target = url.slice(PGLITE_PREFIX_LENGTH);
     const client = new PGlite(target === "memory" ? undefined : target);
-    return { db: drizzle(client, { schema }), close: () => client.close() };
+    return { db: drizzle(client, { schema }), url, close: () => client.close() };
   }
   const [{ Pool }, { drizzle }] = await Promise.all([
     import("@neondatabase/serverless"),
     import("drizzle-orm/neon-serverless"),
   ]);
   const pool = new Pool({ connectionString: url });
-  return { db: drizzle(pool, { schema }), close: () => pool.end() };
+  return { db: drizzle(pool, { schema }), url, close: () => pool.end() };
 }
 
 function printOtp(r: OtpResult): void {
@@ -255,7 +255,7 @@ function printOtp(r: OtpResult): void {
 }
 
 const USAGE =
-  "usage: admin init --name <n> --email <e> | reissue --email <e> | recover --email <e> --no-admin-can-sign-in | reapply-erasures --from <url> [--since <date>] | clear-feedback --confirm-delete-all-feedback";
+  "usage: admin init --name <n> --email <e> | reissue --email <e> | recover --email <e> --no-admin-can-sign-in | reapply-erasures --from <url> [--since <date>] | clear-feedback --database-host <host> --confirm-delete-all-feedback";
 
 async function runReapply(db: Db, from: string, sinceText: string | undefined): Promise<void> {
   const since = sinceText ? new Date(sinceText) : undefined;
@@ -269,23 +269,17 @@ async function runReapply(db: Db, from: string, sinceText: string | undefined): 
   }
 }
 
-async function run(db: Db, argv: string[]): Promise<void> {
-  const { values, positionals } = parseArgs({
-    args: argv,
-    allowPositionals: true,
-    options: {
-      name: { type: "string" },
-      email: { type: "string" },
-      from: { type: "string" },
-      since: { type: "string" },
-      "no-admin-can-sign-in": { type: "boolean", default: false },
-      "confirm-delete-all-feedback": { type: "boolean", default: false },
-    },
-  });
+async function run(handle: Handle, argv: string[]): Promise<void> {
+  const { db } = handle;
+  const { values, positionals } = parseCli(argv);
   const [command] = positionals;
   const { name, email } = values;
   if (command === "clear-feedback") {
-    await runClear(db, values["confirm-delete-all-feedback"]);
+    await runClear(db, {
+      confirm: values["confirm-delete-all-feedback"],
+      expectedHost: values["database-host"],
+      databaseUrl: handle.url,
+    });
     return;
   }
   if (command === "reapply-erasures" && values.from) {
@@ -310,7 +304,7 @@ async function run(db: Db, argv: string[]): Promise<void> {
 async function main(): Promise<void> {
   const handle = await openDb();
   try {
-    await run(handle.db, process.argv.slice(2));
+    await run(handle, process.argv.slice(2));
   } finally {
     await handle.close();
   }

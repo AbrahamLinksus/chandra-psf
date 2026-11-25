@@ -3,6 +3,8 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { clearFeedback, type AdminDeps } from "../../../../scripts/admin";
+import { ClearRefused, databaseHostOf } from "../../../../scripts/adminClear";
+import { parseCli } from "../../../../scripts/adminCli";
 import { writeAudit } from "../../../../src/server/audit";
 import {
   advisors,
@@ -24,6 +26,7 @@ import { seedLink } from "../feedback/harness";
 vi.mock("server-only", () => ({}));
 
 const NOW = new Date("2026-12-01T09:00:00.000Z");
+const HOST = { expectedHost: "pglite", actualHost: "pglite" };
 
 function one<T>(v: T | undefined): T {
   if (v === undefined) throw new Error("expected a row");
@@ -86,7 +89,9 @@ describe("clearFeedback (CR-2, F-9)", () => {
   it("without the confirm flag it refuses and changes nothing", async () => {
     await seedV1Feedback();
     const before = await counts();
-    await expect(clearFeedback(deps, { confirm: false, env: {} })).rejects.toThrow(/confirm/);
+    await expect(clearFeedback(deps, { confirm: false, ...HOST, env: {} })).rejects.toThrow(
+      /confirm/,
+    );
     expect(await counts()).toEqual(before);
   });
 
@@ -94,7 +99,7 @@ describe("clearFeedback (CR-2, F-9)", () => {
     await seedV1Feedback();
     const before = await counts();
     await expect(
-      clearFeedback(deps, { confirm: true, env: { VERCEL_ENV: "production" } }),
+      clearFeedback(deps, { confirm: true, ...HOST, env: { VERCEL_ENV: "production" } }),
     ).rejects.toThrow(/production/);
     expect(await counts()).toEqual(before);
   });
@@ -107,7 +112,7 @@ describe("clearFeedback (CR-2, F-9)", () => {
       .onConflictDoNothing();
     const before = await counts();
     expect(before.alerts).toBe(1);
-    const result = await clearFeedback(deps, { confirm: true, env: {} });
+    const result = await clearFeedback(deps, { confirm: true, ...HOST, env: {} });
     expect(result).toMatchObject({ alerts: 1, responses: 1, linkTokens: 1, visits: 1 });
     const after = await counts();
     expect(after).toMatchObject({ alerts: 0, responses: 0, links: 0, visits: 0, versions: [2] });
@@ -123,5 +128,94 @@ describe("clearFeedback (CR-2, F-9)", () => {
     const audit = await deps.db.select().from(auditLog);
     expect(audit).toHaveLength(before.audit + 1);
     expect(audit.filter((a) => a.action === "system.cleanup")).toHaveLength(1);
+  });
+
+  const NEON =
+    "postgres://neondb_owner:s3cretPW@ep-cool-123.eu-west-2.aws.neon.tech/neondb?sslmode=require";
+
+  it("a wrong --database-host refuses, names the expected host only, deletes nothing", async () => {
+    await seedV1Feedback();
+    const before = await counts();
+    const actualHost = databaseHostOf(NEON);
+    const err = await clearFeedback(deps, {
+      confirm: true,
+      expectedHost: "other-host.example.com",
+      actualHost,
+      env: {},
+    }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ClearRefused);
+    const msg = (err as Error).message;
+    expect(msg).toContain("ep-cool-123.eu-west-2.aws.neon.tech");
+    expect(msg).not.toContain("s3cretPW");
+    expect(msg).not.toContain("neondb_owner");
+    expect(msg).not.toContain("postgres://");
+    expect(await counts()).toEqual(before);
+  });
+
+  it("a missing --database-host refuses and deletes nothing", async () => {
+    await seedV1Feedback();
+    const before = await counts();
+    await expect(
+      clearFeedback(deps, {
+        confirm: true,
+        expectedHost: undefined,
+        actualHost: "pglite",
+        env: {},
+      }),
+    ).rejects.toBeInstanceOf(ClearRefused);
+    expect(await counts()).toEqual(before);
+  });
+
+  it("an empty --database-host refuses", async () => {
+    await expect(
+      clearFeedback(deps, { confirm: true, expectedHost: "", actualHost: "pglite", env: {} }),
+    ).rejects.toBeInstanceOf(ClearRefused);
+  });
+
+  it("a matching Neon host clears", async () => {
+    await seedV1Feedback();
+    const host = databaseHostOf(NEON);
+    const r = await clearFeedback(deps, {
+      confirm: true,
+      expectedHost: host,
+      actualHost: host,
+      env: {},
+    });
+    expect(r.visits).toBe(1);
+  });
+});
+
+describe("databaseHostOf and parseCli (D-50)", () => {
+  it("extracts the host from a Neon-style URL, without user or password", () => {
+    expect(databaseHostOf("postgres://u:pw@ep-x-1.neon.tech/db?sslmode=require")).toBe(
+      "ep-x-1.neon.tech",
+    );
+  });
+  it("returns pglite for pglite: URLs", () => {
+    expect(databaseHostOf("pglite:memory")).toBe("pglite");
+    expect(databaseHostOf("pglite:./data/dev")).toBe("pglite");
+  });
+  it("refuses an unparseable URL without echoing it", () => {
+    expect.assertions(2);
+    try {
+      databaseHostOf("not a url with secret");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ClearRefused);
+      expect((e as Error).message).not.toContain("secret");
+    }
+  });
+  it("parseCli reads --database-host and the confirm flag", () => {
+    const { values, positionals } = parseCli([
+      "clear-feedback",
+      "--database-host",
+      "h.example",
+      "--confirm-delete-all-feedback",
+    ]);
+    expect(positionals).toEqual(["clear-feedback"]);
+    expect(values["database-host"]).toBe("h.example");
+    expect(values["confirm-delete-all-feedback"]).toBe(true);
+  });
+  it("parseCli leaves database-host undefined when absent", () => {
+    expect(parseCli(["clear-feedback"]).values["database-host"]).toBeUndefined();
   });
 });

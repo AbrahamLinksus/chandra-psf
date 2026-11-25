@@ -885,12 +885,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 ### T-43r · clear-feedback must name the database it wipes (data-loss guard)
 - Owner: backend-coder
 - Depends on: T-38
-- Files: scripts/adminClear.ts, scripts/admin.ts, tests/unit/server/admin/**, docs/DEPLOY.md
+- Files: scripts/adminClear.ts, scripts/admin.ts, tests/unit/server/admin/**, docs/DEPLOY.md, scripts/adminCli.ts
 - Context: T-41 card note · D-46, D-49 · LLD-phase2 §26
 - Why separate: found after T-38: the refusal checks VERCEL_ENV/NODE_ENV only, so a maintainer running it locally with the production DATABASE_URL would delete every customer response.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] `clear-feedback` also requires `--database-host <host>` equal to the host of the DATABASE_URL it will use (pglite: `--database-host pglite`); a missing or different host refuses and deletes nothing; the refusal message names the expected host but no credentials
   - [ ] Unit tests: wrong host refuses, missing host refuses, matching host clears; existing production refusal still works
   - [ ] docs/DEPLOY.md shows the new flag
-- Result: —
+- Result: Done 2026-11-26 · clear-feedback needs --database-host + confirm flag + non-production · 913 unit tests · sync ✅ · approved under D-49

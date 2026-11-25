@@ -96,11 +96,13 @@ Run this **once**, after the build with questionnaire v2 is live on the preview 
 
 ```powershell
 $env:DATABASE_URL_UNPOOLED = '<dev direct URL>'
-pnpm admin clear-feedback --confirm-delete-all-feedback
+pnpm admin clear-feedback --database-host <host> --confirm-delete-all-feedback
 Remove-Item Env:DATABASE_URL_UNPOOLED
 ```
 
-- **Dev or preview only.** The command refuses when `VERCEL_ENV` or `NODE_ENV` is `production`, and refuses without `--confirm-delete-all-feedback`. The refusal depends on those settings only, not on which database is reached, so the URL must be the `dev` branch, never `production`.
+- **Name the database (`--database-host <host>`, required).** Give the host of the database the command will wipe. Find it in the Neon `dev` direct URL (`DATABASE_URL_UNPOOLED`): it is the part after `@` and before the first `/`. The URL has the form `postgresql://<user>:<password>@<host>/<database>`, so the host is `<host>`. Copy only the host; never type or paste the password or the rest of the URL. Locally, with the pglite database (`DATABASE_URL` starts with `pglite:`), use `--database-host pglite` and do not set `DATABASE_URL_UNPOOLED`.
+- **A missing or different host refuses and deletes nothing.** The command compares the host you type with the database it is about to wipe. If they differ, or the option is left out, it stops and deletes nothing.
+- **Dev or preview only.** The command refuses when `VERCEL_ENV` or `NODE_ENV` is `production`, and refuses without `--confirm-delete-all-feedback`. The host check stops it reaching the wrong database, but the URL must still be the `dev` branch, never `production`.
 - **Deletes:** every alert, answer (response), link and visit, the old v1 questionnaire and the rate-limit counters. Then it installs v2 and writes one audit entry (`system.cleanup`, "CR-2: feedback cleared, questionnaire v2 installed").
 - **Keeps:** branches, advisors, users and their sessions, job cards, the audit log and the erasure journal.
 - **Output:** `Cleared: <n> alert(s), <n> response(s) with answers, <n> link(s), <n> visit(s), <n> old questionnaire(s). Questionnaire v2 installed.`
