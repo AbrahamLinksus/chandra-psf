@@ -698,12 +698,12 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/server/repos/customers.ts, src/server/rpc/customers.ts, src/server/csv.ts, src/data/access/repos/customers.ts, src/features/admin-customers/**, src/app/admin/customers/**, tests/unit/server/customers/**, tests/e2e/admin-customers/**, tests/unit/server/rpc/phase2Stubs.test.ts
 - Context: SPEC US-30, F-10 steps 1–3, §5 F-10 rows · LLD-phase2 §24 (CustomerRepo, CSV) · files: src/features/admin-customers/*
 - Why separate: own repo and route (personal data export); erase (T-25) builds on its screen.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] The main admin searches `98400 12345` → two rows (Ramesh Kumar · Velachery · 14 Nov 2026; Lakshmi Kumar · Tambaram · 2 Dec 2026), none ticked; no match → "No customer found with that number" (S-21)
   - [ ] Download with only Ramesh ticked → a CSV (UTF-8 BOM) of that job card's link and answers only; a value starting `=` is prefixed with `'`; audit `customer.export {count}` without personal values
   - [ ] Nothing ticked → Download disabled; branch admin and support → "Not allowed" / FORBIDDEN (G-4, G-W2)
-- Result: —
+- Result: Done 2026-11-26 · 3/3 goals · sync ✅ · 1 major fixed (erased cards exportable by id) · cost not measured
 
 ### T-25 · Erase a customer's personal data (and re-apply after restore)
 - Owner: backend-coder, frontend-coder

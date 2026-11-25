@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from "@/components/shared/PlaceholderScreen";
+import { CustomersScreen } from "@/features/admin-customers/CustomersScreen";
 
 export default function AdminCustomersPage() {
-  return <PlaceholderScreen title="Customers" />;
+  return <CustomersScreen />;
 }

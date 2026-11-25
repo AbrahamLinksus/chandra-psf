@@ -5,15 +5,12 @@ import { createServerDataAccess } from "@/server/createServerDataAccess";
 
 vi.mock("server-only", () => ({}));
 
-describe("customers are stubbed on the server (T-01b)", () => {
+describe("erase is still stubbed on the server (T-25 lands it)", () => {
   const da = createServerDataAccess({} as RequestCtx);
 
-  it.each([["customers.searchCustomers", () => da.customers.searchCustomers({ phone: "1" })]])(
-    "%s answers UNAVAILABLE",
-    async (_name, call) => {
-      const r = await call();
-      expect(r.ok).toBe(false);
-      if (!r.ok) expect(r.error.code).toBe("UNAVAILABLE");
-    },
-  );
+  it("customers.eraseCustomers answers UNAVAILABLE", async () => {
+    const r = await da.customers.eraseCustomers(["x"], {} as never);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe("UNAVAILABLE");
+  });
 });

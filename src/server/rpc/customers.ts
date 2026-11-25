@@ -12,6 +12,6 @@ export const customersRpc = {
     access: "staff",
     input: z.tuple([z.object({ phone: textArg.optional(), regNo: textArg.optional() })]),
   },
-  exportCustomers: { kind: "read", access: "staff", input: z.tuple([ids]) },
+  exportCustomers: { kind: "write", access: "staff", input: z.tuple([ids]) },
   eraseCustomers: { kind: "write", access: "staff", input: z.tuple([ids, stepUpArg]) },
 } satisfies RpcTable<CustomerRepo>;

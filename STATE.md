@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (T-09b, T-06b, T-08b, T-36 approved; T-24 sync ✅, card with owner; T-25 next) |
+| Last updated | 2026-11-26 (M5: T-09b, T-06b, T-08b, T-36, T-24 approved; T-25 next) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -172,6 +172,10 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-36 | docs/SPEC.md G-12 + docs/DEPLOY.md | G-12 interim name → "Your Company Name" (D-41); DEPLOY: previews show placeholders unless the three keys are set | ≈3 min |
 | T-36 | src/features/feedback-form PrivacyNotice | hardcodes "Chandra Honda" after the company name | ≈3 min |
 | T-36 | docs/LLD-phase2.md l.101 | remove the "Known gap" note | ≈1 min |
+| T-24 | src/server/repos/customers.ts search | rows newest first (Lakshmi above Ramesh; criterion lists Ramesh first); `erased` flag on search rows always false | ≈5 min |
+| T-24 | src/server/repos/customers.ts export | unknown ids dropped silently; no cap on ids per export | ≈5 min |
+| T-24 | tests/e2e/admin-customers | branch-admin check accepts a redirect or "Not allowed" | ≈3 min |
+| e2e | tests/e2e/admin-branches/admin-branches.spec.ts:15 | ECONNRESET flake seen again on T-24's first sync (see T-04b debug row) | ≈3 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.
