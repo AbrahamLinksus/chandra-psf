@@ -185,6 +185,7 @@ test.describe("T-07b alerts queue on the server", () => {
     await expect(card(page, b.customer)).toBeVisible();
     const label = card(page, a.customer).getByTestId("alert-branch");
     await expect(label).toContainText(a.branchName);
+    await expect(card(page, a.customer)).toContainText("Callback requested (Evening 3 PM–6 PM)");
     await expect(card(page, b.customer).getByTestId("alert-branch")).toContainText(b.branchName);
     await page.screenshot({ path: `${SHOT}/main-admin-${width(page)}.png` });
 

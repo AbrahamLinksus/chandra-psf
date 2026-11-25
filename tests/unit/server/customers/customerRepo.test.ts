@@ -208,7 +208,11 @@ describe("exportCustomers (US-30, F-10)", () => {
     expect(csv).not.toContain("Lakshmi");
     expect(csv).not.toContain("Tambaram");
     expect(csv).not.toContain("Someone Else");
-    for (const code of ["Q1", "Q4", "Q10a"]) expect(lines[0]).toContain(code);
+    const qs = QUESTIONNAIRE_V2.questions;
+    const header = lines[0] ?? "";
+    for (const q of qs) expect(header).toContain(`${q.code} ${q.text}`);
+    expect(header).toContain("Q10a When should we call you?");
+    expect(header).not.toContain("Q14");
 
     const audit = await env.db.select().from(auditLog);
     expect(audit).toHaveLength(1);

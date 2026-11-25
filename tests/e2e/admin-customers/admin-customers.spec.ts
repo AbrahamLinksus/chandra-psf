@@ -113,6 +113,10 @@ test.describe("T-24 customer privacy requests", () => {
     expect(csv).not.toContain("Lakshmi");
     expect(csv).not.toContain("Stranger");
     expect(csv.slice(1).trimEnd().split("\r\n")).toHaveLength(2);
+    const head = csv.slice(1).split(String.fromCharCode(13, 10))[0] ?? "";
+    expect(head).toMatch(/Q1 [A-Za-z]/);
+    expect(head).toContain("Q10a When should we call you?");
+    expect(head).not.toContain("Q14");
 
     const audit = await rpcCall<{ entries: { action: string; newValue: unknown }[] }>(
       admin,

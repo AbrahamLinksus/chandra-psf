@@ -62,10 +62,11 @@ function infoOf(v: VisitRow, resp: ResponseRow, now: Date): VisitInfo {
 }
 
 function exportRows(cards: Found[], info: Map<string, VisitInfo>): (string | null)[][] {
-  const codes = QUESTIONNAIRE_V2.questions.map((x) => x.code);
+  const questions = QUESTIONNAIRE_V2.questions;
+  const codes = questions.map((x) => x.code);
   const head = [
     ...["Branch", "Job card", "Service date", "Name", "Phone", "Reg. no", "Model"],
-    ...["Link status", "Submitted at", ...codes],
+    ...["Link status", "Submitted at", ...questions.map((x) => `${x.code} ${x.text}`)],
   ];
   const body = cards.map(({ card, branchName }) => {
     const i = info.get(card.id);

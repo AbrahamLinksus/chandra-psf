@@ -108,7 +108,7 @@ function detailOf(ctx: RequestCtx, r: Row): ResponseDetail {
 }
 
 function listRowOf(r: Row): ResponseListRow {
-  const q12 = (r.response.answers as AnswerMap).Q1;
+  const q1 = (r.response.answers as AnswerMap).Q1;
   return {
     id: r.response.id,
     serviceDate: r.card.serviceDate,
@@ -116,12 +116,12 @@ function listRowOf(r: Row): ResponseListRow {
     model: r.card.model,
     advisorName: r.advisorName,
     branchName: r.branchName,
-    q12: typeof q12 === "number" ? q12 : 0,
+    q12: typeof q1 === "number" ? q1 : 0,
     hasAlert: r.alert !== null,
   };
 }
 
-/** Only the questions whose answer changed, so the audit shows `{Q6:2,Q6a:...}` then `{Q6:4}`. */
+/** Only the questions whose answer changed, so the audit shows `{Q4:2,Q4a:...}` then `{Q4:4}`. */
 function diffAnswers(before: AnswerMap, after: AnswerMap): { old: AnswerMap; next: AnswerMap } {
   const old: AnswerMap = {};
   const next: AnswerMap = {};

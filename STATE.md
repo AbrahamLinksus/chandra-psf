@@ -209,6 +209,9 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-38 | docs/SPEC.md F-3, US-10 | thank-you callback line says "soon"; app shows the chosen slot ("Our team will call you: Evening 3 PM–6 PM") — align SPEC | ≈2 min |
 | T-38 | tests/e2e/preview/loop.preview.ts | updated to v2 but never run (needs a deployed preview) | ≈5 min |
 | T-38 | scripts/adminClear.ts | production refusal (VERCEL_ENV=production) not shown in a run; covered by unit test only | ≈3 min |
+| T-40 | src/data/access ResponseListRow.q12 | field still named q12 (holds Q1, shown as "Overall") — rename to q1 | ≈5 min |
+| T-40 | src/server/repos/customers.ts CSV | rating cells are numbers 1–5, not words | ≈5 min |
+| T-40 | alert reconcile | Q10 No→Yes edit on an already Resolved alert keeps it Resolved (updated reasons) — existing rule; confirm with owner | ≈2 min |
 
 ## Owner actions (outside the repo)
 - DONE 2026-11-26 (D-48) on the preview (Neon dev): 7 branches (Head Office, RS Puram, Vadavalli, Thondamuthur, PN Palayam, TVS Nagar, Thudiyalur; city Coimbatore) and 14 advisors entered through the app. Thondamuthur has no advisor yet (support can't create job cards there until one is added). Test branch "Velachery (test)" left as is. Staff accounts: add when emails exist. Production: same entries before launch.

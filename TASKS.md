@@ -849,13 +849,13 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/features/admin-responses/**, src/features/admin-alerts/**, src/features/admin-customers/**, src/server/repos/responses.ts, src/server/repos/alerts.ts, src/server/repos/customers.ts, src/server/csv.ts, tests/unit/server/responses/**, tests/unit/server/alerts/**, tests/unit/server/customers/**, tests/e2e/admin-responses/**, tests/e2e/admin-alerts/**, tests/e2e/admin-customers/**, tests/e2e/admin-customers-erase/**
 - Context: SPEC CR-2 note, US-12, US-17, US-18, US-30, F-4, F-6, F-10, §5 F-6 and F-10 rows · LLD-phase2 §17.2 (§11 and §12 rows), §18.4, §24 (CustomerRepo, CSV) · files: src/domain/questionnaire.ts, src/domain/alertRules.ts, src/features/admin-responses/*, src/features/admin-alerts/*, src/server/csv.ts
 - Why separate: three staff screens that read answers by code; disjoint from T-39's files so both run at once.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] Response detail lists every v2 answer with its question text, including the Q10a time slot; nothing shows a v1 code or label
   - [ ] Editing Q4 2 → 4 with the password removes Q4a and audits old `{Q4:2,Q4a:…}` new `{Q4:4}`; editing Q1 1 → 4 on an alert whose only reason was "Q1 rated 1" → Resolved "Auto-resolved: no alert reason after edit"; Q10 No → Yes (with a slot) → a new Open alert (SPEC §5 F-6, S-08)
   - [ ] The alert row and drawer show "Callback requested (Evening 3 PM–6 PM)" for a callback alert
   - [ ] The customer download has v2 question columns only (no Q14 or other v1 columns); erasing a customer removes Q2a and "Tell us more" text from the response detail and the download (S-21)
-- Result: —
+- Result: Done 2026-11-26 · 4/4 goals · review 0/0/0 · sync ✅ · approved under D-49 (owner asleep)
 
 ### T-41 · Wire-up: v2 walkthrough, preview data clear, demo docs
 - Owner: tester, docs
