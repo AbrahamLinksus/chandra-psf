@@ -888,7 +888,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: scripts/adminClear.ts, scripts/admin.ts, tests/unit/server/admin/**, docs/DEPLOY.md
 - Context: T-41 card note · D-46, D-49 · LLD-phase2 §26
 - Why separate: found after T-38: the refusal checks VERCEL_ENV/NODE_ENV only, so a maintainer running it locally with the production DATABASE_URL would delete every customer response.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] `clear-feedback` also requires `--database-host <host>` equal to the host of the DATABASE_URL it will use (pglite: `--database-host pglite`); a missing or different host refuses and deletes nothing; the refusal message names the expected host but no credentials
   - [ ] Unit tests: wrong host refuses, missing host refuses, matching host clears; existing production refusal still works
