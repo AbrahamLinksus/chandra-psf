@@ -7,7 +7,7 @@
 | Problem | Mobile-first post-service feedback (PSF) system for Chandra Honda: WhatsApp links → step form → admin analytics + alerts. Demo phase = clickable UI on mock data, built to become fully interactive later. |
 | Repo | AbrahamLinksus/chandra-psf (public) |
 | Local folder | C:/Users/Jake/chandraProject (Windows 11, Git Bash; worktrees in C:/Users/Jake/chandraProject-wt/; start sessions in C:/Users/Jake/chandraProject) |
-| Status | Active |
+| Status | Paused |
 | Stage | 7 Build (phase 2) |
 | Design | one design step (one Next.js app, no outside services) |
 | Plugin | dev-team-setup 1.1.0 |
@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (SPEED MODE until demo; T-25 + T-27 running in parallel, owner OK to start T-27 before T-25 lands) |
+| Last updated | 2026-11-26 PAUSED (usage limit): T-27 sync ✅ in Batch queue; T-25 runner was mid-build — resume with a fresh runner at the first step not ✅ in its TASK_PROGRESS.md (wip/T-25), PORT=8025, speed mode |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -37,7 +37,7 @@
 - Tasks in progress live on `wip/*` branches (see `taskgit.sh list`); their step states are in each branch's TASK_PROGRESS.md.
 
 ## Batch queue (low-risk cards waiting for the batch card)
-- empty
+- T-27 (low risk, tests only): TASK READY, sync ✅, 2/2 goals, 217/217 matrix, no leaks. Card: chandraProject-wt/T-27/.results/T-27/card.md. Approve → TASKGIT approve with PORT=8027. Then add the real eraseCustomers row after T-25 merges.
 
 ## Open decisions (waiting for the owner)
 - none
