@@ -17,10 +17,10 @@
 | Milestone | M5 · 12/12 done (T-23 via owner manual check D-44) |
 | Next step | M6 (CR-2, D-46): T-37r done → T-38 foundation running → T-39 ∥ T-40 → T-41. Then handover. Demo fallback: wip/T-30 preview (v1). |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
-| Approval mode | batch-low-risk |
+| Approval mode | autopilot overnight per D-49 (Recommended option at every card; approve on goals met + sync ✅) |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (CR-2 merged 58767b8; T-37r approved; T-38 starting) |
+| Last updated | 2026-11-26 night (D-49 autopilot; T-38 in test+review; branches/advisors entry waits for owner sign-in on the preview) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -208,6 +208,7 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | M5 review | docs/PRODUCTION.md G-6 | says T-23 "still Backlog" (D-44 closed it) | ≈1 min |
 
 ## Owner actions (outside the repo)
+- Sign in as main admin on the wip/T-30 preview in Claude's built-in browser so the Orchestrator can enter the 7 branches and 14 advisors (D-48); staff accounts later, when emails exist.
 - After M6 (questionnaire v2) is approved: on the preview (Neon dev) run `pnpm admin clear-feedback --confirm-delete-all-feedback` (dev/preview only; keeps job cards, branches, users, audit) before sending v2 links, or v2 submits fail.
 - Before the demo (D-44): on the deployed site, sign in as support, generate a link, open it on a real phone, submit with Q15 = Yes; the laptop must show Opened → Completed without reload and the branch admin the alert. If the link opens the wrong site or a Vercel login: fix APP_URL / Deployment Protection.
 - T-28 (approved 2026-11-26, main → Vercel Production ON): set Production env on the new project — DATABASE_URL + DATABASE_URL_UNPOOLED (Neon production), CRON_SECRET, IP_HASH_PEPPER (32+ chars each), APP_URL (new https .vercel.app), NEXT_PUBLIC_DEALER_PHONE; recommended the 3 contact keys; redeploy; run `pnpm admin init` against Neon production (docs/DEPLOY.md step 6); run the cron once in Vercel → 200 + audit system.cleanup. Until then main builds fail before touching any DB.
