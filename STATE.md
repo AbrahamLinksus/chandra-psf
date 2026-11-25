@@ -15,12 +15,12 @@
 | Owner mode | developer |
 | Size | large (phase 2) · signals: backend, auth, database, multi-user, deployment · 31 tasks |
 | Milestone | M5 done · M6 (CR-2 questionnaire v2) done: T-37r, T-38..T-42, T-43r |
-| Next step | Handover running (wip/handover): as-built ARCHITECTURE + WALKTHROUGH, fresh-clone README run, screenshots, production gate. Handover CARD waits for the owner: 143 small Known minors → Fix (one task) or Waive; open gate items. Owner (morning): clear-feedback on the preview with --database-host; Vercel production setup. |
+| Next step | MORNING (owner): handover card ready — wip/handover synced ✅ (docs rewritten, docrefs 56→0 broken, v2 screenshots, README commands run, PRODUCTION.md gate statuses). Decide: (1) 143 small Known minors Fix (one task) or Waive; (2) open gate items G-2 admin reset test, G-06 true fresh clone, G-W7 production HTTPS; (3) README says Windows 11 but CI is Ubuntu only: add Windows CI job or reword; then approve handover → Status Complete. Card: chandraProject-wt/handover/.results/handover/card.md. Owner steps: clear-feedback on the preview (--database-host), Vercel production setup. |
 | Started | 2026-11-21 17:35 +05:30 · Budget 0 (no cap) |
-| Approval mode | autopilot overnight per D-49 (Recommended option at every card; approve on goals met + sync ✅) |
+| Approval mode | batch-low-risk (D-49 overnight autopilot ended at the handover card, which needs the owner) |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 night (M6 complete; handover running) |
+| Last updated | 2026-11-26 night (handover ready for the owner) |
 
 ## Team
 | Agent | Model | Why on this project |
