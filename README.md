@@ -123,7 +123,7 @@ Every key the server or the build reads is in `.env.example` (placeholders only)
 Other public settings in `.env.example`:
 
 - `NEXT_PUBLIC_POLL_SECONDS`: live-refresh interval in seconds (default `30`). Missing, non-numeric or zero or negative values fall back to 30. Read by `src/config/env.ts`.
-- `NEXT_PUBLIC_COMPANY_NAME`, `NEXT_PUBLIC_PRIVACY_PHONE`, `NEXT_PUBLIC_PRIVACY_EMAIL`: company name and privacy contact. **Not read yet (T-36).** They are placeholders until the dealership supplies the real values; the app does not use them today.
+- `NEXT_PUBLIC_COMPANY_NAME`, `NEXT_PUBLIC_PRIVACY_PHONE`, `NEXT_PUBLIC_PRIVACY_EMAIL`: company name and privacy contact. Read by `src/config/env.ts` and shown on the feedback notice and /privacy. Missing values fall back to placeholders until the dealership supplies the real ones.
 
 Set by the platform, do not set them yourself: `NODE_ENV` (Next.js and the test runner) and `VERCEL_ENV` (Vercel).
 

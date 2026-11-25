@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | balanced |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (T-09b, T-06b, T-08b approved; T-24 sync running; T-36 TASK READY, sync next; D-41 recorded) |
+| Last updated | 2026-11-26 (T-09b, T-06b, T-08b, T-36 approved; T-24 sync ✅, card with owner; T-25 next) |
 
 ## Team
 | Agent | Model | Why on this project |
@@ -168,6 +168,10 @@ CHECK_NO_COVERAGE=1 scripts/check.sh         # all quality gates
 | T-08b | src/server/repos/alerts reevaluate | narrow alert-version race on edit | ≈10 min |
 | T-08b | tests/e2e/admin-responses/rework.spec.ts | still test.fixme | ≈20 min |
 | T-08b | review | 5 minors total; rest in the git-ignored review report (deleted on approve) | — |
+| T-36 | scripts/golive-check.ts (T-29) | must flag CONTACT_PLACEHOLDERS from src/config/env.ts | ≈5 min |
+| T-36 | docs/SPEC.md G-12 + docs/DEPLOY.md | G-12 interim name → "Your Company Name" (D-41); DEPLOY: previews show placeholders unless the three keys are set | ≈3 min |
+| T-36 | src/features/feedback-form PrivacyNotice | hardcodes "Chandra Honda" after the company name | ≈3 min |
+| T-36 | docs/LLD-phase2.md l.101 | remove the "Known gap" note | ≈1 min |
 
 ## Owner actions (outside the repo)
 - Neon: project chandra-psf (Singapore) done; branches `production` (= LLD "main") and `dev`; compute 0.25 CU. Docs/tasks saying Neon `main` mean `production`.

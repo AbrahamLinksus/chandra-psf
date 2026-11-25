@@ -646,11 +646,11 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/config/env.ts, src/features/feedback-form/contact.ts, src/features/privacy/contact.ts, src/features/feedback-form/PrivacyNotice.tsx, src/features/privacy/**, tests/unit/foundation/**, tests/e2e/feedback-form/feedback-form.spec.ts, README.md
 - Context: LLD-phase2 §15.5 · SPEC §9 · D-37
 - Why separate: small config wiring; removes the duplicated constants from T-04b.
-- Status: In progress
+- Status: Done
 - Acceptance criteria:
   - [ ] The welcome notice and /privacy show NEXT_PUBLIC_COMPANY_NAME, _PRIVACY_PHONE and _PRIVACY_EMAIL from src/config/env.ts (one shared source, no duplicated constants); .env.example keeps the keys with placeholders
   - [ ] Missing keys fall back to the placeholders outside production; the go-live check still flags placeholders
-- Result: —
+- Result: Done 2026-11-26 · 2/2 goals (criterion 2 prepared: CONTACT_PLACEHOLDERS exported for T-29) · sync ✅ · 0 major · cost not measured
 
 ### T-06b · Overview analytics on the server, with the branch filter
 - Owner: backend-coder, frontend-coder

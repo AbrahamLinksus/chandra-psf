@@ -9,6 +9,17 @@ function requireNonEmpty(name: string, value: string | undefined): string {
   return value;
 }
 
+/** .env.example placeholders for the contact keys (D-37). Exported so the go-live check can flag them. */
+export const CONTACT_PLACEHOLDERS = {
+  NEXT_PUBLIC_COMPANY_NAME: "Your Company Name",
+  NEXT_PUBLIC_PRIVACY_PHONE: "+91 00 0000 0000",
+  NEXT_PUBLIC_PRIVACY_EMAIL: "privacy@example.com",
+} as const;
+
+/** Unset or empty falls back to the placeholder in every environment (never throws). */
+const orPlaceholder = (value: string | undefined, placeholder: string) =>
+  value === undefined || value === "" ? placeholder : value;
+
 const dealerPhone =
   process.env.NEXT_PUBLIC_DEALER_PHONE ??
   (process.env.NODE_ENV === "production" ? undefined : DEV_FALLBACK_DEALER_PHONE);
@@ -16,6 +27,18 @@ const dealerPhone =
 /** The only module that reads process.env (LLD 0.5). Literal accesses so Next inlines them. */
 export const env = {
   NEXT_PUBLIC_DEALER_PHONE: requireNonEmpty("NEXT_PUBLIC_DEALER_PHONE", dealerPhone),
+  NEXT_PUBLIC_COMPANY_NAME: orPlaceholder(
+    process.env.NEXT_PUBLIC_COMPANY_NAME,
+    CONTACT_PLACEHOLDERS.NEXT_PUBLIC_COMPANY_NAME,
+  ),
+  NEXT_PUBLIC_PRIVACY_PHONE: orPlaceholder(
+    process.env.NEXT_PUBLIC_PRIVACY_PHONE,
+    CONTACT_PLACEHOLDERS.NEXT_PUBLIC_PRIVACY_PHONE,
+  ),
+  NEXT_PUBLIC_PRIVACY_EMAIL: orPlaceholder(
+    process.env.NEXT_PUBLIC_PRIVACY_EMAIL,
+    CONTACT_PLACEHOLDERS.NEXT_PUBLIC_PRIVACY_EMAIL,
+  ),
 };
 
 const DEFAULT_POLL_SECONDS = 30;

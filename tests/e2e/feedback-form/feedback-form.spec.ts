@@ -98,7 +98,7 @@ test.describe("T-04b customer form on a real server", () => {
     await expect(notice).toContainText("Chandra Honda");
     await expect(notice).toContainText("3 years");
     await expect(notice).toContainText("outside India");
-    await expect(notice).toContainText("[head-office phone]");
+    await expect(notice).toContainText("+91 00 0000 0000");
     const more = notice.getByRole("link", { name: "How we use your answers" });
     await expect(more).toHaveAttribute("href", "/privacy");
     await expect.poll(() => statusOf(link)).toBe("opened");

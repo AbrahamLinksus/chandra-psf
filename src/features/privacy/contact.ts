@@ -1,4 +1,6 @@
-/** Placeholders until the owner supplies the registered company name and contacts (SPEC §9, go-live blocker). */
-export const COMPANY_NAME = "Chandra Honda";
-export const HEAD_OFFICE_PHONE = "[head-office phone]";
-export const HEAD_OFFICE_EMAIL = "[head-office email]";
+import { env } from "@/config/env";
+
+/** Contact details come from NEXT_PUBLIC_ keys via src/config/env.ts (D-37, SPEC §9). */
+export const COMPANY_NAME = env.NEXT_PUBLIC_COMPANY_NAME;
+export const HEAD_OFFICE_PHONE = env.NEXT_PUBLIC_PRIVACY_PHONE;
+export const HEAD_OFFICE_EMAIL = env.NEXT_PUBLIC_PRIVACY_EMAIL;

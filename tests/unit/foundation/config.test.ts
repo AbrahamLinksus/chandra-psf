@@ -112,6 +112,66 @@ describe("env fallback", () => {
   });
 });
 
+const contactKeys = [
+  ["NEXT_PUBLIC_COMPANY_NAME", "Your Company Name"],
+  ["NEXT_PUBLIC_PRIVACY_PHONE", "+91 00 0000 0000"],
+  ["NEXT_PUBLIC_PRIVACY_EMAIL", "privacy@example.com"],
+] as const;
+
+async function load(nodeEnv: string, values: Record<string, string | undefined>) {
+  vi.resetModules();
+  vi.stubEnv("NODE_ENV", nodeEnv);
+  vi.stubEnv("NEXT_PUBLIC_DEALER_PHONE", "+91 99 1111 2222");
+  for (const [k] of contactKeys) vi.stubEnv(k, values[k]);
+  return import("@/config/env");
+}
+
+describe("contact keys (D-37)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  describe.each(["development", "test", "production"])("in %s", (nodeEnv) => {
+    it.each(contactKeys)("%s: a set value is used", async (key) => {
+      const { env } = await load(nodeEnv, { [key]: "Set Value" });
+      expect(env[key]).toBe("Set Value");
+    });
+
+    it.each(contactKeys)("%s: unset gives the placeholder, no throw", async (key, placeholder) => {
+      const { env } = await load(nodeEnv, {});
+      expect(env[key]).toBe(placeholder);
+    });
+
+    it.each(contactKeys)("%s: empty gives the placeholder, no throw", async (key, placeholder) => {
+      const { env } = await load(nodeEnv, { [key]: "" });
+      expect(env[key]).toBe(placeholder);
+    });
+  });
+});
+
+describe("contact placeholders (D-37)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("CONTACT_PLACEHOLDERS equals the values in .env.example (go-live check input)", async () => {
+    const { CONTACT_PLACEHOLDERS } = await load("test", {});
+    const example = Object.fromEntries(
+      readFileSync(".env.example", "utf8")
+        .split(/\r?\n/)
+        .filter((l) => l.includes("=") && !l.startsWith("#"))
+        .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
+    );
+    for (const [k, v] of contactKeys) {
+      expect(example[k]).toBe(v);
+      expect(CONTACT_PLACEHOLDERS[k]).toBe(v);
+    }
+  });
+
+  it("dealer phone is unchanged: still throws in production when missing", async () => {
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_DEALER_PHONE", undefined);
+    await expect(import("@/config/env")).rejects.toThrow(/NEXT_PUBLIC_DEALER_PHONE is required/);
+  });
+});
+
 describe("POLL_SECONDS (LLD §20)", () => {
   async function poll(value: string | undefined) {
     vi.resetModules();
