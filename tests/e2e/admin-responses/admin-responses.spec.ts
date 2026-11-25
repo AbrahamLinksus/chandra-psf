@@ -10,27 +10,26 @@ const SHOT = ".results/T-08b";
 const TEMP = "Temp-Pass-4471";
 const OWN = "My-Own-Pass-2026!";
 const STALE = "Someone else changed this. Reload to see the latest.";
-const Q6 = "Were you satisfied with the behaviour of the Service Advisor?";
-const Q12 = "Were you satisfied with the overall service experience?";
-const Q15 = "Would you like someone from our service team to call you?";
+const Q4 = "Were you satisfied with the behaviour of the Service Advisor?";
+const Q1 = "Were you satisfied with the overall service experience?";
+const Q10 = "Would you like someone from our Service team to call you?";
+const Q10A = "When should we call you?";
+const EVENING = "Evening (3 PM–6 PM)";
 const width = (page: Page): string => String(page.viewportSize()?.width);
 const uniq = (): string => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
 const BASE_ANSWERS = {
-  Q1: 5,
+  Q1: 4,
   Q2: "Yes",
   Q3: "No",
-  Q4: "Yes",
+  Q4: 5,
   Q5: "Yes",
-  Q6: 5,
+  Q6: "Yes",
   Q7: "Yes",
-  Q8: "Yes",
+  Q8: 5,
   Q9: "Yes",
-  Q10: "Yes",
-  Q11: 5,
-  Q12: 4,
-  Q13: "Yes",
-  Q15: "No",
+  Q9a: "Quality of Service",
+  Q10: "No",
 };
 
 interface Scene {
@@ -129,31 +128,32 @@ async function startEdit(page: Page, edits: [string, string][]): Promise<void> {
   await page.getByRole("button", { name: "Save changes" }).click();
 }
 
-const Q6_LOW = { ...BASE_ANSWERS, Q6: 2, Q6a: { options: ["Rude"] } };
+const Q4_LOW = { ...BASE_ANSWERS, Q4: 2, Q4a: { options: ["Not Attentive"] } };
+const Q1_LOW = { ...BASE_ANSWERS, Q1: 1, Q1a: { options: ["Poor workmanship"] } };
 
 test.describe("T-08b responses on the server", () => {
-  test("AC-9 G-01 edit Q6 2 -> 4: wrong password saves nothing, right one removes Q6a", async ({
+  test("AC-9 G-01 edit Q4 2 -> 4: wrong password saves nothing, right one removes Q4a", async ({
     browser,
     page,
     playwright,
     baseURL,
   }) => {
     const base = String(baseURL);
-    const s = await scene(playwright, base, Q6_LOW);
+    const s = await scene(playwright, base, Q4_LOW);
     const boss = await asBoss(browser, page, s, base);
     await boss.goto(`/admin/responses/${s.id}`);
-    await expect(boss.locator('[data-question="Q6a"]')).toContainText("Rude");
-    await startEdit(boss, [[Q6, "4"]]);
-    await expect(boss.locator('[data-question="Q6a"]')).toHaveCount(0);
+    await expect(boss.locator('[data-question="Q4a"]')).toContainText("Not Attentive");
+    await startEdit(boss, [[Q4, "4"]]);
+    await expect(boss.locator('[data-question="Q4a"]')).toHaveCount(0);
     await confirmPassword(boss, "wrong-password");
     await expect(boss.getByText("Password incorrect")).toBeVisible();
     await boss.screenshot({ path: `${SHOT}/wrong-password-${width(page)}.png` });
-    expect((await detail(s.boss, s.id)).response.answers["Q6"]).toBe(2);
+    expect((await detail(s.boss, s.id)).response.answers["Q4"]).toBe(2);
     await confirmPassword(boss, OWN);
     await expect(boss.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
     const after = await detail(s.boss, s.id);
-    expect(after.response.answers["Q6"]).toBe(4);
-    expect(after.response.answers["Q6a"]).toBeUndefined();
+    expect(after.response.answers["Q4"]).toBe(4);
+    expect(after.response.answers["Q4a"]).toBeUndefined();
     await boss.context().close();
   });
 
@@ -164,37 +164,37 @@ test.describe("T-08b responses on the server", () => {
     baseURL,
   }) => {
     const base = String(baseURL);
-    const s = await scene(playwright, base, Q6_LOW);
+    const s = await scene(playwright, base, Q4_LOW);
     const one = await asBoss(browser, page, s, base);
     const two = await asBoss(browser, page, s, base);
     for (const p of [one, two]) {
       await p.goto(`/admin/responses/${s.id}`);
       await expect(p.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
     }
-    await startEdit(one, [[Q6, "4"]]);
+    await startEdit(one, [[Q4, "4"]]);
     await confirmPassword(one, OWN);
     await expect(one.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
-    await startEdit(two, [[Q6, "3"]]);
+    await startEdit(two, [[Q4, "3"]]);
     await confirmPassword(two, OWN);
     await expect(two.getByRole("alert").filter({ hasText: STALE })).toBeVisible();
     await two.screenshot({ path: `${SHOT}/stale-${width(page)}.png` });
-    expect((await detail(s.boss, s.id)).response.answers["Q6"]).toBe(4);
+    expect((await detail(s.boss, s.id)).response.answers["Q4"]).toBe(4);
     await one.context().close();
     await two.context().close();
   });
 
-  test("S-08 Q12 1 -> 4 auto-resolves the only-reason alert; Q15 No -> Yes opens a new one", async ({
+  test("S-08 Q1 1 -> 4 auto-resolves the only-reason alert; Q10 No -> Yes opens a new one", async ({
     browser,
     page,
     playwright,
     baseURL,
   }) => {
     const base = String(baseURL);
-    const s = await scene(playwright, base, { ...BASE_ANSWERS, Q12: 1 });
+    const s = await scene(playwright, base, Q1_LOW);
     const boss = await asBoss(browser, page, s, base);
     await boss.goto(`/admin/responses/${s.id}`);
-    await expect(boss.getByTestId("response-alert")).toContainText("Q12 rated 1");
-    await startEdit(boss, [[Q12, "4"]]);
+    await expect(boss.getByTestId("response-alert")).toContainText("Q1 rated 1");
+    await startEdit(boss, [[Q1, "4"]]);
     await confirmPassword(boss, OWN);
     await expect(boss.getByTestId("response-alert")).toContainText("Resolved");
     expect((await detail(s.boss, s.id)).alert?.status).toBe("resolved");
@@ -205,7 +205,10 @@ test.describe("T-08b responses on the server", () => {
     await other.goto(`/admin/responses/${t.id}`);
     await expect(other.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
     await expect(other.getByTestId("response-alert")).toHaveCount(0);
-    await startEdit(other, [[Q15, "Yes"]]);
+    await startEdit(other, [
+      [Q10, "Yes"],
+      [Q10A, EVENING],
+    ]);
     await confirmPassword(other, OWN);
     await expect(other.getByTestId("response-alert")).toContainText("Callback requested");
     await expect(other.getByTestId("response-alert")).toContainText("Open");
@@ -221,7 +224,7 @@ test.describe("T-08b responses on the server", () => {
     baseURL,
   }) => {
     const base = String(baseURL);
-    const s = await scene(playwright, base, { ...BASE_ANSWERS, Q12: 1 });
+    const s = await scene(playwright, base, Q1_LOW);
     const before = JSON.stringify((await detail(s.boss, s.id)).response.answers);
     const boss = await asBoss(browser, page, s, base);
     await boss.goto(`/admin/responses/${s.id}`);
@@ -258,8 +261,8 @@ test.describe("T-08b responses on the server", () => {
     baseURL,
   }) => {
     const base = String(baseURL);
-    const mine = await scene(playwright, base, Q6_LOW);
-    const theirs = await scene(playwright, base, Q6_LOW);
+    const mine = await scene(playwright, base, Q4_LOW);
+    const theirs = await scene(playwright, base, Q4_LOW);
     const boss = await asBoss(browser, page, mine, base);
     await boss.goto(`/admin/responses/${theirs.id}`);
     await expect(boss.getByText("Not found")).toBeVisible();
@@ -276,23 +279,23 @@ test.describe("T-08b responses on the server", () => {
     baseURL,
   }) => {
     const base = String(baseURL);
-    const s = await scene(playwright, base, Q6_LOW);
+    const s = await scene(playwright, base, Q4_LOW);
     const boss = await asBoss(browser, page, s, base);
     await boss.goto(`/admin/responses/${s.id}`);
     await expect(boss.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
     await boss.route("**/api/rpc/responses/editResponse", (r) => r.abort());
-    await startEdit(boss, [[Q6, "4"]]);
+    await startEdit(boss, [[Q4, "4"]]);
     await confirmPassword(boss, OWN);
     await expect(boss.getByText("Couldn't save, try again").first()).toBeVisible();
     await boss.screenshot({ path: `${SHOT}/save-failed-${width(page)}.png` });
     await boss.getByRole("button", { name: "Cancel", exact: true }).click();
     await expect(
-      boss.getByRole("group", { name: Q6 }).getByRole("button", { name: "4", exact: true }),
+      boss.getByRole("group", { name: Q4 }).getByRole("button", { name: "4", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
     await boss.unroute("**/api/rpc/responses/editResponse");
     await boss.getByRole("button", { name: "Retry" }).click();
     await confirmPassword(boss, OWN);
-    await expect.poll(async () => (await detail(s.boss, s.id)).response.answers["Q6"]).toBe(4);
+    await expect.poll(async () => (await detail(s.boss, s.id)).response.answers["Q4"]).toBe(4);
     await boss.context().close();
   });
 });

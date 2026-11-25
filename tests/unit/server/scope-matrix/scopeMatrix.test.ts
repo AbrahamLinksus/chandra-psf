@@ -197,7 +197,7 @@ let markers: string[] = [];
 async function seedResponse(visitId: string) {
   const [row] = await env.db
     .insert(responses)
-    .values({ visitId, questionsVersion: 1, answers: {}, submissionId: crypto.randomUUID() })
+    .values({ visitId, questionsVersion: 2, answers: {}, submissionId: crypto.randomUUID() })
     .returning();
   return must(row);
 }

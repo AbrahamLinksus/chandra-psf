@@ -17,17 +17,14 @@ const ANSWERS = {
   Q1: 5,
   Q2: "Yes",
   Q3: "No",
-  Q4: "Yes",
+  Q4: 5,
   Q5: "Yes",
-  Q6: 5,
+  Q6: "Yes",
   Q7: "Yes",
-  Q8: "Yes",
+  Q8: 5,
   Q9: "Yes",
-  Q10: "Yes",
-  Q11: 5,
-  Q12: 5,
-  Q13: "Yes",
-  Q15: "No",
+  Q9a: "Quality of Service",
+  Q10: "No",
 };
 
 interface Scene {

@@ -2,7 +2,7 @@
 /* eslint-disable max-lines-per-function -- describe blocks group many one-line tests */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import {
   advisors,
   auditLog,
@@ -78,7 +78,7 @@ async function card(
 async function answered(cardRow: Awaited<ReturnType<typeof card>>, answers: object) {
   await env.db
     .insert(questionnaires)
-    .values({ version: QUESTIONNAIRE_V1.version, definition: QUESTIONNAIRE_V1 })
+    .values({ version: QUESTIONNAIRE_V2.version, definition: QUESTIONNAIRE_V2 })
     .onConflictDoNothing();
   const [v] = await env.db
     .insert(visits)
@@ -93,7 +93,7 @@ async function answered(cardRow: Awaited<ReturnType<typeof card>>, answers: obje
     .returning();
   await env.db.insert(responses).values({
     visitId: must(v).id,
-    questionsVersion: 1,
+    questionsVersion: 2,
     answers,
     submissionId: crypto.randomUUID(),
   });
@@ -208,7 +208,7 @@ describe("exportCustomers (US-30, F-10)", () => {
     expect(csv).not.toContain("Lakshmi");
     expect(csv).not.toContain("Tambaram");
     expect(csv).not.toContain("Someone Else");
-    for (const code of ["Q1", "Q4", "Q15"]) expect(lines[0]).toContain(code);
+    for (const code of ["Q1", "Q4", "Q10a"]) expect(lines[0]).toContain(code);
 
     const audit = await env.db.select().from(auditLog);
     expect(audit).toHaveLength(1);

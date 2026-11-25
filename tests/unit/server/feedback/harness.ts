@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { advisors, jobCards, linkTokens, questionnaires, visits } from "@/server/db/schema";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import type { Db } from "@/server/db/client";
 import type { AnswerMap } from "@/domain/types";
 import { hashCode, newLinkCode } from "@/server/tokens";
@@ -21,10 +21,10 @@ export async function seedLink(
   db: Db,
   o: { branchId?: string | undefined; no: string; now: Date; expiresInMs?: number },
 ): Promise<Seeded> {
-  // `admin init` installs questionnaire v1 in production; responses reference it.
+  // `admin init` installs questionnaire v2 in production; responses reference it.
   await db
     .insert(questionnaires)
-    .values({ version: QUESTIONNAIRE_V1.version, definition: QUESTIONNAIRE_V1 })
+    .values({ version: QUESTIONNAIRE_V2.version, definition: QUESTIONNAIRE_V2 })
     .onConflictDoNothing();
   const branchId = o.branchId ?? (await seedBranch(db, `Velachery ${o.no}`));
   const userId = await seedUser(db, { role: "support", branchId });
@@ -86,24 +86,28 @@ export async function resend(db: Db, s: Seeded, now: Date): Promise<string> {
   return code;
 }
 
-/** A complete, valid answer set: Q12 = 1 and Q15 = Yes (callback + low rating). */
+/** A complete, valid v2 answer set: Q1 = 1 (with Q1a), Q10 = Yes, Q10a = Evening (callback + low rating). */
 export function happyAnswers(over: Record<string, unknown> = {}): AnswerMap {
   const base: Record<string, unknown> = {
-    Q1: 5,
+    Q1: 1,
+    Q1a: { options: ["Poor workmanship"] },
     Q2: "Yes",
     Q3: "No",
-    Q4: "Yes",
+    Q4: 5,
     Q5: "Yes",
-    Q6: 5,
+    Q6: "Yes",
     Q7: "Yes",
-    Q8: "Yes",
+    Q8: 5,
     Q9: "Yes",
+    Q9a: "Quality of Service",
     Q10: "Yes",
-    Q11: 5,
-    Q12: 1,
-    Q13: "Yes",
-    Q15: "Yes",
+    Q10a: "Evening (3 PM–6 PM)",
     ...over,
   };
   return Object.fromEntries(Object.entries(base).filter(([, v]) => v !== undefined)) as AnswerMap;
+}
+
+/** A complete, valid v2 answer set that raises no alert. */
+export function calmAnswers(over: Record<string, unknown> = {}): AnswerMap {
+  return happyAnswers({ Q1: 5, Q1a: undefined, Q10: "No", Q10a: undefined, ...over });
 }

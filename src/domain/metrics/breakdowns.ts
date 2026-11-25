@@ -1,4 +1,4 @@
-import { QUESTIONNAIRE_V1, findQuestion } from "../questionnaire";
+import { QUESTIONNAIRE_V2, findQuestion } from "../questionnaire";
 import type { AnswerMap, AnswerValue, OverviewData } from "../types";
 
 type Problems = OverviewData["problems"];
@@ -26,7 +26,7 @@ export function buildProblems(list: AnswerMap[]): Problems {
 /** Yes / Partially / No split for every yes-no style question (Q2-Q5, Q7-Q10, Q13, Q15). */
 export function buildQuestionDetail(list: AnswerMap[]): OverviewData["questionDetail"] {
   if (list.length === 0) return [];
-  return QUESTIONNAIRE_V1.questions
+  return QUESTIONNAIRE_V2.questions
     .filter((q) => q.type === "yes_no" || q.type === "yes_partial_no")
     .map((q) => {
       const answers = q.type === "yes_no" ? ["Yes", "No"] : ["Yes", "Partially", "No"];

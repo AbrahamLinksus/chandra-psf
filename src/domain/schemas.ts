@@ -92,8 +92,8 @@ export const ResponseRecordSchema: z.ZodType<ResponseRecord> = z.object({
 });
 
 const AlertReasonSchema: z.ZodType<AlertReason> = z.union([
-  z.object({ kind: z.literal("callback") }),
-  z.object({ kind: z.literal("low_rating"), code: z.enum(["Q1", "Q6", "Q11", "Q12"]) }),
+  z.object({ kind: z.literal("callback"), slot: z.string().exactOptional() }),
+  z.object({ kind: z.literal("low_rating"), code: z.enum(["Q1", "Q4", "Q8"]) }),
 ]);
 
 export const AlertSchema: z.ZodType<Alert> = z.object({

@@ -1,5 +1,5 @@
 import { RECENT_COMMENTS } from "../constants";
-import { QUESTIONNAIRE_V1 } from "../questionnaire";
+import { QUESTIONNAIRE_V2 } from "../questionnaire";
 import type { AnalyticsInput, AnswerValue, OverviewData } from "../types";
 import { numberOf } from "./stats";
 
@@ -7,7 +7,7 @@ type Comment = OverviewData["comments"][number];
 type ResponseRow = AnalyticsInput["responses"][number];
 
 /** Q14 first, then every follow-up that can carry free text. */
-const TEXT_CODES = QUESTIONNAIRE_V1.questions
+const TEXT_CODES = QUESTIONNAIRE_V2.questions
   .filter((q) => q.code === "Q14" || (q.parent !== undefined && q.type !== "single_select"))
   .map((q) => q.code);
 

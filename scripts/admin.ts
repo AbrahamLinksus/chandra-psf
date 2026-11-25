@@ -4,7 +4,7 @@
 import { randomInt } from "node:crypto";
 import { parseArgs } from "node:util";
 import { count, eq, gt, sql } from "drizzle-orm";
-import { QUESTIONNAIRE_V1 } from "../src/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "../src/domain/questionnaire";
 import { hashPassword } from "../src/server/auth/password";
 import { writeAudit } from "../src/server/audit";
 import type { Db, Tx } from "../src/server/db/client";
@@ -17,7 +17,8 @@ import {
   users,
 } from "../src/server/db/schema";
 import { isPgliteUrl, parseServerEnv } from "../src/server/env";
-
+import { runClear } from "./adminClear";
+export { clearFeedback, type ClearResult } from "./adminClear";
 export const OTP_LENGTH = 16;
 export const OTP_TTL_HOURS = 72;
 const MS_PER_HOUR = 3_600_000;
@@ -89,7 +90,7 @@ export async function initAdmin(
     }
     await tx
       .insert(questionnaires)
-      .values({ version: QUESTIONNAIRE_V1.version, definition: QUESTIONNAIRE_V1 })
+      .values({ version: QUESTIONNAIRE_V2.version, definition: QUESTIONNAIRE_V2 })
       .onConflictDoNothing();
     const [user] = await tx
       .insert(users)
@@ -254,7 +255,7 @@ function printOtp(r: OtpResult): void {
 }
 
 const USAGE =
-  "usage: admin init --name <n> --email <e> | reissue --email <e> | recover --email <e> --no-admin-can-sign-in | reapply-erasures --from <url> [--since <date>]";
+  "usage: admin init --name <n> --email <e> | reissue --email <e> | recover --email <e> --no-admin-can-sign-in | reapply-erasures --from <url> [--since <date>] | clear-feedback --confirm-delete-all-feedback";
 
 async function runReapply(db: Db, from: string, sinceText: string | undefined): Promise<void> {
   const since = sinceText ? new Date(sinceText) : undefined;
@@ -278,10 +279,15 @@ async function run(db: Db, argv: string[]): Promise<void> {
       from: { type: "string" },
       since: { type: "string" },
       "no-admin-can-sign-in": { type: "boolean", default: false },
+      "confirm-delete-all-feedback": { type: "boolean", default: false },
     },
   });
   const [command] = positionals;
   const { name, email } = values;
+  if (command === "clear-feedback") {
+    await runClear(db, values["confirm-delete-all-feedback"]);
+    return;
+  }
   if (command === "reapply-erasures" && values.from) {
     await runReapply(db, values.from, values.since);
     return;

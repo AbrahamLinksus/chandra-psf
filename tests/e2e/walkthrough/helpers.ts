@@ -158,33 +158,30 @@ const chip = (page: Page, code: string, name: string) =>
   q(page, code).getByRole("button", { name, exact: true });
 const next = (page: Page) => page.getByRole("button", { name: "Next", exact: true });
 
-/** Welcome to the callback step (Q15 left to the caller); `q6` is the Q6 rating to tap. */
-export async function fillUntilCallback(page: Page, q6: 1 | 5, started = false): Promise<void> {
+/** Welcome to the callback step (Q10 left to the caller); `q4` is the Service Advisor (Q4) rating to tap. */
+export async function fillUntilCallback(page: Page, q4: 1 | 5, started = false): Promise<void> {
   if (!started) await page.getByRole("button", { name: "Start" }).click();
   await rate(page, "Q1", /^5 /).click();
   await chip(page, "Q2", "Yes").click();
   await chip(page, "Q3", "No").click();
   await next(page).click();
-  await chip(page, "Q4", "Yes").click();
+  await rate(page, "Q4", new RegExp(`^${String(q4)} `)).click();
+  if (q4 === 1) await chip(page, "Q4a", "Not Attentive").click();
+  await next(page).click();
   await chip(page, "Q5", "Yes").click();
-  await rate(page, "Q6", new RegExp(`^${String(q6)} `)).click();
-  if (q6 === 1) await chip(page, "Q6a", "Rude").click();
+  await chip(page, "Q6", "Yes").click();
   await next(page).click();
   await chip(page, "Q7", "Yes").click();
-  await chip(page, "Q8", "Yes").click();
+  await rate(page, "Q8", /^5 /).click();
+  await next(page).click();
   await chip(page, "Q9", "Yes").click();
-  await next(page).click();
-  await chip(page, "Q10", "Yes").click();
-  await rate(page, "Q11", /^5 /).click();
-  await next(page).click();
-  await rate(page, "Q12", /^5 /).click();
-  await chip(page, "Q13", "Yes").click();
-  await q(page, "Q14").getByRole("textbox").fill("Walkthrough note");
+  await chip(page, "Q9a", "Quality of Service").click();
   await next(page).click();
 }
 
 export async function answerCallback(page: Page, answer: "Yes" | "No"): Promise<void> {
-  await chip(page, "Q15", answer).click();
+  await chip(page, "Q10", answer).click();
+  if (answer === "Yes") await chip(page, "Q10a", "Evening (3 PM–6 PM)").click();
 }
 
 export async function submitForm(page: Page): Promise<void> {
@@ -194,22 +191,19 @@ export async function submitForm(page: Page): Promise<void> {
 // ---- data made through the API ----
 
 export const HAPPY = {
-  Q1: 5,
+  Q1: 4,
   Q2: "Yes",
   Q3: "No",
-  Q4: "Yes",
+  Q4: 5,
   Q5: "Yes",
-  Q6: 5,
+  Q6: "Yes",
   Q7: "Yes",
-  Q8: "Yes",
+  Q8: 5,
   Q9: "Yes",
-  Q10: "Yes",
-  Q11: 5,
-  Q12: 4,
-  Q13: "Yes",
-  Q15: "No",
+  Q9a: "Quality of Service",
+  Q10: "No",
 };
-export const CALLBACK = { ...HAPPY, Q15: "Yes" };
+export const CALLBACK = { ...HAPPY, Q10: "Yes", Q10a: "Evening (3 PM–6 PM)" };
 
 export interface Made {
   id: string;

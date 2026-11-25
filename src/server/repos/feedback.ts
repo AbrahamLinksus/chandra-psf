@@ -5,10 +5,10 @@ import type { FeedbackRepo, FormContext } from "@/data/access/repos/feedback";
 import { err, ok, type Result } from "@/data/access/result";
 import { evaluateAlertReasons, reconcileAlert } from "@/domain/alertRules";
 import { SYSTEM_ACTOR } from "@/domain/constants";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import type { AnswerMap } from "@/domain/types";
 import { visitStatus } from "@/domain/visitStatus";
-import { validateSubmission } from "@/domain/visibility";
+import { findStrayAnswers, validateSubmission } from "@/domain/visibility";
 import { writeAudit } from "../audit";
 import { guard, type RequestCtx } from "../ctx";
 import type { Tx } from "../db/client";
@@ -102,7 +102,15 @@ const DONE = "Feedback already received";
 const BUSY = "Too many requests, try again in a few minutes";
 
 type Ready = Extract<LinkState, { kind: "ready" }>;
-type Submitted = Result<{ callbackRequested: boolean }>;
+type Submitted = Result<{ callbackRequested: boolean; callbackSlot?: string }>;
+
+function callbackOf(answers: AnswerMap): { callbackRequested: boolean; callbackSlot?: string } {
+  const slot = answers.Q10a;
+  if (answers.Q10 !== "Yes") return { callbackRequested: false };
+  return typeof slot === "string"
+    ? { callbackRequested: true, callbackSlot: slot }
+    : { callbackRequested: true };
+}
 
 function contextOf(s: Ready): FormContext {
   return {
@@ -112,7 +120,7 @@ function contextOf(s: Ready): FormContext {
     model: s.card.model,
     regNo: s.card.regNo ?? "",
     serviceDate: s.card.serviceDate,
-    questionnaire: QUESTIONNAIRE_V1,
+    questionnaire: QUESTIONNAIRE_V2,
   };
 }
 
@@ -167,6 +175,8 @@ export class ServerFeedbackRepo implements FeedbackRepo {
       if (s.kind === "completed") return this.replay(this.ctx.db, s.visit.id, subId);
       if (s.kind === "invalid") return err("NOT_FOUND", NOT_VALID);
       if (s.kind === "expired") return err("CONFLICT", EXPIRED);
+      const stray = findStrayAnswers(answers);
+      if (stray.length > 0) return err("VALIDATION", "Some answers are not valid.", stray);
       const checked = validateSubmission(answers);
       if (!checked.ok) {
         return err("VALIDATION", "Answer every question to submit.", checked.missing);
@@ -182,7 +192,7 @@ export class ServerFeedbackRepo implements FeedbackRepo {
       .where(eq(responses.visitId, visitId))
       .limit(1);
     if (row?.submissionId !== subId) return err("ALREADY_COMPLETED", DONE);
-    return ok({ callbackRequested: (row.answers as AnswerMap).Q15 === "Yes" });
+    return ok(callbackOf(row.answers as AnswerMap));
   }
 
   private async store(tx: Tx, s: Ready, answers: AnswerMap, subId: string): Promise<Submitted> {
@@ -205,7 +215,7 @@ export class ServerFeedbackRepo implements FeedbackRepo {
       .insert(responses)
       .values({
         visitId: s.visit.id,
-        questionsVersion: QUESTIONNAIRE_V1.version,
+        questionsVersion: QUESTIONNAIRE_V2.version,
         answers,
         submissionId: subId,
         submittedAt: now,
@@ -213,7 +223,7 @@ export class ServerFeedbackRepo implements FeedbackRepo {
       .returning({ id: responses.id });
     if (!resp) throw new Error("insert returned no row");
     await this.raiseAlert(tx, s.visit.branchId, resp.id, answers);
-    return ok({ callbackRequested: answers.Q15 === "Yes" });
+    return ok(callbackOf(answers));
   }
 
   /** The claiming update matched nothing: someone finished first (same id: replay), or the link just lapsed. */

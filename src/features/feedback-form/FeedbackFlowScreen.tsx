@@ -21,7 +21,12 @@ export function FeedbackFlowScreen({ token, context }: { token: string; context:
         />
       );
     case "thanks":
-      return <ThankYouView callbackRequested={flow.state.callbackRequested} />;
+      return (
+        <ThankYouView
+          callbackRequested={flow.state.callbackRequested}
+          callbackSlot={flow.state.callbackSlot}
+        />
+      );
     case "step":
       return <StepScreen flow={flow} />;
   }

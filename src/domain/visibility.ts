@@ -1,5 +1,5 @@
 import { TEXT_MAX_LENGTH } from "./constants";
-import { findQuestion, QUESTIONNAIRE_V1, type Question, type ShowIf } from "./questionnaire";
+import { findQuestion, QUESTIONNAIRE_V2, type Question, type ShowIf } from "./questionnaire";
 import type { AnswerMap, AnswerValue, QuestionCode } from "./types";
 
 function matches(rule: ShowIf, value: AnswerValue | undefined): boolean {
@@ -25,7 +25,7 @@ export function isVisible(q: Question, answers: AnswerMap): boolean {
 }
 
 export function visibleQuestions(step: number, answers: AnswerMap): Question[] {
-  return QUESTIONNAIRE_V1.questions.filter((q) => q.step === step && isVisible(q, answers));
+  return QUESTIONNAIRE_V2.questions.filter((q) => q.step === step && isVisible(q, answers));
 }
 
 function isRating(v: AnswerValue | undefined): boolean {
@@ -86,17 +86,26 @@ export function isStepComplete(step: number, answers: AnswerMap): boolean {
 /** Drops answers of hidden follow-ups (and unknown codes). */
 export function pruneHidden(answers: AnswerMap): AnswerMap {
   const out: AnswerMap = {};
-  for (const q of QUESTIONNAIRE_V1.questions) {
+  for (const q of QUESTIONNAIRE_V2.questions) {
     const v = answers[q.code];
     if (v !== undefined && isVisible(q, answers)) out[q.code] = v;
   }
   return out;
 }
 
+/** Codes present in a submission that are unknown (e.g. v1 codes) or hidden by their parent's answer. */
+export function findStrayAnswers(answers: AnswerMap): QuestionCode[] {
+  const known = new Map(QUESTIONNAIRE_V2.questions.map((q) => [q.code, q]));
+  return (Object.keys(answers) as QuestionCode[]).filter((code) => {
+    const q = known.get(code);
+    return q === undefined || !isVisible(q, answers);
+  });
+}
+
 export function validateSubmission(
   answers: AnswerMap,
 ): { ok: true; answers: AnswerMap } | { ok: false; missing: QuestionCode[] } {
   const pruned = pruneHidden(answers);
-  const missing = QUESTIONNAIRE_V1.steps.flatMap((s) => stepMissing(s.n, pruned));
+  const missing = QUESTIONNAIRE_V2.steps.flatMap((s) => stepMissing(s.n, pruned));
   return missing.length === 0 ? { ok: true, answers: pruned } : { ok: false, missing };
 }

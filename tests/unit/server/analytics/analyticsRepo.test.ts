@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { advisors, alerts, jobCards, questionnaires, responses, visits } from "@/server/db/schema";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import type { SessionUser } from "@/server/ctx";
 import { makeServerCtx, must, seedBranch, seedUser } from "../../../support/serverCtx";
 
@@ -16,7 +16,7 @@ beforeEach(async () => {
   env = await makeServerCtx();
   await env.db
     .insert(questionnaires)
-    .values({ version: QUESTIONNAIRE_V1.version, definition: QUESTIONNAIRE_V1 });
+    .values({ version: QUESTIONNAIRE_V2.version, definition: QUESTIONNAIRE_V2 });
 });
 afterEach(async () => {
   await env.client.close();
@@ -93,7 +93,7 @@ async function seedVisits(
         .insert(responses)
         .values({
           visitId: must(v).id,
-          questionsVersion: 1,
+          questionsVersion: 2,
           answers: o.answers ?? { Q12: 4, Q13: "Yes" },
           submissionId: crypto.randomUUID(),
         })

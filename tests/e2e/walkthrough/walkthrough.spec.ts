@@ -4,7 +4,7 @@ import { rpcCall } from "../../support/e2e";
 import { sharedAdminApi } from "../admin-users/sharedAdmin";
 import { actAs, newBranch } from "../support-links/helpers";
 import {
-  HAPPY,
+  CALLBACK,
   afterFirstRunStarted,
   answerCallback,
   branchAdminFor,
@@ -73,7 +73,7 @@ test.describe("T-11b DoD 3-8: two devices, one visit", () => {
     await cardWithLink(
       staff,
       { name: "Farida Banu", phone: "98400 55555", reg: "tn10ab1111", date: today() },
-      { ...HAPPY, Q15: "Yes" },
+      CALLBACK,
     );
 
     // --- Support laptop: type in a new job card, generate the link, WhatsApp message ---
@@ -128,12 +128,12 @@ test.describe("T-11b DoD 3-8: two devices, one visit", () => {
     await expect(row.getByText("Opened", { exact: true })).toBeVisible({ timeout: POLL_WAIT });
     await shot(page, "journey-3-laptop-opened");
 
-    // The customer answers with Q6 = 1 and Q15 = Yes (S-12) and submits.
+    // The customer answers with Q4 = 1 and Q10 = Yes (S-12) and submits.
     await fillUntilCallback(phone, 1);
     await answerCallback(phone, "Yes");
     await submitForm(phone);
     await expect(phone.getByRole("heading", { name: "Thank you for your feedback" })).toBeVisible();
-    await expect(phone.getByText("Our team will call you soon")).toBeVisible();
+    await expect(phone.getByText("Our team will call you: Evening 3 PM–6 PM")).toBeVisible();
     await phone.screenshot({ path: `.results/T-11b/journey-4-customer-thanks-360.png` });
     await phoneContext.close();
 

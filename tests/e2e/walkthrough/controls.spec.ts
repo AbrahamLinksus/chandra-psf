@@ -25,7 +25,7 @@ import {
 test.beforeAll(afterFirstRunStarted);
 
 const RANGE = { from: "2000-01-01", to: "2100-01-01" };
-const Q12 = "Were you satisfied with the overall service experience?";
+const Q1 = "Were you satisfied with the overall service experience?";
 const row = (page: Page, email: string) => page.locator(`li[data-user-email="${email}"]`);
 
 interface Entry {
@@ -75,11 +75,11 @@ test.describe("T-11b DoD 11-14: edit, lock-out, erase, clean-up", () => {
     const id = rows[0]?.id ?? "";
     expect(await responsesCount(admin, branchId)).toBe(1);
 
-    // Edit Q12 4 -> 3: a wrong password changes nothing, the right one saves.
+    // Edit Q1 4 -> 3: a wrong password changes nothing, the right one saves.
     await page.goto(`/admin/responses/${id}`);
     await page.getByRole("button", { name: "Edit", exact: true }).click();
     await page
-      .getByRole("group", { name: Q12 })
+      .getByRole("group", { name: Q1 })
       .getByRole("button", { name: "3", exact: true })
       .click();
     await page.getByRole("button", { name: "Save changes" }).click();
@@ -94,7 +94,7 @@ test.describe("T-11b DoD 11-14: edit, lock-out, erase, clean-up", () => {
       "getResponse",
       [id],
     );
-    expect(after.response.answers["Q12"]).toBe(3);
+    expect(after.response.answers["Q1"]).toBe(3);
 
     // Delete with the password: Responses received drops 1 -> 0 (S-09).
     await page.getByRole("button", { name: "Delete", exact: true }).click();
@@ -120,7 +120,7 @@ test.describe("T-11b DoD 11-14: edit, lock-out, erase, clean-up", () => {
       "getResponse",
       [id],
     );
-    expect(back.response.answers["Q12"]).toBe(3);
+    expect(back.response.answers["Q1"]).toBe(3);
 
     // The audit holds all three, the edit with old and new values.
     const audit = await rpcCall<{ entries: Entry[] }>(admin, "audit", "listAudit", [{ branchId }]);
@@ -204,7 +204,7 @@ test.describe("T-11b DoD 11-14: edit, lock-out, erase, clean-up", () => {
     const ramesh = await cardWithLink(
       vel.staff,
       { name: "Ramesh Kumar", phone: spaced, reg: regOf(), date: daysAgo(30) },
-      { ...HAPPY, Q14: "Advisor was rude, ring me" },
+      { ...HAPPY, Q2: "No", Q2a: "Advisor was rude, ring me" },
     );
     const brother = await cardWithLink(
       tam.staff,

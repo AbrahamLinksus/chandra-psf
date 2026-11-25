@@ -2,7 +2,7 @@
 /* eslint-disable max-lines, max-lines-per-function -- describe blocks group many one-line tests */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import {
   advisors,
   alerts,
@@ -26,7 +26,7 @@ const { ServerCustomerRepo } = await import("@/server/repos/customers");
 
 type Env = Awaited<ReturnType<typeof makeServerCtx>>;
 const PW = "Correct-Horse-9";
-const Q14 = "The advisor was rude, call me on 9840012345";
+const Q2a = "The advisor was rude, call me on 9840012345";
 let env: Env;
 let pwHash = "";
 let stdout: string[] = [];
@@ -74,7 +74,7 @@ interface Seeded {
   alert: string;
 }
 
-/** One job card with a visit, a soft-deleted response holding Q14, an alert note and audit rows. */
+/** One job card with a visit, a soft-deleted response holding Q2a, an alert note and audit rows. */
 async function customer(
   db: Env["db"],
   branchId: string,
@@ -107,7 +107,7 @@ async function customer(
     .returning();
   await db
     .insert(questionnaires)
-    .values({ version: QUESTIONNAIRE_V1.version, definition: QUESTIONNAIRE_V1 })
+    .values({ version: QUESTIONNAIRE_V2.version, definition: QUESTIONNAIRE_V2 })
     .onConflictDoNothing();
   const [v] = await db
     .insert(visits)
@@ -124,8 +124,14 @@ async function customer(
     .insert(responses)
     .values({
       visitId: must(v).id,
-      questionsVersion: 1,
-      answers: { Q1: 2, Q1a: { options: ["Delay"], text: "slow desk" }, Q14 },
+      questionsVersion: 2,
+      answers: {
+        Q1: 2,
+        Q1a: { options: ["Delay"], text: "slow desk" },
+        Q2a,
+        Q10: "Yes",
+        Q10a: "Evening (3 PM–6 PM)",
+      },
       submissionId: crypto.randomUUID(),
       deletedAt: new Date("2026-11-15T05:00:00Z"),
     })
@@ -152,15 +158,15 @@ async function customer(
     action: "response.edit",
     entityType: "response",
     entityId: seeded.response,
-    oldValue: { Q14: `old ${o.name}` },
-    newValue: { Q14 },
+    oldValue: { Q2a: `old ${o.name}` },
+    newValue: { Q2a },
     branchId,
   });
   await writeAudit(stamp, db, {
     action: "response.create",
     entityType: "response",
     entityId: seeded.response,
-    newValue: { Q14 },
+    newValue: { Q2a },
     branchId,
   });
   return seeded;
@@ -190,7 +196,7 @@ const answersOf = async (id: string) =>
 const auditOf = (id: string) => env.db.select().from(auditLog).where(eq(auditLog.entityId, id));
 
 describe("eraseCustomers (US-30, S-21)", () => {
-  it("erases only the ticked card: personal data, Q14 in a deleted response, alert notes and audit values", async () => {
+  it("erases only the ticked card: personal data, Q2a in a deleted response, alert notes and audit values", async () => {
     const { ramesh, lakshmi } = await two();
     await asMain();
     const r = await repo().eraseCustomers([ramesh.card], { password: PW });
@@ -205,7 +211,12 @@ describe("eraseCustomers (US-30, S-21)", () => {
       null,
     ]);
     expect(gone.erasedAt).not.toBeNull();
-    expect(await answersOf(ramesh.response)).toEqual({ Q1: 2, Q1a: { options: ["Delay"] } });
+    expect(await answersOf(ramesh.response)).toEqual({
+      Q1: 2,
+      Q1a: { options: ["Delay"] },
+      Q10: "Yes",
+      Q10a: "Evening (3 PM–6 PM)",
+    });
     const [alert] = await env.db.select().from(alerts).where(eq(alerts.id, ramesh.alert));
     expect((alert?.notes as { text: string }[])[0]?.text).toBe("[erased]");
 
@@ -226,8 +237,8 @@ describe("eraseCustomers (US-30, S-21)", () => {
       "TN 22 AB 1111",
       null,
     ]);
-    expect(await answersOf(lakshmi.response)).toMatchObject({ Q14 });
-    expect((await auditOf(lakshmi.response)).map((x) => x.newValue)).toEqual([{ Q14 }, { Q14 }]);
+    expect(await answersOf(lakshmi.response)).toMatchObject({ Q2a });
+    expect((await auditOf(lakshmi.response)).map((x) => x.newValue)).toEqual([{ Q2a }, { Q2a }]);
 
     // alert audit notes: Ramesh's redacted, Lakshmi's kept
     expect((await auditOf(ramesh.alert)).map((x) => x.note)).toEqual(["[erased]"]);
@@ -250,7 +261,7 @@ describe("eraseCustomers (US-30, S-21)", () => {
     const r = await repo().eraseCustomers([ramesh.card], { password: "Wrong-Pass-1" });
     expect(!r.ok && r.error.code).toBe("BAD_PASSWORD");
     expect((await cardOf(ramesh.card)).customerName).toBe("Ramesh Kumar");
-    expect(await answersOf(ramesh.response)).toMatchObject({ Q14 });
+    expect(await answersOf(ramesh.response)).toMatchObject({ Q2a });
     expect(await env.db.select().from(erasureJournal)).toHaveLength(0);
     const audit = await env.db.select().from(auditLog).where(eq(auditLog.action, "customer.erase"));
     expect(audit).toHaveLength(0);
@@ -363,10 +374,10 @@ describe("reapply-erasures (S-24, LLD section 26)", () => {
       expect(cards["JC-1"]?.customerName).toBeNull();
       expect(cards["JC-1"]?.erasedAt).not.toBeNull();
       expect(cards["JC-2"]?.customerName).toBe("Lakshmi Kumar");
-      const withQ14 = (await restored.db.select().from(responses)).filter((x) =>
+      const withQ2a = (await restored.db.select().from(responses)).filter((x) =>
         JSON.stringify(x.answers).includes("rude"),
       );
-      expect(withQ14).toHaveLength(1);
+      expect(withQ2a).toHaveLength(1);
       expect((await restored.db.select().from(erasureJournal)).map((j) => j.jobCardId)).toEqual([
         ramesh.card,
       ]);

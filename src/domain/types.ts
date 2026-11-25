@@ -68,7 +68,7 @@ export interface ResponseRecord {
 }
 
 export type AlertReason =
-  { kind: "callback" } | { kind: "low_rating"; code: "Q1" | "Q6" | "Q11" | "Q12" };
+  { kind: "callback"; slot?: string } | { kind: "low_rating"; code: "Q1" | "Q4" | "Q8" };
 export type AlertStatus = "open" | "contacted" | "resolved";
 export interface AlertNote {
   at: ISOTime;

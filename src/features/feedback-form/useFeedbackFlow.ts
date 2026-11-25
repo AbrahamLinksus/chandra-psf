@@ -61,7 +61,11 @@ function useSubmit(ids: SubmitIds, answers: AnswerMap, dispatch: Dispatch<FormAc
       if (!result.ok) return;
       const outcome = result.value;
       if (outcome.kind === "done") {
-        dispatch({ type: "submitted", callbackRequested: outcome.callbackRequested });
+        dispatch({
+          type: "submitted",
+          callbackRequested: outcome.callbackRequested,
+          callbackSlot: outcome.callbackSlot,
+        });
       } else if (outcome.kind !== "failed") {
         setEnded(outcome.kind);
       }

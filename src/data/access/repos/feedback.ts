@@ -32,5 +32,5 @@ export interface FeedbackRepo {
     token: string,
     answers: AnswerMap,
     submissionId?: string,
-  ): Promise<Result<{ callbackRequested: boolean }>>;
+  ): Promise<Result<{ callbackRequested: boolean; callbackSlot?: string }>>;
 }

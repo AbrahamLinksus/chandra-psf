@@ -1,4 +1,4 @@
-import { QUESTIONNAIRE_V1 } from "../questionnaire";
+import { QUESTIONNAIRE_V2 } from "../questionnaire";
 import type { AnalyticsInput, AnswerMap, Filters, Metric, OverviewData } from "../types";
 import { buildProblems, buildQuestionDetail } from "./breakdowns";
 import { buildComments } from "./comments";
@@ -48,7 +48,7 @@ function kpisFor(input: AnalyticsInput, f: Filters): Omit<OverviewData["kpis"], 
 function categoryScores(list: AnswerMap[]): OverviewData["categoryScores"] {
   return CATEGORY_STEPS.map((step) => {
     const score = mean(list.flatMap((a) => stepScores(step, a)));
-    const title = QUESTIONNAIRE_V1.steps.find((s) => s.n === step)?.title ?? `Step ${String(step)}`;
+    const title = QUESTIONNAIRE_V2.steps.find((s) => s.n === step)?.title ?? `Step ${String(step)}`;
     return { step, title, score: score === null ? null : round1(score) };
   });
 }

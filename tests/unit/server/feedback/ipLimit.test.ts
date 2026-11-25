@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { responses } from "@/server/db/schema";
 import { MutableClock, makeServerCtx } from "../../../support/serverCtx";
-import { happyAnswers, seedLink } from "./harness";
+import { calmAnswers, seedLink } from "./harness";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/server", () => ({ after: () => undefined }));
@@ -39,7 +39,7 @@ function submit(ip: string, code: string, subId: string): Promise<Response> {
     "content-type": "application/json",
     "x-forwarded-for": ip,
   });
-  const body = JSON.stringify({ args: [code, happyAnswers({ Q12: 5, Q15: "No" }), subId] });
+  const body = JSON.stringify({ args: [code, calmAnswers(), subId] });
   return handleRpc(new Request("http://app.test/api/rpc", { method: "POST", headers, body }), {
     repo: "feedback",
     method: "submitResponse",

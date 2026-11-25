@@ -2,9 +2,10 @@
 import { describe, expect, it } from "vitest";
 import { AUTO_RESOLVE_NOTE } from "@/domain/constants";
 import { evaluateAlertReasons, formatReasons, reconcileAlert } from "@/domain/alertRules";
-import { findQuestion, QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { findQuestion } from "@/domain/questionnaire";
 import type { Alert, AnswerMap, QuestionCode } from "@/domain/types";
 import {
+  findStrayAnswers,
   isStepComplete,
   isVisible,
   pruneHidden,
@@ -18,15 +19,29 @@ function visible(code: QuestionCode, answers: AnswerMap): boolean {
   return isVisible(q, answers);
 }
 
-describe("visibility (SPEC F-3 triggers)", () => {
+const FULL: AnswerMap = {
+  Q1: 5,
+  Q2: "Yes",
+  Q3: "No",
+  Q4: 5,
+  Q5: "Yes",
+  Q6: "Yes",
+  Q7: "Yes",
+  Q8: 5,
+  Q9: "Yes",
+  Q9a: "Trust & Reliability",
+  Q10: "No",
+};
+
+describe("visibility (SPEC F-3 v2 triggers)", () => {
   it.each([
-    ["Q1a", "Q1", 3, 4],
-    ["Q6a", "Q6", 3, 4],
-    ["Q11a", "Q11", 3, 4],
-  ] as const)("%s shows when %s <= 3, hidden at 4", (child, parent, low, high) => {
-    expect(visible(child, { [parent]: low })).toBe(true);
+    ["Q1a", "Q1"],
+    ["Q4a", "Q4"],
+    ["Q8a", "Q8"],
+  ] as const)("%s shows when %s is 1 or 2, hidden at 3", (child, parent) => {
+    expect(visible(child, { [parent]: 2 })).toBe(true);
     expect(visible(child, { [parent]: 1 })).toBe(true);
-    expect(visible(child, { [parent]: high })).toBe(false);
+    expect(visible(child, { [parent]: 3 })).toBe(false);
     expect(visible(child, {})).toBe(false);
   });
 
@@ -41,13 +56,16 @@ describe("visibility (SPEC F-3 triggers)", () => {
     expect(visible("Q3a", { Q3: "No" })).toBe(false);
   });
 
-  it.each([
-    ["Q7a", "Q7"],
-    ["Q9a", "Q9"],
-    ["Q13a", "Q13"],
-  ] as const)("%s shows when %s = No only", (child, parent) => {
-    expect(visible(child, { [parent]: "No" })).toBe(true);
-    expect(visible(child, { [parent]: "Yes" })).toBe(false);
+  it("Q5a and Q6a show on No only; Q9a on Yes or No; Q10a on Yes only", () => {
+    expect(visible("Q5a", { Q5: "No" })).toBe(true);
+    expect(visible("Q5a", { Q5: "Yes" })).toBe(false);
+    expect(visible("Q6a", { Q6: "No" })).toBe(true);
+    expect(visible("Q6a", { Q6: "Yes" })).toBe(false);
+    expect(visible("Q9a", { Q9: "Yes" })).toBe(true);
+    expect(visible("Q9a", { Q9: "No" })).toBe(true);
+    expect(visible("Q9a", {})).toBe(false);
+    expect(visible("Q10a", { Q10: "Yes" })).toBe(true);
+    expect(visible("Q10a", { Q10: "No" })).toBe(false);
   });
 
   it("visibleQuestions lists a step's follow-ups only when triggered", () => {
@@ -56,10 +74,13 @@ describe("visibility (SPEC F-3 triggers)", () => {
     expect(codes({ Q1: 2, Q2: "No", Q3: "Yes" })).toEqual(["Q1", "Q1a", "Q2", "Q2a", "Q3", "Q3a"]);
   });
 
-  it("isStepComplete needs the visible follow-up answered", () => {
-    const base: AnswerMap = { Q1: 2, Q2: "Yes", Q3: "No" };
+  it("isStepComplete needs the visible follow-ups answered, Q2a text required", () => {
+    const base: AnswerMap = { Q1: 5, Q2: "Partially", Q3: "No" };
     expect(isStepComplete(1, base)).toBe(false);
-    expect(isStepComplete(1, { ...base, Q1a: { options: ["Other"], text: "x" } })).toBe(true);
+    expect(isStepComplete(1, { ...base, Q2a: "   " })).toBe(false);
+    expect(isStepComplete(1, { ...base, Q2a: "Brake noise" })).toBe(true);
+    expect(isStepComplete(1, { ...base, Q1: 2, Q2a: "x" })).toBe(false);
+    expect(isStepComplete(1, { ...base, Q1: 2, Q2a: "x", Q1a: { options: ["Other"] } })).toBe(true);
   });
 
   it("pruneHidden drops answers of hidden follow-ups", () => {
@@ -71,51 +92,49 @@ describe("visibility (SPEC F-3 triggers)", () => {
     const bad = validateSubmission({ Q1: 5 });
     expect(bad.ok).toBe(false);
     if (!bad.ok) expect(bad.missing).toContain("Q2");
-    const full: AnswerMap = {
-      Q1: 5,
-      Q2: "Yes",
-      Q3: "No",
-      Q4: "Yes",
-      Q5: "Yes",
-      Q6: 5,
-      Q7: "Yes",
-      Q8: "Yes",
-      Q9: "Yes",
-      Q10: "Yes",
-      Q11: 5,
-      Q12: 5,
-      Q13: "Yes",
-      Q15: "No",
-    };
-    const good = validateSubmission({ ...full, Q1a: { options: ["Other"] } });
+    const good = validateSubmission({ ...FULL, Q1a: { options: ["Other"] } });
     expect(good.ok).toBe(true);
     if (good.ok) expect(good.answers["Q1a"]).toBeUndefined();
   });
 
+  it("Q10 = Yes requires a slot; Q9 needs its reason", () => {
+    const noSlot = validateSubmission({ ...FULL, Q10: "Yes" });
+    expect(noSlot.ok).toBe(false);
+    if (!noSlot.ok) expect(noSlot.missing).toEqual(["Q10a"]);
+    const ok = validateSubmission({ ...FULL, Q10: "Yes", Q10a: "Evening (3 PM–6 PM)" });
+    expect(ok.ok).toBe(true);
+    const noReason = { ...FULL };
+    delete noReason["Q9a"];
+    expect(validateSubmission(noReason).ok).toBe(false);
+  });
+
+  it("findStrayAnswers flags v1 codes and hidden follow-ups", () => {
+    expect(findStrayAnswers({ ...FULL, Q14: "x", Q12: 3 }).sort()).toEqual(["Q12", "Q14"]);
+    expect(findStrayAnswers({ ...FULL, Q1a: { options: ["Other"] } })).toEqual(["Q1a"]);
+    expect(findStrayAnswers(FULL)).toEqual([]);
+  });
+
   it("text over 1000 characters is invalid", () => {
-    const q = QUESTIONNAIRE_V1.questions.find((x) => x.code === "Q14");
-    expect(q).toBeDefined();
-    const r = validateSubmission({ Q14: "x".repeat(1001) });
+    const r = validateSubmission({ ...FULL, Q2: "No", Q2a: "x".repeat(1001) });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.missing).toContain("Q14");
+    if (!r.ok) expect(r.missing).toContain("Q2a");
   });
 });
 
-describe("alert rules (SPEC F-4)", () => {
-  it("Q12 = 1 and Q15 = Yes → 'Callback requested · Q12 rated 1'", () => {
-    const reasons = evaluateAlertReasons({ Q12: 1, Q15: "Yes" });
-    expect(reasons).toEqual([{ kind: "callback" }, { kind: "low_rating", code: "Q12" }]);
-    expect(formatReasons(reasons)).toBe("Callback requested · Q12 rated 1");
+describe("alert rules (SPEC F-4 v2)", () => {
+  it("Q1 = 1 and Q10 = Yes + Evening → 'Callback requested (Evening 3 PM–6 PM) · Q1 rated 1'", () => {
+    const reasons = evaluateAlertReasons({ Q1: 1, Q10: "Yes", Q10a: "Evening (3 PM–6 PM)" });
+    expect(formatReasons(reasons)).toBe("Callback requested (Evening 3 PM–6 PM) · Q1 rated 1");
   });
 
   it("Q3 = Yes alone raises no reason", () => {
     expect(evaluateAlertReasons({ Q3: "Yes" })).toEqual([]);
   });
 
-  it("orders Q1, Q6, Q11, Q12 low ratings after the callback; rating 2 is not low", () => {
-    const reasons = evaluateAlertReasons({ Q12: 1, Q11: 1, Q6: 1, Q1: 1, Q15: "Yes" });
+  it("orders Q1, Q4, Q8 low ratings after the callback; rating 2 is not low", () => {
+    const reasons = evaluateAlertReasons({ Q8: 1, Q4: 1, Q1: 1, Q10: "Yes" });
     expect(formatReasons(reasons)).toBe(
-      "Callback requested · Q1 rated 1 · Q6 rated 1 · Q11 rated 1 · Q12 rated 1",
+      "Callback requested · Q1 rated 1 · Q4 rated 1 · Q8 rated 1",
     );
     expect(evaluateAlertReasons({ Q1: 2 })).toEqual([]);
   });

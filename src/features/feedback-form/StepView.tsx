@@ -1,5 +1,5 @@
 import type { AnswerMap, AnswerValue, QuestionCode } from "@/domain/types";
-import { QUESTIONNAIRE_V1, type Question } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2, type Question } from "@/domain/questionnaire";
 import { isVisible } from "@/domain/visibility";
 import { FIELD_REGISTRY } from "./fieldRegistry";
 import { Reveal } from "./Reveal";
@@ -42,8 +42,8 @@ function QuestionBlock({ question: q, value, onAnswer }: QuestionBlockProps) {
 
 /** One category: visible questions only; follow-ups slide open and closed as they come and go. */
 export function StepView({ step, answers, onAnswer }: StepViewProps) {
-  const title = QUESTIONNAIRE_V1.steps.find((s) => s.n === step)?.title ?? "";
-  const questions = QUESTIONNAIRE_V1.questions.filter((q) => q.step === step);
+  const title = QUESTIONNAIRE_V2.steps.find((s) => s.n === step)?.title ?? "";
+  const questions = QUESTIONNAIRE_V2.questions.filter((q) => q.step === step);
   return (
     <section>
       <h2 className="text-lg font-semibold">{title}</h2>

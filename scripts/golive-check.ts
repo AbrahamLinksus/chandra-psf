@@ -4,6 +4,7 @@
 import { pathToFileURL } from "node:url";
 import { Pool } from "@neondatabase/serverless";
 import { CONTACT_PLACEHOLDERS, env as publicEnv } from "../src/config/env";
+import { QUESTIONNAIRE_V2 } from "../src/domain/questionnaire";
 import { getServerEnv, isPgliteUrl } from "../src/server/env";
 
 /** Public sample value from .env.example (src/config/env.ts keeps its copy private). */
@@ -79,17 +80,32 @@ export function checkLaunchData(counts: LaunchCounts): Finding[] {
   return findings;
 }
 
+/** The installed question set must be the current one (v2, CR-2); null means none is installed. */
+export function checkQuestionnaire(installed: number | null | undefined): Finding[] {
+  if (installed === undefined) return [];
+  if (installed === QUESTIONNAIRE_V2.version) return [];
+  const found = installed === null ? "none installed" : `version ${String(installed)} installed`;
+  return [
+    {
+      key: "questionnaires",
+      message: `must be version ${String(QUESTIONNAIRE_V2.version)} (${found})`,
+    },
+  ];
+}
+
 export function runChecks(input: {
   contacts: ContactValues;
   appUrl: string | undefined;
   databaseUrl: string;
   counts: LaunchCounts;
+  questionnaireVersion?: number | null | undefined;
 }): Finding[] {
   return [
     ...checkContacts(input.contacts),
     ...checkAppUrl(input.appUrl),
     ...checkDatabaseUrl(input.databaseUrl),
     ...checkLaunchData(input.counts),
+    ...checkQuestionnaire(input.questionnaireVersion),
   ];
 }
 
@@ -100,7 +116,9 @@ export function formatReport(findings: Finding[]): string {
 }
 
 /** Read-only counts. Table names come from a fixed list, never from input. */
-async function countLaunchData(connectionString: string): Promise<LaunchCounts> {
+async function readLaunchState(
+  connectionString: string,
+): Promise<{ counts: LaunchCounts; questionnaireVersion: number | null }> {
   const pool = new Pool({ connectionString });
   try {
     const counts: LaunchCounts = {};
@@ -108,7 +126,10 @@ async function countLaunchData(connectionString: string): Promise<LaunchCounts> 
       const res = await pool.query<{ n: string }>(`select count(*) as n from ${table}`);
       counts[table] = Number(res.rows[0]?.n ?? 0);
     }
-    return counts;
+    const q = await pool.query<{ v: number | null }>(
+      "select max(version) as v from questionnaires",
+    );
+    return { counts, questionnaireVersion: q.rows[0]?.v ?? null };
   } finally {
     await pool.end();
   }
@@ -116,13 +137,17 @@ async function countLaunchData(connectionString: string): Promise<LaunchCounts> 
 
 async function main(): Promise<void> {
   const server = getServerEnv();
-  const counts = isPgliteUrl(server.DATABASE_URL) ? {} : await countLaunchData(server.DATABASE_URL);
+  const state = isPgliteUrl(server.DATABASE_URL)
+    ? { counts: {}, questionnaireVersion: undefined }
+    : await readLaunchState(server.DATABASE_URL);
   const findings = runChecks({
     contacts: publicEnv,
     appUrl: server.APP_URL,
     databaseUrl: server.DATABASE_URL,
-    counts,
+    counts: state.counts,
+    questionnaireVersion: state.questionnaireVersion,
   });
+  console.log(`Question set installed: ${String(state.questionnaireVersion ?? "unknown")}`);
   console.log(formatReport(findings));
   process.exit(findings.length === 0 ? 0 : 1);
 }

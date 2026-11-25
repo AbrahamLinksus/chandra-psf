@@ -124,15 +124,25 @@ describe("retention", () => {
 });
 
 describe("stripFreeText", () => {
-  it("drops Q14, Q2a, Q13a and every .text; keeps ratings and chips", () => {
+  it("drops Q2a and every .text; keeps ratings, chosen options and Q10a", () => {
     const answers: AnswerMap = {
       Q1: 2,
-      Q1a: { options: ["Slow"], text: "ramesh called me" },
+      Q1a: { options: ["Other"], text: "ramesh called me" },
       Q2: "No",
-      Q2a: "Brake still weak",
-      Q13a: "Price",
-      Q14: "Great, call 98400 12345",
+      Q2a: "Brake still weak, call 98400 12345",
+      Q9: "Yes",
+      Q9a: "Staff Behaviour",
+      Q10: "Yes",
+      Q10a: "Evening (3 PM–6 PM)",
     };
-    expect(stripFreeText(answers)).toEqual({ Q1: 2, Q1a: { options: ["Slow"] }, Q2: "No" });
+    expect(stripFreeText(answers)).toEqual({
+      Q1: 2,
+      Q1a: { options: ["Other"] },
+      Q2: "No",
+      Q9: "Yes",
+      Q9a: "Staff Behaviour",
+      Q10: "Yes",
+      Q10a: "Evening (3 PM–6 PM)",
+    });
   });
 });

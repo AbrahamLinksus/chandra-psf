@@ -1,6 +1,13 @@
 import { CheckIcon } from "lucide-react";
 
-export function ThankYouView({ callbackRequested }: { callbackRequested: boolean }) {
+import { slotLabel } from "@/domain/alertRules";
+
+interface ThankYouViewProps {
+  callbackRequested: boolean;
+  callbackSlot?: string | undefined;
+}
+
+export function ThankYouView({ callbackRequested, callbackSlot }: ThankYouViewProps) {
   return (
     <section className="flex flex-1 flex-col items-center justify-center gap-4 py-10 text-center">
       <span
@@ -11,7 +18,11 @@ export function ThankYouView({ callbackRequested }: { callbackRequested: boolean
       </span>
       <h1 className="text-2xl font-semibold">Thank you for your feedback</h1>
       {callbackRequested && (
-        <p className="text-lg text-muted-foreground">Our team will call you soon</p>
+        <p className="text-lg text-muted-foreground">
+          {callbackSlot === undefined
+            ? "Our team will call you soon"
+            : `Our team will call you: ${slotLabel(callbackSlot)}`}
+        </p>
       )}
     </section>
   );

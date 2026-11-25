@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import type { CustomerRepo } from "@/data/access";
 import type { CustomerRow } from "@/data/access/repos/customers";
 import { err, ok } from "@/data/access/result";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import type { AnswerValue, VisitStatus } from "@/domain/types";
 import { visitStatus } from "@/domain/visitStatus";
 import { verifyStepUp } from "../auth/stepUp";
@@ -62,7 +62,7 @@ function infoOf(v: VisitRow, resp: ResponseRow, now: Date): VisitInfo {
 }
 
 function exportRows(cards: Found[], info: Map<string, VisitInfo>): (string | null)[][] {
-  const codes = QUESTIONNAIRE_V1.questions.map((x) => x.code);
+  const codes = QUESTIONNAIRE_V2.questions.map((x) => x.code);
   const head = [
     ...["Branch", "Job card", "Service date", "Name", "Phone", "Reg. no", "Model"],
     ...["Link status", "Submitted at", ...codes],

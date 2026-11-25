@@ -1,4 +1,4 @@
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import type { AnswerMap, AnswerValue, QuestionCode } from "@/domain/types";
 import { isStepComplete, pruneHidden } from "@/domain/visibility";
 import type { Draft } from "./draft";
@@ -11,6 +11,7 @@ export interface FormState {
   step: number;
   answers: AnswerMap;
   callbackRequested: boolean;
+  callbackSlot?: string | undefined;
 }
 
 export type FormAction =
@@ -18,9 +19,9 @@ export type FormAction =
   | { type: "answer"; code: QuestionCode; value: AnswerValue }
   | { type: "next" }
   | { type: "back" }
-  | { type: "submitted"; callbackRequested: boolean };
+  | { type: "submitted"; callbackRequested: boolean; callbackSlot?: string | undefined };
 
-export const LAST_STEP = QUESTIONNAIRE_V1.steps.length;
+export const LAST_STEP = QUESTIONNAIRE_V2.steps.length;
 
 /** Starts at the welcome screen, or on the saved step when a draft exists. */
 export function initialState(draft: Draft | null): FormState {
@@ -59,6 +60,11 @@ export function formReducer(state: FormState, action: FormAction): FormState {
     case "back":
       return state.phase === "step" ? step(state, -1) : state;
     case "submitted":
-      return { ...state, phase: "thanks", callbackRequested: action.callbackRequested };
+      return {
+        ...state,
+        phase: "thanks",
+        callbackRequested: action.callbackRequested,
+        callbackSlot: action.callbackSlot,
+      };
   }
 }

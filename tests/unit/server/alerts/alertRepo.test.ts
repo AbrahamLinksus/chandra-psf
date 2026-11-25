@@ -37,7 +37,7 @@ async function seedAlert(branchId: string, no: string) {
     .insert(responses)
     .values({
       visitId: s.visitId,
-      questionsVersion: 1,
+      questionsVersion: 2,
       answers: {},
       submissionId: crypto.randomUUID(),
     })

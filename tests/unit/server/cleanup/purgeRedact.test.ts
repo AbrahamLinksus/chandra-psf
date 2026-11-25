@@ -2,7 +2,7 @@
 /* eslint-disable max-lines-per-function -- one scenario per test */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import {
   advisors,
   alerts,
@@ -59,7 +59,7 @@ async function seedResponse(branchId: string, no: string, deletedAt: Date | null
     .returning();
   await env.db
     .insert(questionnaires)
-    .values({ version: QUESTIONNAIRE_V1.version, definition: QUESTIONNAIRE_V1 })
+    .values({ version: QUESTIONNAIRE_V2.version, definition: QUESTIONNAIRE_V2 })
     .onConflictDoNothing();
   const [v] = await env.db
     .insert(visits)
@@ -76,8 +76,8 @@ async function seedResponse(branchId: string, no: string, deletedAt: Date | null
     .insert(responses)
     .values({
       visitId: must(v).id,
-      questionsVersion: 1,
-      answers: { Q14: Q14_NEW },
+      questionsVersion: 2,
+      answers: { Q2a: Q14_NEW },
       submissionId: crypto.randomUUID(),
       deletedAt,
     })
@@ -96,8 +96,8 @@ async function seedResponse(branchId: string, no: string, deletedAt: Date | null
     action: "response.edit",
     entityType: "response",
     entityId: must(r).id,
-    oldValue: { Q14: Q14_OLD },
-    newValue: { Q14: Q14_NEW },
+    oldValue: { Q2a: Q14_OLD },
+    newValue: { Q2a: Q14_NEW },
     branchId,
   });
   await writeAudit(stamp, env.db, {

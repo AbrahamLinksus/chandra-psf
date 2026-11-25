@@ -1,4 +1,4 @@
-import { QUESTIONNAIRE_V1, type Question } from "../questionnaire";
+import { QUESTIONNAIRE_V2, type Question } from "../questionnaire";
 import type { AnswerMap, AnswerValue } from "../types";
 
 /** Rating 1-5 to 0-100: (rating - 1) / 4 * 100. */
@@ -22,7 +22,7 @@ function questionScore(q: Question, v: AnswerValue | undefined): number | null {
 
 /** Scores of the answered scoreable questions of one step (follow-ups and text are never scored). */
 export function stepScores(step: number, answers: AnswerMap): number[] {
-  return QUESTIONNAIRE_V1.questions
+  return QUESTIONNAIRE_V2.questions
     .filter((q) => q.step === step && q.parent === undefined)
     .flatMap((q) => questionScore(q, answers[q.code]) ?? []);
 }

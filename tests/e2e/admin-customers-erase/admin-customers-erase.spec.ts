@@ -6,23 +6,23 @@ import { newBranch, type Staff } from "../support-links/helpers";
 
 const SHOT = ".results/T-25";
 const RANGE = { from: "2000-01-01", to: "2100-01-01" };
-const Q14 = "Advisor was rude, ring me on my second number";
+const TELL_MORE = "Advisor was rude, ring me on my second number";
+const Q2A = "Brake noise still there, ring me on my second number";
 const ANSWERS = {
-  Q1: 5,
-  Q2: "Yes",
+  Q1: 2,
+  Q1a: { options: ["Other"], text: TELL_MORE },
+  Q2: "No",
+  Q2a: Q2A,
   Q3: "No",
-  Q4: "Yes",
+  Q4: 5,
   Q5: "Yes",
-  Q6: 5,
+  Q6: "Yes",
   Q7: "Yes",
-  Q8: "Yes",
+  Q8: 5,
   Q9: "Yes",
+  Q9a: "Quality of Service",
   Q10: "Yes",
-  Q11: 5,
-  Q12: 4,
-  Q13: "Yes",
-  Q14,
-  Q15: "No",
+  Q10a: "Evening (3 PM–6 PM)",
 };
 const digits = (): string => `9${String(Math.floor(Math.random() * 1e9)).padStart(9, "0")}`;
 const spaced = (p: string): string => `${p.slice(0, 5)} ${p.slice(5)}`;
@@ -115,14 +115,14 @@ test.describe("T-25 erase a customer", () => {
       date: "2026-11-20",
     });
 
-    // An edit puts Q14 into the audit old/new values; then delete a second Ramesh-free response
+    // An edit puts Q1a / Q2a text into the audit old/new values; then delete a second Ramesh-free response
     const rameshResponse = await responseIdIn(admin, vel.branchId);
     const detail = await rpcCall<{ version: number }>(admin, "responses", "getResponse", [
       rameshResponse,
     ]);
     await rpcCall(admin, "responses", "editResponse", [
       rameshResponse,
-      { ...ANSWERS, Q12: 3 },
+      { ...ANSWERS, Q4: 3 },
       detail.version,
       step,
     ]);
@@ -176,22 +176,25 @@ test.describe("T-25 erase a customer", () => {
     ).toHaveLength(0);
     await expect(page.getByRole("listitem").filter({ hasText: "Lakshmi Kumar" })).toBeVisible();
 
-    // Q14 gone from Ramesh's response; Lakshmi's keeps hers
+    // Q2a and the Q1a text are gone from Ramesh's response (ratings, options and Q10a stay); Lakshmi's keeps hers
     const after = await rpcCall<{ response: { answers: Record<string, unknown> } }>(
       admin,
       "responses",
       "getResponse",
       [rameshResponse],
     );
-    expect(after.response.answers["Q14"]).toBeUndefined();
-    expect(after.response.answers["Q12"]).toBe(3);
+    expect(after.response.answers["Q2a"]).toBeUndefined();
+    expect(after.response.answers["Q1a"]).toEqual({ options: ["Other"] });
+    expect(after.response.answers["Q4"]).toBe(3);
+    expect(after.response.answers["Q10a"]).toBe("Evening (3 PM\u20136 PM)");
     const hers = await rpcCall<{ response: { answers: Record<string, unknown> } }>(
       admin,
       "responses",
       "getResponse",
       [await responseIdIn(admin, tam.branchId)],
     );
-    expect(hers.response.answers["Q14"]).toBe(Q14);
+    expect(hers.response.answers["Q2a"]).toBe(Q2A);
+    expect(hers.response.answers["Q1a"]).toEqual({ options: ["Other"], text: TELL_MORE });
 
     // Overview counts unchanged
     expect(await overviewCount(admin, vel.branchId)).toBe(velBefore);
@@ -225,7 +228,7 @@ test.describe("T-25 erase a customer", () => {
     await expect(page.getByText("Link not valid")).toHaveCount(0);
   });
 
-  test("a deleted response of an erased customer loses Q14 in Recently deleted too", async ({
+  test("a deleted response of an erased customer loses Q2a in Recently deleted too", async ({
     page,
     playwright,
     baseURL,
@@ -275,7 +278,7 @@ test.describe("T-25 erase a customer", () => {
       "getResponse",
       [id],
     ).catch(() => null);
-    if (detail) expect(detail.response.answers["Q14"]).toBeUndefined();
+    if (detail) expect(detail.response.answers["Q2a"]).toBeUndefined();
   });
 
   test("an unanswered open link stops working after the erase, and a branch admin cannot erase (G-4)", async ({

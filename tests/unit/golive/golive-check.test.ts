@@ -5,6 +5,7 @@ import {
   checkContacts,
   checkDatabaseUrl,
   checkLaunchData,
+  checkQuestionnaire,
   formatReport,
   runChecks,
   type ContactValues,
@@ -109,5 +110,13 @@ describe("go-live report", () => {
     for (const secret of ["hunter", "secret-host", phone, "personal-", "Acme", "acme-motors"]) {
       expect(report).not.toContain(secret);
     }
+  });
+});
+
+describe("go-live question set (CR-2)", () => {
+  it("passes on v2, flags v1 or none installed", () => {
+    expect(checkQuestionnaire(2)).toEqual([]);
+    expect(keysOf(checkQuestionnaire(1))).toEqual(["questionnaires"]);
+    expect(keysOf(checkQuestionnaire(null))).toEqual(["questionnaires"]);
   });
 });

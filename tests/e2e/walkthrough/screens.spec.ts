@@ -58,7 +58,7 @@ test.describe("T-11b SPEC 7 screens at 360 and 1440 px (G-W5, DoD last item)", (
     await shot(page, "form-step");
 
     await fillUntilCallback(page, 5, true);
-    await expect(page.locator('[data-question="Q15"]')).toBeVisible();
+    await expect(page.locator('[data-question="Q10"]')).toBeVisible();
     await expectLabelled(page, "form callback");
     await shot(page, "form-callback");
     await answerCallback(page, "Yes");

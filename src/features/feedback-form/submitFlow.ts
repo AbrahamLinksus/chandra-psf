@@ -3,7 +3,7 @@ import type { AnswerMap } from "@/domain/types";
 import { clearDraft } from "./draft";
 
 export type SubmitOutcome =
-  | { kind: "done"; callbackRequested: boolean }
+  | { kind: "done"; callbackRequested: boolean; callbackSlot?: string }
   | { kind: "already" }
   | { kind: "invalid" }
   | { kind: "expired" }
@@ -25,7 +25,10 @@ export async function submitFeedback(
   const result = await data.feedback.submitResponse(token, answers, submissionId);
   if (result.ok) {
     clearDraft(visitId);
-    return { kind: "done", callbackRequested: result.value.callbackRequested };
+    const { callbackRequested, callbackSlot } = result.value;
+    return callbackSlot === undefined
+      ? { kind: "done", callbackRequested }
+      : { kind: "done", callbackRequested, callbackSlot };
   }
   switch (result.error.code) {
     case "ALREADY_COMPLETED":

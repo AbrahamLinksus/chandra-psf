@@ -1,4 +1,4 @@
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import type { AnswerMap } from "@/domain/types";
 
 export interface Draft {
@@ -6,10 +6,16 @@ export interface Draft {
   answers: AnswerMap;
 }
 
-const PREFIX = "psf:draft:";
-const MAX_STEP = QUESTIONNAIRE_V1.steps.length;
+const LEGACY_PREFIX = "psf:draft:";
+const PREFIX = `${LEGACY_PREFIX}v${String(QUESTIONNAIRE_V2.version)}:`;
+const MAX_STEP = QUESTIONNAIRE_V2.steps.length;
 
 const keyFor = (visitId: string): string => `${PREFIX}${visitId}`;
+
+/** A draft saved under the old questionnaire (no version in its key) is discarded, never loaded. */
+function dropLegacy(visitId: string): void {
+  localStorage.removeItem(`${LEGACY_PREFIX}${visitId}`);
+}
 
 function isDraft(value: unknown): value is Draft {
   if (typeof value !== "object" || value === null) return false;
@@ -31,6 +37,7 @@ export function saveDraft(visitId: string, draft: Draft): void {
 /** Returns the saved draft, or null when none exists or it is unreadable. */
 export function loadDraft(visitId: string): Draft | null {
   try {
+    dropLegacy(visitId);
     const raw = localStorage.getItem(keyFor(visitId));
     if (raw === null) return null;
     const parsed: unknown = JSON.parse(raw);
@@ -43,6 +50,7 @@ export function loadDraft(visitId: string): Draft | null {
 export function clearDraft(visitId: string): void {
   try {
     localStorage.removeItem(keyFor(visitId));
+    dropLegacy(visitId);
   } catch {
     // nothing to clear
   }

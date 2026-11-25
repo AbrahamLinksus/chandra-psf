@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import {
   advisors,
   alerts,
@@ -90,7 +90,7 @@ async function card(
     .returning();
   await env.db
     .insert(questionnaires)
-    .values({ version: QUESTIONNAIRE_V1.version, definition: QUESTIONNAIRE_V1 })
+    .values({ version: QUESTIONNAIRE_V2.version, definition: QUESTIONNAIRE_V2 })
     .onConflictDoNothing();
   let responseId: string | null = null;
   if (o.deletedAt) {
@@ -98,8 +98,8 @@ async function card(
       .insert(responses)
       .values({
         visitId: must(v).id,
-        questionsVersion: 1,
-        answers: { Q14: "call me on 9840012345" },
+        questionsVersion: 2,
+        answers: { Q2a: "call me on 9840012345" },
         submissionId: crypto.randomUUID(),
         deletedAt: o.deletedAt,
       })

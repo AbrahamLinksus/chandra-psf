@@ -5,7 +5,7 @@ import type { ResponseDetail, ResponseListRow, ResponseRepo } from "@/data/acces
 import { err, ok, type Result } from "@/data/access/result";
 import { evaluateAlertReasons, reconcileAlert } from "@/domain/alertRules";
 import { DELETED_PURGE_DAYS } from "@/domain/constants";
-import { QUESTIONNAIRE_V1 } from "@/domain/questionnaire";
+import { QUESTIONNAIRE_V2 } from "@/domain/questionnaire";
 import { addDays, istDateOf } from "@/domain/time";
 import type { Alert, AnswerMap, AuditAction } from "@/domain/types";
 import { validateSubmission } from "@/domain/visibility";
@@ -100,7 +100,7 @@ function detailOf(ctx: RequestCtx, r: Row): ResponseDetail {
       advisorId: card.advisorId,
       advisorName: r.advisorName,
     },
-    questionnaire: QUESTIONNAIRE_V1,
+    questionnaire: QUESTIONNAIRE_V2,
     alert: alertOf(r.alert, erased),
     branchName: r.branchName,
     version: response.version,
@@ -108,7 +108,7 @@ function detailOf(ctx: RequestCtx, r: Row): ResponseDetail {
 }
 
 function listRowOf(r: Row): ResponseListRow {
-  const q12 = (r.response.answers as AnswerMap).Q12;
+  const q12 = (r.response.answers as AnswerMap).Q1;
   return {
     id: r.response.id,
     serviceDate: r.card.serviceDate,
@@ -125,7 +125,7 @@ function listRowOf(r: Row): ResponseListRow {
 function diffAnswers(before: AnswerMap, after: AnswerMap): { old: AnswerMap; next: AnswerMap } {
   const old: AnswerMap = {};
   const next: AnswerMap = {};
-  for (const q of QUESTIONNAIRE_V1.questions) {
+  for (const q of QUESTIONNAIRE_V2.questions) {
     const a = before[q.code];
     const b = after[q.code];
     if (JSON.stringify(a) === JSON.stringify(b)) continue;

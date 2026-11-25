@@ -23,28 +23,27 @@ const chip = (page: Page, code: string, name: string) =>
   q(page, code).getByRole("button", { name, exact: true });
 const next = (page: Page) => page.getByRole("button", { name: "Next", exact: true });
 
-/** Welcome to the last step with Q12 = 1 and Q15 = Yes, then Submit. */
+/** Welcome to the last step with Q1 = 1 and Q10 = Yes (Evening), then Submit. */
 async function fillAndSubmit(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Start" }).click();
-  await rate(page, "Q1", /^5 /).click();
+  await rate(page, "Q1", /^1 /).click();
+  await chip(page, "Q1a", "Poor workmanship").click();
   await chip(page, "Q2", "Yes").click();
   await chip(page, "Q3", "No").click();
   await next(page).click();
-  await chip(page, "Q4", "Yes").click();
+  await rate(page, "Q4", /^5 /).click();
+  await next(page).click();
   await chip(page, "Q5", "Yes").click();
-  await rate(page, "Q6", /^5 /).click();
+  await chip(page, "Q6", "Yes").click();
   await next(page).click();
   await chip(page, "Q7", "Yes").click();
-  await chip(page, "Q8", "Yes").click();
+  await rate(page, "Q8", /^5 /).click();
+  await next(page).click();
   await chip(page, "Q9", "Yes").click();
+  await chip(page, "Q9a", "Quality of Service").click();
   await next(page).click();
   await chip(page, "Q10", "Yes").click();
-  await rate(page, "Q11", /^5 /).click();
-  await next(page).click();
-  await rate(page, "Q12", /^1 /).click();
-  await chip(page, "Q13", "Yes").click();
-  await next(page).click();
-  await chip(page, "Q15", "Yes").click();
+  await chip(page, "Q10a", "Evening (3 PM–6 PM)").click();
   await page.getByRole("button", { name: "Submit", exact: true }).click();
 }
 
@@ -125,7 +124,7 @@ test("support laptop generates a link, a 360 px phone opens and submits: Opened 
   await laptopContext.close();
 });
 
-test("Q15 = Yes raised an alert: Velachery's admin sees it, Tambaram's does not (S-30)", async ({
+test("Q10 = Yes raised an alert: Velachery's admin sees it, Tambaram's does not (S-30)", async ({
   browser,
 }) => {
   const vel = await asActor(browser, world.velacheryAdmin);

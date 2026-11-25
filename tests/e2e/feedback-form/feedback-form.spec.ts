@@ -6,7 +6,7 @@ import { makeCard, newBranch, type Staff } from "../support-links/helpers";
 type Playwright = PlaywrightWorkerArgs["playwright"];
 const SHOT = ".results/T-04b";
 const BUSY = "Too many requests, try again in a few minutes";
-const NOTES = "Do you have any additional feedback or suggestions? (optional)";
+const MORE = "Tell us more";
 
 interface Issued {
   visit: { id: string; status: string };
@@ -47,34 +47,38 @@ const width = (page: Page) => String(page.viewportSize()?.width);
 const pwned = (page: Page) =>
   page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned);
 
-/** Welcome to step 6 with Q12 = 1; `extra` runs on step 5. Leaves Q15 to the caller. */
+/**
+ * Welcome to step 6 with Q1 rated 1 (Q1a answered; `extra` runs there to add "Tell us more" text).
+ * Leaves Q10 to the caller.
+ */
 async function fillToCallback(page: Page, extra?: () => Promise<void>): Promise<void> {
   await page.getByRole("button", { name: "Start" }).click();
-  await rate(page, "Q1", /^5 /).click();
+  await expect(page.getByText("Step 1 of 6")).toBeVisible();
+  await rate(page, "Q1", /^1 /).click();
+  await chip(page, "Q1a", "Poor workmanship").click();
+  if (extra) await extra();
   await chip(page, "Q2", "Yes").click();
   await chip(page, "Q3", "No").click();
   await next(page).click();
-  await chip(page, "Q4", "Yes").click();
+  await rate(page, "Q4", /^5 /).click();
+  await next(page).click();
   await chip(page, "Q5", "Yes").click();
-  await rate(page, "Q6", /^5 /).click();
+  await chip(page, "Q6", "Yes").click();
   await next(page).click();
   await chip(page, "Q7", "Yes").click();
-  await chip(page, "Q8", "Yes").click();
+  await rate(page, "Q8", /^5 /).click();
+  await next(page).click();
   await chip(page, "Q9", "Yes").click();
+  await chip(page, "Q9a", "Quality of Service").click();
   await next(page).click();
-  await chip(page, "Q10", "Yes").click();
-  await rate(page, "Q11", /^5 /).click();
-  await next(page).click();
-  await rate(page, "Q12", /^1 /).click();
-  await chip(page, "Q13", "Yes").click();
-  if (extra) await extra();
-  await next(page).click();
+  await expect(page.getByText("Step 6 of 6")).toBeVisible();
 }
 
 async function reachSubmit(page: Page, link: Link, extra?: () => Promise<void>): Promise<void> {
   await page.goto(link.path);
   await fillToCallback(page, extra);
-  await chip(page, "Q15", "Yes").click();
+  await chip(page, "Q10", "Yes").click();
+  await chip(page, "Q10a", "Evening (3 PM–6 PM)").click();
 }
 
 test.describe("T-04b customer form on a real server", () => {
@@ -114,7 +118,7 @@ test.describe("T-04b customer form on a real server", () => {
     await page.screenshot({ path: `${SHOT}/privacy-${width(page)}.png` });
   });
 
-  test("Q12 = 1, Q15 = Yes: thank-you with the callback line; script text stays text (AC-7, US-11, G-05, G-W3)", async ({
+  test("Q1 = 1, Q10 = Yes, Evening: thank-you shows the callback slot; script text stays text (AC-7, US-11, G-05, G-W3)", async ({
     page,
     playwright,
     baseURL,
@@ -128,17 +132,20 @@ test.describe("T-04b customer form on a real server", () => {
     });
     const evil = "<script>window.__pwned = 1</script>";
     await reachSubmit(page, link, async () => {
-      await page.getByLabel(NOTES).fill(evil);
+      await page.getByLabel(MORE).first().fill(evil);
     });
     await submit(page).click();
     await expect(page.getByRole("heading", { name: "Thank you for your feedback" })).toBeVisible();
-    await expect(page.getByText("Our team will call you soon")).toBeVisible();
+    await expect(page.getByText("Our team will call you: Evening 3 PM–6 PM")).toBeVisible();
     await page.screenshot({ path: `${SHOT}/thanks-${width(page)}.png` });
     expect(await pwned(page)).toBeUndefined();
     expect(sent).toHaveLength(1);
     // The client sends a submission id with every real submit (the optional parameter is unused).
     expect(sent[0]?.[2]).toMatch(/^[0-9a-f-]{36}$/);
-    expect((sent[0]?.[1] as Record<string, unknown>)["Q14"]).toBe(evil);
+    const sentAnswers = sent[0]?.[1] as Record<string, unknown>;
+    expect(sentAnswers["Q1a"]).toEqual({ options: ["Poor workmanship"], text: evil });
+    expect(sentAnswers["Q10a"]).toBe("Evening (3 PM–6 PM)");
+    expect(sentAnswers).not.toHaveProperty("Q14");
 
     await expect.poll(() => statusOf(link)).toBe("completed");
     await page.goto(link.path);
@@ -154,8 +161,8 @@ test.describe("T-04b customer form on a real server", () => {
     const evil = '<img src=x onerror="window.__pwned=1"><script>window.__pwned=1</script>';
     await page.goto(link.path);
     await fillToCallback(page);
-    await page.getByRole("button", { name: "Back" }).click();
-    const box = page.getByLabel(NOTES);
+    for (let i = 0; i < 5; i++) await page.getByRole("button", { name: "Back" }).click();
+    const box = page.getByLabel(MORE).first();
     await box.fill(evil);
     await expect(box).toHaveValue(evil);
     await expect(page.locator("main img")).toHaveCount(0);
@@ -190,11 +197,11 @@ test.describe("T-04b customer form on a real server", () => {
     await expect(
       page.getByRole("alert").filter({ hasText: "Couldn't save, try again" }),
     ).toBeVisible();
-    await expect(chip(page, "Q15", "Yes")).toHaveAttribute("aria-pressed", "true");
+    await expect(chip(page, "Q10a", "Evening (3 PM–6 PM)")).toHaveAttribute("aria-pressed", "true");
     await page.screenshot({ path: `${SHOT}/save-failed-${width(page)}.png` });
     await page.getByRole("button", { name: "Retry" }).click();
     await expect(page.getByRole("heading", { name: "Thank you for your feedback" })).toBeVisible();
-    await expect(page.getByText("Our team will call you soon")).toBeVisible();
+    await expect(page.getByText("Our team will call you: Evening")).toBeVisible();
     expect(ids).toHaveLength(2);
     expect(ids[0]).toBe(ids[1]);
     expect(ids[0]).toMatch(/^[0-9a-f-]{36}$/);
@@ -264,7 +271,7 @@ test.describe("T-04b customer form on a real server", () => {
     await reachSubmit(page, link);
     await submit(page).click();
     await expect(page.getByRole("alert").filter({ hasText: BUSY })).toBeVisible();
-    await expect(chip(page, "Q15", "Yes")).toHaveAttribute("aria-pressed", "true");
+    await expect(chip(page, "Q10a", "Evening (3 PM–6 PM)")).toHaveAttribute("aria-pressed", "true");
     await page.screenshot({ path: `${SHOT}/rate-limited-${width(page)}.png` });
     expect(await statusOf(link)).not.toBe("completed");
     await anon.dispose();

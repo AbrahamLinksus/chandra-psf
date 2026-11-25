@@ -75,7 +75,7 @@ describe("generateOneTimePassword", () => {
 });
 
 describe("initAdmin (S-16, G-14)", () => {
-  it("installs questionnaire v1 and one main admin with a 16-char one-time password valid 72 h", async () => {
+  it("installs questionnaire v2 only and one main admin with a 16-char one-time password valid 72 h", async () => {
     const r = await initAdmin(deps, { name: " Owner ", email: "Owner@ChandraHonda.in " });
     expect(r.created).toBe(true);
     if (!r.created) return;
@@ -92,7 +92,7 @@ describe("initAdmin (S-16, G-14)", () => {
     });
     expect(await verify(one(rows[0]).passwordHash, r.password)).toBe(true);
     const qs = await deps.db.select().from(questionnaires);
-    expect(qs.map((q) => q.version)).toEqual([1]);
+    expect(qs.map((q) => q.version)).toEqual([2]);
   });
 
   it("audits actor system, and the password is never in the audit", async () => {

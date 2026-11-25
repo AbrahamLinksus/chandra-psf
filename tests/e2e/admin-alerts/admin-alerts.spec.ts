@@ -14,22 +14,21 @@ const STALE = "Someone else changed this alert. Reload to see the latest.";
 const width = (page: Page): string => String(page.viewportSize()?.width);
 const uniq = (): string => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
-// Q12 = 1 and Q15 = Yes: raises one alert for the visit's branch.
+// v2: Q1 = 1 and Q10 = Yes (Evening callback) raise one alert for the visit's branch.
 const ANSWERS = {
-  Q1: 5,
+  Q1: 1,
+  Q1a: { options: ["Poor workmanship"] },
   Q2: "Yes",
   Q3: "No",
-  Q4: "Yes",
+  Q4: 5,
   Q5: "Yes",
-  Q6: 5,
+  Q6: "Yes",
   Q7: "Yes",
-  Q8: "Yes",
+  Q8: 5,
   Q9: "Yes",
+  Q9a: "Quality of Service",
   Q10: "Yes",
-  Q11: 5,
-  Q12: 1,
-  Q13: "Yes",
-  Q15: "Yes",
+  Q10a: "Evening (3 PM–6 PM)",
 };
 
 interface Scene {

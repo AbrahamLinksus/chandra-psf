@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function -- describe blocks group many one-line tests */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryStorage } from "../../support/memoryStorage";
 import { err, ok } from "@/data/access";
@@ -29,12 +30,20 @@ describe("draft", () => {
   });
 
   it("ignores unreadable or out-of-range drafts", () => {
-    storage.setItem("psf:draft:v1", "{not json");
+    storage.setItem("psf:draft:v2:v1", "{not json");
     expect(loadDraft("v1")).toBeNull();
-    storage.setItem("psf:draft:v1", JSON.stringify({ step: 9, answers: {} }));
+    storage.setItem("psf:draft:v2:v1", JSON.stringify({ step: 9, answers: {} }));
     expect(loadDraft("v1")).toBeNull();
-    storage.setItem("psf:draft:v1", JSON.stringify({ step: 2, answers: [] }));
+    storage.setItem("psf:draft:v2:v1", JSON.stringify({ step: 2, answers: [] }));
     expect(loadDraft("v1")).toBeNull();
+  });
+});
+
+describe("v1 draft", () => {
+  it("a draft saved under v1 (unversioned key) is discarded and never loaded", () => {
+    storage.setItem("psf:draft:v-1", JSON.stringify({ step: 4, answers: { Q12: 3 } }));
+    expect(loadDraft("v-1")).toBeNull();
+    expect(storage.getItem("psf:draft:v-1")).toBeNull();
   });
 });
 
@@ -63,12 +72,17 @@ describe("form machine", () => {
     expect(formReducer(back, { type: "back" }).phase).toBe("welcome");
   });
 
-  it("Q1 = 2 opens Q1a; Q7 No -> Yes drops Q7a (F-3 triggers)", () => {
-    let s = formReducer(started, { type: "answer", code: "Q7", value: "No" });
-    s = formReducer(s, { type: "answer", code: "Q7a", value: "1 day late" });
-    expect(s.answers["Q7a"]).toBe("1 day late");
-    s = formReducer(s, { type: "answer", code: "Q7", value: "Yes" });
-    expect(s.answers).not.toHaveProperty("Q7a");
+  it("Q1 = 2 opens Q1a, 3 does not; Q5 No -> Yes drops Q5a (F-3 triggers)", () => {
+    let s = formReducer(started, { type: "answer", code: "Q1", value: 2 });
+    s = formReducer(s, { type: "answer", code: "Q1a", value: { options: ["Other"] } });
+    expect(s.answers["Q1a"]).toEqual({ options: ["Other"] });
+    s = formReducer(s, { type: "answer", code: "Q1", value: 3 });
+    expect(s.answers).not.toHaveProperty("Q1a");
+    s = formReducer(s, { type: "answer", code: "Q5", value: "No" });
+    s = formReducer(s, { type: "answer", code: "Q5a", value: "1 Day" });
+    expect(s.answers["Q5a"]).toBe("1 Day");
+    s = formReducer(s, { type: "answer", code: "Q5", value: "Yes" });
+    expect(s.answers).not.toHaveProperty("Q5a");
   });
 
   it("does not advance past the last step; submitted moves to thanks", () => {
@@ -90,7 +104,12 @@ describe("submitFeedback", () => {
       feedback: { submitResponse: () => Promise.resolve(ok({ callbackRequested: true })) },
     });
     saveDraft("v-1", { step: 6, answers: {} });
-    const out = await submitFeedback(da, "tok", "v-1", happyAnswers({ Q15: "Yes" }));
+    const out = await submitFeedback(
+      da,
+      "tok",
+      "v-1",
+      happyAnswers({ Q10: "Yes", Q10a: "Evening (3 PM–6 PM)" }),
+    );
     expect(out).toEqual({ kind: "done", callbackRequested: true });
     expect(loadDraft("v-1")).toBeNull();
   });

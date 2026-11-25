@@ -1,22 +1,33 @@
 import { AUTO_RESOLVE_NOTE, SYSTEM_ACTOR } from "./constants";
 import type { Alert, AlertReason, AnswerMap } from "./types";
 
-const RATED = ["Q1", "Q6", "Q11", "Q12"] as const;
+const RATED = ["Q1", "Q4", "Q8"] as const;
 
-/** SPEC F-4 step 1: callback first, then Q1, Q6, Q11, Q12 rated 1. Q3 = Yes alone raises none. */
+/** SPEC F-4 step 1 (v2): callback (with its time slot) first, then Q1, Q4, Q8 rated 1. Q3 = Yes alone raises none. */
 export function evaluateAlertReasons(answers: AnswerMap): AlertReason[] {
   const reasons: AlertReason[] = [];
-  if (answers.Q15 === "Yes") reasons.push({ kind: "callback" });
+  if (answers.Q10 === "Yes") {
+    const slot = answers.Q10a;
+    reasons.push(typeof slot === "string" ? { kind: "callback", slot } : { kind: "callback" });
+  }
   for (const code of RATED) {
     if (answers[code] === 1) reasons.push({ kind: "low_rating", code });
   }
   return reasons;
 }
 
+/** "Evening (3 PM–6 PM)" -> "Evening 3 PM–6 PM". */
+export function slotLabel(slot: string): string {
+  return slot.replace(/ \((.*)\)$/, " $1");
+}
+
+function formatReason(r: AlertReason): string {
+  if (r.kind === "low_rating") return `${r.code} rated 1`;
+  return r.slot === undefined ? "Callback requested" : `Callback requested (${slotLabel(r.slot)})`;
+}
+
 export function formatReasons(reasons: AlertReason[]): string {
-  return reasons
-    .map((r) => (r.kind === "callback" ? "Callback requested" : `${r.code} rated 1`))
-    .join(" · ");
+  return reasons.map(formatReason).join(" · ");
 }
 
 export type AlertChange = "none" | "created" | "reasons_updated" | "auto_resolved";

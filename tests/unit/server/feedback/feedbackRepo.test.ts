@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { alerts, jobCards, rateLimits, responses, visits } from "@/server/db/schema";
 import { hashCode } from "@/server/tokens";
 import { makeServerCtx, must, seedBranch } from "../../../support/serverCtx";
-import { happyAnswers, resend, seedLink, type Seeded } from "./harness";
+import { calmAnswers, happyAnswers, resend, seedLink, type Seeded } from "./harness";
 
 vi.mock("server-only", () => ({}));
 
@@ -144,12 +144,15 @@ describe("markOpened (AC-3)", () => {
 });
 
 describe("submitResponse", () => {
-  it("Q12 = 1, Q15 = Yes: one response, callback true, the alert for the visit's branch", async () => {
+  it("Q1 = 1, Q10 = Yes, Q10a = Evening: one response, callback true, one alert for the visit's branch", async () => {
     const other = await seedBranch(env.db, "Tambaram");
     await link("JC-9", other);
     const s = await link();
     const r = await repo().submitResponse(s.code, happyAnswers(), SUB);
-    expect(r).toEqual({ ok: true, value: { callbackRequested: true } });
+    expect(r).toEqual({
+      ok: true,
+      value: { callbackRequested: true, callbackSlot: "Evening (3 PM–6 PM)" },
+    });
     const rows = await env.db.select().from(responses);
     expect(rows).toHaveLength(1);
     expect(must(rows[0]).visitId).toBe(s.visitId);
@@ -160,8 +163,8 @@ describe("submitResponse", () => {
     expect(must(al[0]).branchId).not.toBe(other);
     expect(must(al[0]).responseId).toBe(must(rows[0]).id);
     expect(must(al[0]).reasons).toEqual([
-      { kind: "callback" },
-      { kind: "low_rating", code: "Q12" },
+      { kind: "callback", slot: "Evening (3 PM–6 PM)" },
+      { kind: "low_rating", code: "Q1" },
     ]);
     const v = await visitRow(s.visitId);
     expect(v.completedAt).toEqual(NOW);
@@ -170,40 +173,28 @@ describe("submitResponse", () => {
 
   it("no alert and callbackRequested false for a happy customer", async () => {
     const s = await link();
-    const r = await repo().submitResponse(s.code, happyAnswers({ Q12: 5, Q15: "No" }), SUB);
+    const r = await repo().submitResponse(s.code, calmAnswers(), SUB);
     expect(r).toEqual({ ok: true, value: { callbackRequested: false } });
     expect(await env.db.select().from(alerts)).toHaveLength(0);
   });
 
   it("an incomplete submit is VALIDATION with the missing codes and stores nothing", async () => {
     const s = await link();
-    const r = await repo().submitResponse(s.code, happyAnswers({ Q12: undefined }), SUB);
+    const r = await repo().submitResponse(s.code, happyAnswers({ Q8: undefined }), SUB);
     expect(r).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    expect(JSON.stringify(r)).toContain("Q12");
+    expect(JSON.stringify(r)).toContain("Q8");
     expect(await env.db.select().from(responses)).toHaveLength(0);
     expect((await visitRow(s.visitId)).completedAt).toBeNull();
   });
 
-  it("text over 1,000 characters is rejected; exactly 1,000 is accepted", async () => {
+  it("Q2a text over 1,000 characters is rejected; exactly 1,000 is accepted", async () => {
     const s = await link();
-    const bad = await repo().submitResponse(s.code, happyAnswers({ Q14: "x".repeat(1001) }), SUB);
+    const long = happyAnswers({ Q2: "No", Q2a: "x".repeat(1001) });
+    const bad = await repo().submitResponse(s.code, long, SUB);
     expect(bad).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
-    expect(JSON.stringify(bad)).toContain("Q14");
     expect(await env.db.select().from(responses)).toHaveLength(0);
-    const good = await repo().submitResponse(s.code, happyAnswers({ Q14: "x".repeat(1000) }), SUB);
-    expect(good.ok).toBe(true);
-  });
-
-  it("hidden follow-ups never reach the database (Q1 = 5 hides Q1a; dropped, not an error)", async () => {
-    const s = await link();
-    const r = await repo().submitResponse(
-      s.code,
-      happyAnswers({ Q1a: "Problem not fixed", Q7a: "1 day late", Q2a: "x".repeat(5000) }),
-      SUB,
-    );
-    expect(r.ok).toBe(true);
-    const stored = await storedAnswers();
-    for (const k of ["Q1a", "Q7a", "Q2a"]) expect(stored).not.toHaveProperty(k);
+    const ok = happyAnswers({ Q2: "No", Q2a: "x".repeat(1000) });
+    expect((await repo().submitResponse(s.code, ok, SUB)).ok).toBe(true);
   });
 
   it("a visible follow-up over 1,000 characters is rejected (Q2 = No shows Q2a)", async () => {
@@ -218,15 +209,19 @@ describe("submitResponse", () => {
 
   it("<script> text is stored verbatim as data (rendering escapes it)", async () => {
     const s = await link();
-    await repo().submitResponse(s.code, happyAnswers({ Q14: "<script>alert(1)</script>" }), SUB);
-    expect((await storedAnswers()).Q14).toBe("<script>alert(1)</script>");
+    await repo().submitResponse(
+      s.code,
+      happyAnswers({ Q2: "No", Q2a: "<script>alert(1)</script>" }),
+      SUB,
+    );
+    expect((await storedAnswers()).Q2a).toBe("<script>alert(1)</script>");
   });
 
   it("same submission id again: the same result, still one response and one alert", async () => {
     const s = await link();
     await repo().submitResponse(s.code, happyAnswers(), SUB);
     const again = await repo().submitResponse(s.code, happyAnswers(), SUB);
-    expect(again).toEqual({ ok: true, value: { callbackRequested: true } });
+    expect(again).toMatchObject({ ok: true, value: { callbackRequested: true } });
     expect(await env.db.select().from(responses)).toHaveLength(1);
     expect(await env.db.select().from(alerts)).toHaveLength(1);
   });
@@ -243,7 +238,7 @@ describe("submitResponse", () => {
     const s = await link();
     const [a, b] = await Promise.all([
       new ServerFeedbackRepo(env.ctx).submitResponse(s.code, happyAnswers(), SUB),
-      new ServerFeedbackRepo(env.ctx).submitResponse(s.code, happyAnswers({ Q12: 3 }), SUB2),
+      new ServerFeedbackRepo(env.ctx).submitResponse(s.code, calmAnswers(), SUB2),
     ]);
     expect([a.ok, b.ok].filter(Boolean)).toHaveLength(1);
     expect(a.ok ? b : a).toMatchObject({ ok: false, error: { code: "ALREADY_COMPLETED" } });

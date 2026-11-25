@@ -207,7 +207,17 @@ describe("no data (S-10)", () => {
 
 describe("blocks (US-15, AC-10)", () => {
   const rows: Row[] = [
-    { answers: { Q1: 5, Q4: "Yes", Q6: 4, Q7: "No", Q7a: "1 day late", Q12: 5, Q13: "Yes" } },
+    {
+      answers: {
+        Q1: 5,
+        Q4: "Yes",
+        Q6: 4,
+        Q6a: { options: ["Other"] },
+        Q7: "No",
+        Q12: 5,
+        Q13: "Yes",
+      },
+    },
     {
       answers: {
         Q1: 2,
@@ -240,27 +250,26 @@ describe("blocks (US-15, AC-10)", () => {
     );
   });
 
-  it("problems count follow-up options, including the Q7a lateness split", () => {
+  // TODO(T-39): v2 metrics
+  it("problems count follow-up options (Q1a, Q6a)", () => {
     expect(data.problems.Q1a.find((o) => o.option === "Other")?.count).toBe(1);
-    expect(data.problems.Q7a.find((o) => o.option === "1 day late")?.count).toBe(1);
+    expect(data.problems.Q6a.find((o) => o.option === "Other")?.count).toBe(1);
     expect(data.problems.Q3a.every((o) => o.count === 0)).toBe(true);
   });
 
-  it("question detail splits Yes/Partially/No for Q2-Q5, Q7-Q10, Q13, Q15", () => {
+  // TODO(T-39): v2 metrics
+  it("question detail splits Yes/Partially/No for the v2 yes/no questions", () => {
     expect(data.questionDetail.map((q) => q.code)).toEqual([
       "Q2",
       "Q3",
-      "Q4",
       "Q5",
+      "Q6",
       "Q7",
-      "Q8",
       "Q9",
       "Q10",
-      "Q13",
-      "Q15",
     ]);
-    const q4 = data.questionDetail.find((q) => q.code === "Q4");
-    expect(q4?.split).toEqual([
+    const q7 = data.questionDetail.find((q) => q.code === "Q7");
+    expect(q7?.split).toEqual([
       { answer: "Yes", count: 1 },
       { answer: "No", count: 1 },
     ]);
@@ -288,8 +297,11 @@ describe("blocks (US-15, AC-10)", () => {
     ]);
   });
 
+  // TODO(T-39): v2 metrics
   it("only the newest 10 comments are kept", () => {
-    const many: Row[] = Array.from({ length: 12 }, () => ({ answers: { Q12: 4, Q14: "hi" } }));
+    const many: Row[] = Array.from({ length: 12 }, () => ({
+      answers: { Q12: 4, Q1a: { options: ["Other"], text: "hi" } },
+    }));
     expect(computeOverview(build(many), F).comments).toHaveLength(10);
   });
 });
