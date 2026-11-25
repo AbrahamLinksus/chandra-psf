@@ -20,7 +20,7 @@
 | Approval mode | batch-low-risk |
 | Cost mode | fast (owner 2026-11-26: speed until the demo; minors later) |
 | Visuals | installed (capture.py ready) |
-| Last updated | 2026-11-26 (M5: 10/11 done; only T-30 left, waits on T-23) |
+| Last updated | 2026-11-26 (M5: 11/12 done incl. T-23 (D-44); T-30 handover running) |
 
 ## Team
 | Agent | Model | Why on this project |
