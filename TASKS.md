@@ -749,7 +749,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: tests/e2e/walkthrough/**
 - Context: SPEC §12 (DoD), §5 · files: tests/support/*, docs/scenarios.md (S-16 to S-30)
 - Why separate: the whole-app check; no feature edits (fixes raise `Needs file:` on the owning slice).
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] On a fresh PGlite server: init → the owner sets a password → "Add your first branch" → two branches, advisors, a branch admin and a support user each → each lands on their portal (DoD 1–2, S-16)
   - [ ] Two browser contexts: job card → link → customer form at 360 px with the notice → the laptop shows Opened then Completed without reload → alert → Contacted → Resolved, all in the audit (DoD 3–8, S-06, S-12)
@@ -763,7 +763,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: vercel.json, docs/DEPLOY.md
 - Context: SPEC §8, §12 DoD (DEPLOY.md item), US-23, US-32 · HLD Free now / paid later · LLD-phase2 §15.5, §16.2, §25, §26 · files: .env.example
 - Why separate: owner's accounts; the production database.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] **Owner step:** Production env on the new project (Neon `main` URLs, its own `CRON_SECRET`, `IP_HASH_PEPPER`, `APP_URL` = the new `….vercel.app` address, public placeholders); production deploys switched on; the maintainer runs `admin init` against `main` → only questionnaire v1 + one main admin exist (DoD 1, G-04)
   - [ ] The cron is visible in Vercel and one run returns 200 with an audit `system.cleanup`
