@@ -833,7 +833,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/domain/metrics/**, src/domain/types.ts, src/server/repos/analytics.ts, src/data/access/repos/analytics.ts, src/features/admin-overview/**, tests/unit/admin-overview/**, tests/unit/server/analytics/**, tests/e2e/admin-overview/**, docs/SPEC.md
 - Context: SPEC CR-2 note, US-14, US-15, F-5, §5 F-5 rows · LLD-phase2 §17.2 (§10 row), §19 · files: src/domain/metrics/*, src/domain/questionnaire.ts, src/features/admin-overview/*
 - Why separate: its own screen and repo; runs side by side with T-40 after the foundation.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] KPI tiles show "Avg overall satisfaction" from Q1 and "Recommend rate" from Q9; Q1 ratings 4, 5, 3 → 4.0 (SPEC §5 F-5)
   - [ ] Category scores use the v2 membership (Q10 and follow-ups excluded); Trend uses Q1 and Q9; launch day (no responses) still shows "—" in every block (S-10)
@@ -849,7 +849,7 @@ Frozen: package.json, pnpm-lock.yaml, next.config.ts, src/app/layout.tsx, src/ap
 - Files: src/features/admin-responses/**, src/features/admin-alerts/**, src/features/admin-customers/**, src/server/repos/responses.ts, src/server/repos/alerts.ts, src/server/repos/customers.ts, src/server/csv.ts, tests/unit/server/responses/**, tests/unit/server/alerts/**, tests/unit/server/customers/**, tests/e2e/admin-responses/**, tests/e2e/admin-alerts/**, tests/e2e/admin-customers/**, tests/e2e/admin-customers-erase/**
 - Context: SPEC CR-2 note, US-12, US-17, US-18, US-30, F-4, F-6, F-10, §5 F-6 and F-10 rows · LLD-phase2 §17.2 (§11 and §12 rows), §18.4, §24 (CustomerRepo, CSV) · files: src/domain/questionnaire.ts, src/domain/alertRules.ts, src/features/admin-responses/*, src/features/admin-alerts/*, src/server/csv.ts
 - Why separate: three staff screens that read answers by code; disjoint from T-39's files so both run at once.
-- Status: Backlog
+- Status: In progress
 - Acceptance criteria:
   - [ ] Response detail lists every v2 answer with its question text, including the Q10a time slot; nothing shows a v1 code or label
   - [ ] Editing Q4 2 → 4 with the password removes Q4a and audits old `{Q4:2,Q4a:…}` new `{Q4:4}`; editing Q1 1 → 4 on an alert whose only reason was "Q1 rated 1" → Resolved "Auto-resolved: no alert reason after edit"; Q10 No → Yes (with a slot) → a new Open alert (SPEC §5 F-6, S-08)
