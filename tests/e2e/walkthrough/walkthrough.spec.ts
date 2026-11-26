@@ -114,7 +114,7 @@ test.describe("T-11b DoD 3-8: two devices, one visit", () => {
     });
     const phone = await phoneContext.newPage();
     await phone.goto(path);
-    await expect(phone.getByRole("heading", { name: /^Hi Ramesh Kumar/ })).toBeVisible();
+    await expect(phone.getByRole("heading", { name: "Dear Customer," })).toBeVisible();
     const notice = phone.getByRole("complementary", { name: "Privacy notice" });
     await expect(notice).toContainText("3 years");
     await expect(notice.getByRole("link", { name: "How we use your answers" })).toBeVisible();

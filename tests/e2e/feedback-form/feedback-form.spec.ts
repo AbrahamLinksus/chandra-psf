@@ -94,9 +94,8 @@ test.describe("T-04b customer form on a real server", () => {
     expect(await statusOf(link)).toBe("created");
 
     await page.goto(link.path);
-    await expect(
-      page.getByRole("heading", { name: /^Hi Ramesh Kumar, how was your Activa's service on / }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Dear Customer," })).toBeVisible();
+    await expect(page.getByText("Your peace of mind is our priority!")).toBeVisible();
     await expect(page.getByText("Takes about 2 minutes")).toBeVisible();
     const notice = page.getByRole("complementary", { name: "Privacy notice" });
     await expect(notice).toContainText("Chandra Honda");
