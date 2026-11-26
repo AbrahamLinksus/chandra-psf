@@ -100,9 +100,13 @@ describe("createVisitLink (AC-2, D-11, S-01)", () => {
   it("builds the SPEC wa.me URL for a mobile number", async () => {
     const { jc } = await setup();
     const out = value(await repo().createVisitLink({ jobCardId: jc.id }));
-    const text =
-      "Hi Ramesh Kumar, thank you for servicing your Activa (TN 09 BX 4521) at Chandra Honda. " +
-      `Please share your feedback (2 mins): ${out.url}`;
+    const text = [
+      "Dear Customer,",
+      "Thank you for choosing Chandra Honda for servicing your two-wheeler.",
+      "We value your feedback! Kindly click the link below to complete a short survey within 24 hours of vehicle delivery and help us serve you better.",
+      out.url,
+      "Thank you for your time and trust!",
+    ].join("\n");
     expect(out.whatsappUrl).toBe(`https://wa.me/919840012345?text=${encodeURIComponent(text)}`);
   });
 
